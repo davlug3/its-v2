@@ -13,7 +13,7 @@ return new class extends Migration
             $table->json('meta')->nullable()->after('action');
 
             $table->index('ticket_id', 'idx_tickets_log_ticket_id');
-            $table->index('created_uid', 'idx_tickets_log_created_uid');
+            $table->index('user_id', 'idx_tickets_log_user_id');
         });
     }
 
@@ -21,7 +21,7 @@ return new class extends Migration
     {
         Schema::table('tickets_log', function (Blueprint $table) {
             $table->dropIndex('idx_tickets_log_ticket_id');
-            $table->dropIndex('idx_tickets_log_created_uid');
+            $table->dropIndex('idx_tickets_log_user_id');
 
             $table->dropColumn(['action', 'meta']);
         });
