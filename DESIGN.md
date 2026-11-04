@@ -551,7 +551,9 @@ The busiest screens are ticket lists, the ticket detail view, and the create for
 
 ### Components
 
-Use PrimeVue components.
+Use shadcn-vue components.
+They are copied into `resources/js/components/ui/` and owned by this project.
+Edit them when the design needs it.
 Style them with the Tailwind theme tokens above.
 Do not build a second component library.
 
@@ -561,15 +563,18 @@ Do not use `any` to silence a type error.
 
 | Need | Component |
 |---|---|
-| Buttons | PrimeVue `Button` |
-| Inputs | PrimeVue `InputText`, `Textarea`, `Select`, `DatePicker` |
-| Tables and cards | PrimeVue `DataTable` for desktop, custom card list for small screens |
-| Filters | PrimeVue `Popover` or a bottom sheet |
-| Dialogs | PrimeVue `Dialog` on desktop, full-screen sheet on small screens |
-| Notifications | PrimeVue `Toast` for feedback, the bell for the inbox |
-| Menus | PrimeVue `Menu`, `Drawer` on small screens |
-| Tabs | PrimeVue `Tabs` |
-| Status | PrimeVue `Tag` with text, not color only |
+| Buttons | `Button`, `Button Group` |
+| Inputs | `Input`, `Textarea`, `Select`, `Date Picker`, `Checkbox`, `Switch` |
+| Forms | `Form`, `Field`, `Label` with `vee-validate` and Zod |
+| Tables and cards | `Table` with `@tanstack/vue-table` for desktop, custom card list for small screens |
+| Filters | `Popover` on desktop, `Sheet` on small screens |
+| Dialogs | `Dialog` on desktop, full-screen `Sheet` on small screens |
+| Notifications | `Sonner` for feedback, the bell for the inbox |
+| Menus | `Dropdown Menu` on desktop, `Sheet` or `Drawer` on small screens |
+| Navigation | `Tabs`, `Sidebar`, `Breadcrumb` |
+| Status | `Badge` with text, not color only |
+| Loading | `Skeleton`, `Spinner` |
+| Empty state | `Empty` |
 
 ### States
 

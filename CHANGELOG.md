@@ -41,6 +41,18 @@ Versions start at `0.1.0` when the scaffold is ready.
 
 ### Changed
 
+- **UI library changed to shadcn-vue (2026-11-04).**
+  - Decision U1. PrimeVue 5 is under the PrimeUI commercial license and needs a key.
+  - shadcn-vue 2.x with Reka UI 2.x replaces it. Both are MIT.
+  - Components are copied into `resources/js/components/ui/` and owned by this project.
+  - `ARCHITECTURE.md`, `PLAN.md`, `README.md`, `DECISIONS.md`, and `DESIGN.md` updated.
+  - Local `DESIGN.md` component map replaced with shadcn-vue components.
+
+- **Frontend dependency decisions.**
+  - U2: TypeScript `7.0.2` first. Fallback to `5.9.3` if `vue-tsc` fails.
+  - U3: Vue Router `5.4.0`. The `4.x` note was out of date.
+  - U4: `vee-validate` with `@vee-validate/zod` for forms. Zod stays the schema source.
+
 - **Frontend language is TypeScript.**
   - `ARCHITECTURE.md` §3.1 now requires TypeScript in strict mode.
   - `ARCHITECTURE.md` §5 and §11.2 add the TypeScript version and the `vue-tsc` type check.

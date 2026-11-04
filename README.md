@@ -75,9 +75,9 @@ The connection is read-only.
 | API style | Strict REST, versioned `/api/v1` |
 | Frontend | Vue 3.5 single-page application with Vite |
 | Language (frontend) | TypeScript 5.x in strict mode, checked with `vue-tsc` |
-| UI components | PrimeVue 5.x |
+| UI components | shadcn-vue 2.x (copied source) + Reka UI 2.x |
 | Styling | Tailwind CSS 4.x |
-| Frontend validation | Zod |
+| Frontend validation | Zod 4.x + vee-validate |
 | Authentication | JWT (`php-open-source-saver/jwt-auth`) |
 | Database | MySQL / MariaDB, legacy schema preserved |
 | Containers | Docker and Docker Compose |
@@ -173,8 +173,8 @@ Planned steps:
 2. Add Vue 3, Vite, and TypeScript.
 3. Set `strict` in `tsconfig.json` and add a `typecheck` script that runs `vue-tsc --noEmit`.
 4. Add Tailwind CSS 4.
-5. Add PrimeVue 5.
-6. Add Zod.
+5. Add shadcn-vue and Reka UI. Initialise with `npx shadcn-vue@latest init`.
+6. Add Zod and `vee-validate` with `@vee-validate/zod`.
 7. Add `php-open-source-saver/jwt-auth` and generate `JWT_SECRET`.
 8. Add Docker Compose services: `app`, `nginx`, `db`, `node`, optional `redis`, optional `queue`.
 9. Create `.env.example` with every key from PROMPT Appendix C. No secrets.

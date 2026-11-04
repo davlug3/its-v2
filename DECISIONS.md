@@ -31,6 +31,10 @@ Related files:
 | C2 | Protect and hide `categories.id = 1` | Approved |
 | C6 | PIS sync uses `jblmrhpayroll` | Approved |
 | C7 | Override the broken `change_password` module row | Approved |
+| U1 | shadcn-vue replaces PrimeVue | Approved |
+| U2 | TypeScript version: 7.0.2 first, 5.9.3 fallback | Approved |
+| U3 | Vue Router 5.4.0 | Approved |
+| U4 | Forms use vee-validate with Zod | Approved |
 | D27 | Staff-create tickets write `assigned_gid = 0` | Approved |
 | D53 | `assigned_gid` stays a legacy group ID; add `units_count` | Approved |
 | D74 | In-app notification bell | Approved |
@@ -71,7 +75,7 @@ Use the stack in `ARCHITECTURE.md`:
 | API | Strict REST, versioned `/api/v1` |
 | Frontend | Vue 3.5 SPA + Vite |
 | Frontend language | TypeScript 5.x, strict mode |
-| UI components | PrimeVue 5.x |
+| UI components | shadcn-vue 2.x + Reka UI 2.x |
 | Styling | Tailwind CSS 4.x |
 | Validation (frontend) | Zod |
 | Database | MySQL / MariaDB (legacy schema preserved) |
@@ -88,11 +92,101 @@ Dave selected this stack.
 - No Inertia.
 - No Sanctum as the primary auth system.
 - No Breeze scaffolding.
+- No PrimeVue. Replaced by shadcn-vue (see U1).
 - The API and the SPA are separate builds.
 - All frontend source is TypeScript in strict mode. Do not add plain JavaScript to `src/`.
 - `vue-tsc --noEmit` runs in CI and must pass.
 - Every dependency version is checked against the official release page before use.
 - No pre-release version is used.
+
+---
+
+## U1 — shadcn-vue replaces PrimeVue
+
+**Decision.**
+Use **shadcn-vue 2.x** with **Reka UI 2.x** for UI components.
+Do not use PrimeVue.
+
+**Reason.**
+Dave selected shadcn-vue on 2026-11-04.
+PrimeVue 5 moved to the PrimeUI commercial license.
+It requires a license key and eligibility checks.
+A hospital helpdesk is unlikely to qualify for the free Community License.
+shadcn-vue is MIT, free, and gives the project full control of the component source.
+
+**What shadcn-vue is.**
+The official docs say: "This is not a component library. It is how you build your component library."
+
+- The `shadcn-vue` npm package is a CLI and a code distribution tool. It is not a runtime dependency.
+- UI components are copied into `resources/js/components/ui/`. The project owns them.
+- Runtime behavior comes from `reka-ui` (MIT).
+- Styling comes from Tailwind CSS 4.
+- Icons come from `lucide-vue-next`.
+- Toasts use `vue-sonner`.
+- Desktop tables use `@tanstack/vue-table`.
+- Forms use `vee-validate` with `@vee-validate/zod`.
+
+**Effect.**
+
+- No license key, no eligibility test, no vendor lock-in.
+- Copied components are maintained by this project. Upstream fixes are not automatic.
+- Reka UI security and behavior fixes arrive through npm.
+- `DESIGN.md` maps to shadcn-vue components instead of PrimeVue.
+- Do not add a second component library.
+
+**Risks.**
+
+- The CLI assumes a plain Vite `src/` layout. This project uses `resources/js/`. The alias settings in `components.json` must be verified. Fallback: create `components.json` by hand and add components one at a time.
+- Copied components can drift from upstream.
+
+---
+
+## U2 — TypeScript version
+
+**Decision.**
+Try TypeScript `7.0.2` first.
+If `vue-tsc` fails to type-check the Vue single-file components, pin `5.9.3`.
+
+**Reason.**
+`7.0.2` is the latest stable.
+`vue-tsc` `3.3.14` declares `typescript >=5.0.0` but I have not verified TypeScript 7 support.
+The fallback keeps the project on a supported, proven line.
+
+**Effect.**
+
+- Record the version used in `package.json` and `CHANGELOG.md`.
+- Record the reason if the fallback is needed.
+
+---
+
+## U3 — Vue Router 5
+
+**Decision.**
+Use Vue Router `5.4.0`.
+Correct the `4.x` references in the docs.
+
+**Reason.**
+`5.4.0` is the current stable.
+It supports Vue 3.5 and Vite 8.
+The earlier `4.x` note was out of date.
+
+---
+
+## U4 — Forms use vee-validate with Zod
+
+**Decision.**
+Use `vee-validate` with `@vee-validate/zod` for forms.
+
+**Reason.**
+The shadcn-vue `Form` components bind to vee-validate field state.
+Zod remains the source of truth for schemas and types.
+
+**Effect.**
+
+- `vee-validate` and `@vee-validate/zod` are direct dependencies.
+- Form state, errors, and touched state come from vee-validate.
+- Validation rules come from Zod schemas. Do not duplicate rules by hand.
+- Server 422 errors map onto the same field errors.
 
 ---
 

@@ -6,7 +6,7 @@ This document defines the technical architecture for the application.
 
 **Do not invent your own scaffolds, boilerplates, or project structures.**
 
-Always look up the official getting-started / installation guide for the library, language, or framework on the web and follow it. Prefer the recommended project layout, tooling, and conventions from the maintainers (Laravel, Vue, Vite, Tailwind, PrimeVue, Docker, jwt-auth, etc.). Only deviate when this architecture document explicitly requires it (e.g. strict REST layering, additive-only migrations, legacy MD5 handling).
+Always look up the official getting-started / installation guide for the library, language, or framework on the web and follow it. Prefer the recommended project layout, tooling, and conventions from the maintainers (Laravel, Vue, Vite, Tailwind, shadcn-vue, Reka UI, Docker, jwt-auth, etc.). Only deviate when this architecture document explicitly requires it (e.g. strict REST layering, additive-only migrations, legacy MD5 handling).
 
 **Stack summary**
 
@@ -14,9 +14,10 @@ Always look up the official getting-started / installation guide for the library
 |--------------------|---------------------------------------------|-------|
 | Backend            | PHP 8.3+ / Laravel 13.x                     | Strict REST API |
 | Frontend           | Vue 3.5+ (SPA) + Vite                       | Consumes REST API |
-| UI Library         | PrimeVue 5.x (latest)                       | Follow `design.md` |
-| Styling            | Tailwind CSS 4.x (latest)                   | Utility-first; works with PrimeVue |
-| Validation (FE)    | Zod (preferred) or Yup                      | Schema-first |
+| Language (FE)      | TypeScript (strict)                         | Checked with `vue-tsc` |
+| UI Components      | shadcn-vue 2.x + Reka UI 2.x                 | Copied source; follow `DESIGN.md` |
+| Styling            | Tailwind CSS 4.x (latest)                   | Utility-first |
+| Validation (FE)    | Zod 4.x + vee-validate                      | Schema-first |
 | Database           | MySQL / MariaDB                             | — |
 | Auth               | JWT (`php-open-source-saver/jwt-auth`)      | Stateless JWT + legacy MD5 support |
 | Containerization   | Docker + Docker Compose                     | Full local / CI / prod parity |
@@ -29,7 +30,7 @@ Always look up the official getting-started / installation guide for the library
 ```
 ┌─────────────────────┐         HTTPS / JSON          ┌──────────────────────────┐
 │   Vue 3 SPA         │  ◄──────────────────────────► │  Laravel 13 REST API     │
-│   (Vite + PrimeVue) │                               │  (Strict, versioned)     │
+│   (Vite + shadcn)   │                               │  (Strict, versioned)     │
 │                     │                               │                          │
 │  - Zod schemas      │                               │  Controllers (thin)      │
 │  - Pinia stores     │                               │  Form Requests           │
@@ -188,8 +189,10 @@ All schema evolution must be additive only. If a column must change semantically
 - Composition API + `<script setup>` exclusively.
 - Follow `design.md` for visual language, spacing, typography, and component usage.
 - **Tailwind CSS 4.x** as the primary styling solution (utility-first).
-- PrimeVue 5.x as the primary UI component library (styled/compatible with Tailwind).
-- Schema validation with **Zod** (preferred) or Yup on all forms and API payloads.
+- **shadcn-vue 2.x** as the component source. Components are copied into `resources/js/components/ui/` and owned by this project.
+- **Reka UI 2.x** as the headless primitive layer for accessibility and keyboard behavior.
+- **vee-validate** with Zod for form state and field-level errors.
+- Schema validation with **Zod** on all forms and API payloads.
 - **TypeScript is required.** All frontend source files use `.ts`, or `.vue` with `<script setup lang="ts">`. Do not add plain JavaScript files to `src/`.
 - Type checking with `vue-tsc --noEmit` must pass in CI.
 - Use `strict` mode in `tsconfig.json`. Do not use `any` to bypass a check. Use a precise type or an explained alternative.
@@ -201,18 +204,22 @@ All schema evolution must be additive only. If a column must change semantically
 ### 3.2 Recommended Structure
 
 ```
-src/
+resources/js/
 ├── assets/
-├── components/          # Shared + design-system components (PrimeVue wrappers)
+├── components/          # Shared components
+│   └── ui/              # shadcn-vue components (copied, owned by this project)
 ├── composables/
 ├── layouts/
+├── lib/
+│   └── utils.ts         # cn() helper for class merging
 ├── pages/               # or views/
 ├── router/
 ├── services/            # API client modules
 ├── stores/              # Pinia
-├── schemas/             # Zod / Yup schemas
+├── schemas/             # Zod schemas
 ├── types/               # Shared types and API contracts
 ├── utils/
+├── app.ts
 └── env.d.ts             # Vite and environment typings
 ```
 
@@ -221,16 +228,18 @@ Component files use `<script setup lang="ts">`.
 
 ### 3.3 Validation
 
-- Every form and every important API payload has a corresponding Zod (or Yup) schema.
+- Every form and every important API payload has a corresponding Zod schema.
 - Schemas are the single source of truth for client-side validation and TypeScript types (`z.infer<typeof schema>`).
+- Forms use `vee-validate` with `@vee-validate/zod`. The shadcn-vue `Form` components bind fields and errors.
 - Server-side validation errors (422) are mapped back onto the form fields.
 
 ### 3.4 UI & Design System
 
 - **Tailwind CSS 4.x** for all layout, spacing, typography, and custom styling.
-- PrimeVue 5.x (latest) for rich interactive components; integrate with Tailwind (PrimeVue Tailwind preset / unstyled mode + Tailwind classes as preferred).
-- Design tokens, colors, spacing scale, and typography follow `design.md` and are expressed via Tailwind theme configuration.
-- Prefer utility classes and composition of PrimeVue primitives over large custom CSS files.
+- **shadcn-vue** components are copied into `resources/js/components/ui/`. Edit them directly when the design needs it.
+- **Reka UI** provides the headless behavior: focus, keyboard, ARIA, and portals.
+- Design tokens follow `DESIGN.md` and live as CSS variables in `resources/css/app.css`, mapped to Tailwind theme tokens.
+- Do not add a second component library. Use the shadcn-vue collection and extend it.
 - Consistent loading, empty, and error states.
 - Accessibility (ARIA, keyboard) is required for interactive components.
 
@@ -264,13 +273,15 @@ Component files use `<script setup lang="ts">`.
 | PHP                   | 8.3 – 8.5 |
 | Laravel               | 13.x |
 | Vue                   | 3.5+ |
-| TypeScript            | 5.x (latest stable) |
+| TypeScript            | 5.x or 7.x (latest stable that passes `vue-tsc`) |
 | Vite                  | Latest stable |
 | Tailwind CSS          | 4.x (latest) |
-| PrimeVue              | 5.x |
-| Zod (or Yup)          | Latest |
+| shadcn-vue            | 2.x (component source, not a runtime library) |
+| Reka UI               | 2.x |
+| vee-validate          | 4.x with `@vee-validate/zod` |
+| Zod                   | 4.x |
 | Pinia                 | Latest |
-| Vue Router            | 4.x |
+| Vue Router            | 5.x |
 | php-open-source-saver/jwt-auth | Latest (v2.9+ for Laravel 13) |
 | MySQL / MariaDB       | Current LTS |
 | Docker / Compose      | Latest stable |
@@ -764,8 +775,7 @@ The stack in sections 2 and 3 stands.
 - Laravel 13 with a strict REST API at `/api/v1`.
 - Vue 3.5 single-page application with Vite.
 - TypeScript in strict mode for all frontend code. Checked with `vue-tsc`.
-- PrimeVue 5 and Tailwind CSS 4.
-- Zod on the frontend.
+- shadcn-vue 2.x with Reka UI, Tailwind CSS 4, and vee-validate with Zod.
 - JWT authentication with `php-open-source-saver/jwt-auth`.
 - Docker and Docker Compose.
 

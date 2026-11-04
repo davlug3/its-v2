@@ -80,7 +80,7 @@ Full detail and reasons are in [`DECISIONS.md`](./DECISIONS.md).
 | D53 | `assigned_gid` stays a legacy group ID. Add new `units_count` column for units. |
 | D74 | Option A. In-app notification bell. |
 | Teams | Option B. Teams fully retired. Keep data and `mods` rows; pages show "retired". |
-| Stack | Laravel 13 + strict REST API + Vue 3 SPA + Tailwind 4 + PrimeVue 5 + Zod + JWT + Docker. No Inertia. |
+| Stack | Laravel 13 + strict REST API + Vue 3 SPA + TypeScript + Tailwind 4 + shadcn-vue + Zod + JWT + Docker. No Inertia. |
 | Design | `DESIGN.md` is the visual reference. Build mobile-first. |
 
 ---
@@ -94,9 +94,9 @@ From [`ARCHITECTURE.md`](./ARCHITECTURE.md):
 | Backend | PHP 8.5 / Laravel 13.x |
 | API | Strict REST, versioned `/api/v1` |
 | Frontend | Vue 3.5 SPA + Vite + TypeScript (strict) |
-| UI | PrimeVue 5.x |
+| UI | shadcn-vue 2.x + Reka UI 2.x (component source) |
 | Styling | Tailwind CSS 4.x |
-| Validation (FE) | Zod |
+| Validation (FE) | Zod 4.x + vee-validate |
 | Database | MySQL / MariaDB |
 | Auth | JWT (`php-open-source-saver/jwt-auth`) + legacy MD5 upgrade |
 | Containers | Docker + Docker Compose |
@@ -197,8 +197,12 @@ Exit check: documentation set exists and matches the confirmed decisions.
 - [ ] Add Vue 3 + Vite + TypeScript via the official Laravel frontend setup.
 - [ ] Set `strict` in `tsconfig.json`. Add `vue-tsc` and an `npm run typecheck` script.
 - [ ] Add Tailwind CSS 4 via the official guide.
-- [ ] Add PrimeVue 5 and its Tailwind integration.
+- [ ] Initialise shadcn-vue with `npx shadcn-vue@latest init`. Style `new-york`, base `neutral`, CSS variables on.
+- [ ] Map `DESIGN.md` tokens to shadcn-vue CSS variables in `resources/css/app.css`.
+- [ ] Add base shadcn-vue components: button, card, input, label, table, dialog, sheet, drawer, select, textarea, badge, tabs, dropdown-menu, sonner, skeleton.
+- [ ] Add `reka-ui`, `vee-validate`, `@vee-validate/zod`, `class-variance-authority`, `clsx`, `tailwind-merge`, `lucide-vue-next`, `tw-animate-css`, `vue-sonner`.
 - [ ] Add Zod on the frontend.
+- [ ] Add `vee-validate` with `@vee-validate/zod`.
 - [ ] Add `php-open-source-saver/jwt-auth`. Generate `JWT_SECRET`.
 - [ ] Add Docker + Docker Compose: `app`, `nginx`, `db`, `node`, optional `redis` and `queue`.
 - [ ] Create `.env.example` with all keys from PROMPT Appendix C. No secrets.
@@ -675,3 +679,4 @@ Summary: 78 defects. 3 decided, 2 open decisions, 73 not started.
 | 2026-11-04 | Initial plan. Recorded decisions C1, C2, C6, C7, D27, D53, D74, teams retired. |
 | 2026-11-04 | Added document set, defect tracker, and corrected the Eloquent timestamp note. |
 | 2026-11-04 | Frontend language set to TypeScript in strict mode across all records. |
+| 2026-11-04 | UI library changed from PrimeVue to shadcn-vue + Reka UI. Vue Router set to 5.x. Forms use vee-validate with Zod. |
