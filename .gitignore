@@ -1,0 +1,69 @@
+# ---- Secrets ----
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+auth.json
+
+# ---- PHP / Laravel ----
+/vendor/
+/bootstrap/cache/*.php
+/storage/*.key
+/storage/app/private/*
+!/storage/app/private/.gitkeep
+/storage/app/public/*
+!/storage/app/public/.gitkeep
+/storage/framework/cache/data/*
+/storage/framework/sessions/*
+/storage/framework/testing/*
+/storage/framework/views/*
+/storage/logs/*
+!.gitkeep
+.phpunit.result.cache
+.phpunit.cache/
+.php-cs-fixer.cache
+/build/
+/coverage/
+*.sqlite
+*.sqlite3
+
+# ---- Node / Vite ----
+/node_modules/
+/public/build/
+/public/hot
+/public/storage
+.vite/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ---- Test output ----
+/playwright-report/
+/test-results/
+/blob-report/
+/coverage/
+
+# ---- Editors and OS ----
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+*~
+
+# ---- Local tooling ----
+/.phpactor.json
+/.homestead/
+/.vagrant/
+.docker/
+docker-compose.override.yml
+
+# ---- Local notes and scratch files ----
+/scratch/
+/tmp/
+*.local.md
