@@ -80,7 +80,7 @@ Full detail and reasons are in [`DECISIONS.md`](./DECISIONS.md).
 | D53 | `assigned_gid` stays a legacy group ID. Add new `units_count` column for units. |
 | D74 | Option A. In-app notification bell. |
 | Teams | Option B. Teams fully retired. Keep data and `mods` rows; pages show "retired". |
-| Stack | Laravel 13 + strict REST API + Vue 3 SPA + TypeScript + Tailwind 4 + shadcn-vue + Zod + JWT + Docker. No Inertia. |
+| Stack | Laravel 13 + strict REST API + Vue 3 SPA + TypeScript + Tailwind 4 + shadcn-vue + Yup + JWT + Docker. No Inertia. |
 | Design | `DESIGN.md` is the visual reference. Build mobile-first. |
 
 ---
@@ -96,7 +96,7 @@ From [`ARCHITECTURE.md`](./ARCHITECTURE.md):
 | Frontend | Vue 3.5 SPA + Vite + TypeScript (strict) |
 | UI | shadcn-vue 2.x + Reka UI 2.x (component source) |
 | Styling | Tailwind CSS 4.x |
-| Validation (FE) | Zod 4.x + vee-validate |
+| Validation (FE) | Yup 1.x + `@vee-validate/yup` |
 | Database | MySQL / MariaDB |
 | Auth | JWT (`php-open-source-saver/jwt-auth`) + legacy MD5 upgrade |
 | Containers | Docker + Docker Compose |
@@ -193,24 +193,40 @@ Exit check: documentation set exists and matches the confirmed decisions.
 
 ### Phase 1 — Scaffold
 
-- [ ] Create a new Laravel 13 project in `/home/dave/its-v2` with the official installer.
-- [ ] Add Vue 3 + Vite + TypeScript via the official Laravel frontend setup.
-- [ ] Set `strict` in `tsconfig.json`. Add `vue-tsc` and an `npm run typecheck` script.
-- [ ] Add Tailwind CSS 4 via the official guide.
-- [ ] Initialise shadcn-vue with `npx shadcn-vue@latest init`. Style `new-york`, base `neutral`, CSS variables on.
-- [ ] Map `DESIGN.md` tokens to shadcn-vue CSS variables in `resources/css/app.css`.
-- [ ] Add base shadcn-vue components: button, card, input, label, table, dialog, sheet, drawer, select, textarea, badge, tabs, dropdown-menu, sonner, skeleton.
-- [ ] Add `reka-ui`, `vee-validate`, `@vee-validate/zod`, `class-variance-authority`, `clsx`, `tailwind-merge`, `lucide-vue-next`, `tw-animate-css`, `vue-sonner`.
-- [ ] Add Zod on the frontend.
-- [ ] Add `vee-validate` with `@vee-validate/zod`.
-- [ ] Add `php-open-source-saver/jwt-auth`. Generate `JWT_SECRET`.
-- [ ] Add Docker + Docker Compose: `app`, `nginx`, `db`, `node`, optional `redis` and `queue`.
-- [ ] Create `.env.example` with all keys from PROMPT Appendix C. No secrets.
-- [ ] Point local `.env` at the dev DB (read-only user where possible).
-- [ ] Add Pint, PHPStan/Larastan, ESLint (TypeScript parser), Prettier.
-- [ ] Add Pest or PHPUnit.
+- [x] Create a new Laravel 13 project in `/home/dave/its-v2` with the official installer.
+- [x] Add Vue 3 + Vite + TypeScript via the official Laravel frontend setup.
+- [x] Set `strict` in `tsconfig.json`. Add `vue-tsc` and an `npm run typecheck` script.
+- [x] Add Tailwind CSS 4 via the official guide.
+- [x] Initialise shadcn-vue with `npx shadcn-vue@latest init`. Style `new-york`, base `neutral`, CSS variables on.
+- [x] Map `DESIGN.md` tokens to shadcn-vue CSS variables in `resources/css/app.css`.
+- [x] Add base shadcn-vue components: button, card, input, label, table, dialog, sheet, drawer, select, textarea, badge, tabs, dropdown-menu, sonner, skeleton, form, field, separator, popover, checkbox, switch, tooltip, avatar, breadcrumb, alert.
+- [x] Add `reka-ui`, `vee-validate`, `@vee-validate/yup`, `yup`, `class-variance-authority`, `clsx`, `tailwind-merge`, `@lucide/vue`, `@vueuse/core`, `tw-animate-css`, `vue-sonner`, `@tanstack/vue-table`.
+- [x] Add Yup on the frontend.
+- [x] Add `vee-validate` with `@vee-validate/yup`.
+- [x] Add `php-open-source-saver/jwt-auth`. Generate `JWT_SECRET`.
+- [x] Add Docker + Docker Compose: `app`, `nginx`, `db`, `node`, optional `redis` and `queue`.
+- [x] Create `.env.example` with all keys from PROMPT Appendix C. No secrets.
+- [x] Point local `.env` at the dev DB (read-only user where possible).
+- [x] Add Pint, PHPStan/Larastan, ESLint (TypeScript parser), Prettier.
+- [x] Add Pest or PHPUnit (PHPUnit 12 from the scaffold).
 
 Exit check: `docker compose up` works. App boots. `composer test`, `npm run typecheck`, and `npm run build` pass. No secret is committed.
+
+**Phase 1 exit check result (2026-11-04).**
+
+- `docker compose up -d app nginx` — app healthy, nginx serves the SPA on port 8080.
+- `php artisan test` — 2 tests, 2 passed.
+- `npm run typecheck` — passed.
+- `npm run build` — passed.
+- `npm run lint` / `npm run format:check` / `./vendor/bin/pint --test` / `phpstan` — passed.
+- No secret committed. `.env` is gitignored. `.env.example` contains placeholders only.
+
+**Open items carried to Phase 2.**
+
+- Local PHP has no `pdo_sqlite`, so PHPUnit uses MySQL only if DB access is needed. Install `php8.5-sqlite3` or run tests in the Docker container.
+- ESLint dev dependency `minimatch` 10.2.6 has a moderate advisory (GHSA-g3hv-75wg-m249) with no non-breaking fix. Dev-only tool.
+- `APP_PORT` defaults to 8080 because port 8000 is held by another local project (`hris-pis-workspace`).
+- `@vue/tsconfig` root config requires duplicated `paths` in `tsconfig.json` so the shadcn-vue CLI can resolve aliases.
 
 ---
 
@@ -567,7 +583,7 @@ Exit check: all quality gates in PROMPT §40 pass.
 | Phase | Status | Started | Done |
 |---|---|---|---|
 | 0 Documentation | Done | 2026-11-04 | 2026-11-04 |
-| 1 Scaffold | Not started | — | — |
+| 1 Scaffold | Done | 2026-11-04 | 2026-11-04 |
 | 2 Database | Not started | — | — |
 | 3 Auth | Not started | — | — |
 | 4 Routing | Not started | — | — |
@@ -679,4 +695,5 @@ Summary: 78 defects. 3 decided, 2 open decisions, 73 not started.
 | 2026-11-04 | Initial plan. Recorded decisions C1, C2, C6, C7, D27, D53, D74, teams retired. |
 | 2026-11-04 | Added document set, defect tracker, and corrected the Eloquent timestamp note. |
 | 2026-11-04 | Frontend language set to TypeScript in strict mode across all records. |
-| 2026-11-04 | UI library changed from PrimeVue to shadcn-vue + Reka UI. Vue Router set to 5.x. Forms use vee-validate with Zod. |
+| 2026-11-04 | UI library changed from PrimeVue to shadcn-vue + Reka UI. Vue Router set to 5.x. Forms use vee-validate. |
+| 2026-11-04 | Phase 1 scaffold complete. Laravel 13, Vue 3.5 + Vite 8 + TS 5.9.3, Tailwind 4, shadcn-vue + Reka UI, Yup + vee-validate, JWT, Docker Compose. All local checks pass. |

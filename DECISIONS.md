@@ -32,9 +32,11 @@ Related files:
 | C6 | PIS sync uses `jblmrhpayroll` | Approved |
 | C7 | Override the broken `change_password` module row | Approved |
 | U1 | shadcn-vue replaces PrimeVue | Approved |
-| U2 | TypeScript version: 7.0.2 first, 5.9.3 fallback | Approved |
+| U2 | TypeScript version: 5.9.3 (7 blocked by `@volar/typescript` peer `<7`) | Approved |
 | U3 | Vue Router 5.4.0 | Approved |
-| U4 | Forms use vee-validate with Zod | Approved |
+| U4 | Forms use vee-validate | Approved |
+| U5 | Schema library is Yup, not Zod | Approved |
+| U6 | Local application port is 8080 | Approved |
 | D27 | Staff-create tickets write `assigned_gid = 0` | Approved |
 | D53 | `assigned_gid` stays a legacy group ID; add `units_count` | Approved |
 | D74 | In-app notification bell | Approved |
@@ -77,7 +79,7 @@ Use the stack in `ARCHITECTURE.md`:
 | Frontend language | TypeScript 5.x, strict mode |
 | UI components | shadcn-vue 2.x + Reka UI 2.x |
 | Styling | Tailwind CSS 4.x |
-| Validation (frontend) | Zod |
+| Validation (frontend) | Yup 1.x with `@vee-validate/yup` |
 | Database | MySQL / MariaDB (legacy schema preserved) |
 | Auth | JWT (`php-open-source-saver/jwt-auth`) |
 | Containers | Docker + Docker Compose |
@@ -121,7 +123,9 @@ The official docs say: "This is not a component library. It is how you build you
 - UI components are copied into `resources/js/components/ui/`. The project owns them.
 - Runtime behavior comes from `reka-ui` (MIT).
 - Styling comes from Tailwind CSS 4.
-- Icons come from `lucide-vue-next`.
+- Icons come from `@lucide/vue` `1.67.0`.
+  - `lucide-vue-next` `1.0.0` is deprecated.
+  - The current shadcn-vue registry (`new-york-v4`) imports from `@lucide/vue`.
 - Toasts use `vue-sonner`.
 - Desktop tables use `@tanstack/vue-table`.
 - Forms use `vee-validate` with `@vee-validate/zod`.
@@ -144,18 +148,23 @@ The official docs say: "This is not a component library. It is how you build you
 ## U2 — TypeScript version
 
 **Decision.**
-Try TypeScript `7.0.2` first.
-If `vue-tsc` fails to type-check the Vue single-file components, pin `5.9.3`.
+Use TypeScript `5.9.3`.
+Do not use TypeScript 7.
 
 **Reason.**
-`7.0.2` is the latest stable.
-`vue-tsc` `3.3.14` declares `typescript >=5.0.0` but I have not verified TypeScript 7 support.
-The fallback keeps the project on a supported, proven line.
+The plan allowed an attempt at TypeScript `7.0.2` with a fallback to `5.9.3`.
+The attempt failed at install time.
+`vue-tsc` `3.3.14` depends on `@volar/typescript` `2.4.30`.
+`@volar/typescript` declares `peerOptional typescript "<7"`.
+`npm` therefore rejects TypeScript 7.
+`5.9.3` is the latest stable 5.x release.
+The fallback condition in the approved plan is met.
 
 **Effect.**
 
-- Record the version used in `package.json` and `CHANGELOG.md`.
-- Record the reason if the fallback is needed.
+- `typescript` is pinned to `5.9.3` in `package.json`.
+- The version and the reason are recorded in `CHANGELOG.md`.
+- Re-check TypeScript 7 when `@volar/typescript` raises its peer range.
 
 ---
 
@@ -172,21 +181,62 @@ The earlier `4.x` note was out of date.
 
 ---
 
-## U4 — Forms use vee-validate with Zod
+## U4 — Forms use vee-validate
 
 **Decision.**
-Use `vee-validate` with `@vee-validate/zod` for forms.
+Use `vee-validate` for forms.
 
 **Reason.**
 The shadcn-vue `Form` components bind to vee-validate field state.
-Zod remains the source of truth for schemas and types.
+It provides form state, errors, touched state, and field registration.
+The schema adapter is supplied by Yup (see U5).
 
 **Effect.**
 
-- `vee-validate` and `@vee-validate/zod` are direct dependencies.
+- `vee-validate` is a direct dependency.
 - Form state, errors, and touched state come from vee-validate.
-- Validation rules come from Zod schemas. Do not duplicate rules by hand.
+- Validation rules come from schemas. Do not duplicate rules by hand.
 - Server 422 errors map onto the same field errors.
+
+---
+
+## U5 — Schema library is Yup
+
+**Decision.**
+Use **Yup `1.7.1`** with **`@vee-validate/yup` `4.15.1`**.
+Do not use Zod.
+
+**Reason.**
+Dave chose Yup on 2026-11-04.
+The shadcn-vue form registry pins `zod@3.25.76`.
+`@vee-validate/zod` requires Zod 3.
+Zod below `4.6.6` has a high-severity advisory: GHSA-mrhx-c7xc-m3w5 / CVE-2023-54404.
+The advisory has no fix on the 3.x line.
+Yup has no known advisories.
+`@vee-validate/yup` is the official adapter and peer-accepts `yup ^1.3.2`.
+
+**Verified facts.**
+
+| Item | Value |
+|---|---|
+| `yup` latest stable | `1.7.1` |
+| Published | 2025-09-21 |
+| License | MIT |
+| `@vee-validate/yup` | `4.15.1` |
+| `npm audit` after the swap | 0 vulnerabilities |
+
+**Effect.**
+
+- Schemas use `y.object`, `y.string`, and `y.array`.
+- Types use `InferType<typeof schema>`.
+- `zod` and `@vee-validate/zod` are not dependencies.
+- `ARCHITECTURE.md` already allowed Yup: "Zod (preferred) or Yup".
+- shadcn-vue documentation examples use Zod. Translate them to Yup. The `Form` components do not change.
+
+**Known limitation.**
+Yup's TypeScript inference is weaker than Zod 4 for conditional rules and discriminated unions.
+Current forms are plain objects, so this does not affect them.
+Revisit if a future form needs a discriminated union.
 
 ---
 
@@ -527,6 +577,25 @@ This is a data-migration strategy, which the working rules reserve for Dave.
 
 ---
 
+## U6 — Local application port
+
+**Decision.**
+The local stack uses port 8080.
+Port 8000 is held by another local project on this machine.
+Do not use 8000 for this project.
+
+**Reason.**
+Port 8000 is in use by `/home/dave/hris-pis-workspace/apps/api`.
+That project must not be displaced.
+
+**Effect.**
+
+- `APP_PORT` defaults to 8080 in `docker-compose.yml`.
+- `APP_URL` and `ITS_BASE_URL` use `http://localhost:8080` in `.env` and `.env.example`.
+- Use `php artisan serve --port=8080` for host-only development.
+
+---
+
 ## Q1 — Open questions
 
 These items need a decision from Dave. They do not block Phase 1.
@@ -538,6 +607,8 @@ These items need a decision from Dave. They do not block Phase 1.
 | Q3 | Cutover date and dual-run window | Sets the password promotion date | Decide before Phase 13 |
 | Q4 | Data retention policy | Affects archives and soft deletes | Decide before Phase 13 |
 | Q5 | Read-only database user for development | Reduces the risk of an accidental production write | Ask the DB owner for a SELECT-only account |
+| Q6 | Local PHP has no `pdo_sqlite` | PHPUnit needs SQLite for the default test config | Install `php8.5-sqlite3`, or run tests in the Docker container, or switch `phpunit.xml` to MySQL |
+| Q7 | ESLint dev dependency `minimatch` 10.2.6 has a moderate advisory (GHSA-g3hv-75wg-m249) | Audit noise in CI | Dev-only tool. No non-breaking fix exists. Report only. |
 
 ---
 
@@ -546,3 +617,4 @@ These items need a decision from Dave. They do not block Phase 1.
 | Date | Change |
 |---|---|
 | 2026-11-04 | Initial record. Added A1–A5, C1, C2, C6, C7, D27, D53, D74, T1, T2, P1, Q1. |
+| 2026-11-04 | Added U1 (shadcn-vue), U2 (TypeScript 5.9.3), U3 (Vue Router 5), U4 (vee-validate), U5 (Yup), U6 (port 8080). |

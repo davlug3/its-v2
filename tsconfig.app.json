@@ -1,0 +1,13 @@
+{
+    "extends": "@vue/tsconfig/tsconfig.dom.json",
+    "include": ["resources/js/**/*.ts", "resources/js/**/*.tsx", "resources/js/**/*.vue"],
+    "exclude": ["resources/js/**/__tests__/*"],
+    "compilerOptions": {
+        "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+        "baseUrl": ".",
+        "paths": {
+            "@/*": ["./resources/js/*"]
+        },
+        "types": ["vite/client"]
+    }
+}

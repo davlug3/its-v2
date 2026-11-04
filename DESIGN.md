@@ -565,7 +565,7 @@ Do not use `any` to silence a type error.
 |---|---|
 | Buttons | `Button`, `Button Group` |
 | Inputs | `Input`, `Textarea`, `Select`, `Date Picker`, `Checkbox`, `Switch` |
-| Forms | `Form`, `Field`, `Label` with `vee-validate` and Zod |
+| Forms | `Form`, `Field`, `Label` with `vee-validate` and Yup |
 | Tables and cards | `Table` with `@tanstack/vue-table` for desktop, custom card list for small screens |
 | Filters | `Popover` on desktop, `Sheet` on small screens |
 | Dialogs | `Dialog` on desktop, full-screen `Sheet` on small screens |

@@ -1,0 +1,8 @@
+vendor/
+node_modules/
+public/build/
+storage/
+bootstrap/cache/
+docs/baseline/
+composer.lock
+package-lock.json

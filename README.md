@@ -77,7 +77,7 @@ The connection is read-only.
 | Language (frontend) | TypeScript 5.x in strict mode, checked with `vue-tsc` |
 | UI components | shadcn-vue 2.x (copied source) + Reka UI 2.x |
 | Styling | Tailwind CSS 4.x |
-| Frontend validation | Zod 4.x + vee-validate |
+| Frontend validation | Yup 1.x + `@vee-validate/yup` |
 | Authentication | JWT (`php-open-source-saver/jwt-auth`) |
 | Database | MySQL / MariaDB, legacy schema preserved |
 | Containers | Docker and Docker Compose |
@@ -164,24 +164,28 @@ Reasons and evidence are in `DECISIONS.md`.
 
 ## 8. Setup
 
-**Pending.** These steps run in Phase 1 of `PLAN.md`.
-The agent will follow the official guides for each tool and record the exact versions.
+Phase 1 is complete. Steps:
 
-Planned steps:
+1. `composer install`
+2. `cp .env.example .env` and fill in the database and IMAP values.
+3. `php artisan key:generate`
+4. `php artisan jwt:secret`
+5. `npm install`
+6. `npm run build`
+7. `docker compose up -d app nginx`
 
-1. Create the Laravel 13 project with the official installer.
-2. Add Vue 3, Vite, and TypeScript.
-3. Set `strict` in `tsconfig.json` and add a `typecheck` script that runs `vue-tsc --noEmit`.
-4. Add Tailwind CSS 4.
-5. Add shadcn-vue and Reka UI. Initialise with `npx shadcn-vue@latest init`.
-6. Add Zod and `vee-validate` with `@vee-validate/zod`.
-7. Add `php-open-source-saver/jwt-auth` and generate `JWT_SECRET`.
-8. Add Docker Compose services: `app`, `nginx`, `db`, `node`, optional `redis`, optional `queue`.
-9. Create `.env.example` with every key from PROMPT Appendix C. No secrets.
-10. Point `.env` at the development database.
-11. Add Pint, PHPStan or Larastan, ESLint, Prettier, and the test runners.
+The application is at `http://localhost:8080`.
+Port 8000 is used by another local project and must not be used.
 
-Exit check: `docker compose up` works, the application boots, the API answers, `composer test` passes, `npm run typecheck` passes, and `npm run build` passes.
+Checks:
+
+- `php artisan test`
+- `npm run typecheck`
+- `npm run build`
+- `npm run lint`
+- `npm run format:check`
+- `./vendor/bin/pint --test`
+- `./vendor/bin/phpstan analyse --memory-limit=512M`
 
 ---
 

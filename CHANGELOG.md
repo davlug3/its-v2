@@ -39,6 +39,18 @@ Versions start at `0.1.0` when the scaffold is ready.
   - D74 — in-app notification bell.
   - T1 — teams fully retired.
 
+- **Phase 1 scaffold complete (2026-11-04).**
+  - Laravel 13.40 with strict REST API skeleton.
+  - Vue 3.5 single-page application with Vite 8 and TypeScript 5.9.3 (strict).
+  - Tailwind CSS 4 with the Attio design tokens from `DESIGN.md`.
+  - shadcn-vue 2.x copied components + Reka UI 2.x.
+  - Yup 1.7.1 with `@vee-validate/yup` for forms.
+  - JWT authentication with `php-open-source-saver/jwt-auth`.
+  - Docker Compose with `app`, `nginx`, and optional `node`, `db`, `queue`, `redis`.
+  - Pint, PHPStan/Larastan, ESLint, and Prettier configured.
+  - `docker compose up` serves the SPA on port 8080.
+  - No secret committed. `.env` is ignored.
+
 ### Changed
 
 - **UI library changed to shadcn-vue (2026-11-04).**
@@ -49,9 +61,15 @@ Versions start at `0.1.0` when the scaffold is ready.
   - Local `DESIGN.md` component map replaced with shadcn-vue components.
 
 - **Frontend dependency decisions.**
-  - U2: TypeScript `7.0.2` first. Fallback to `5.9.3` if `vue-tsc` fails.
+  - U2: TypeScript `5.9.3`. TypeScript 7 is blocked by `@volar/typescript` peer `<7`.
   - U3: Vue Router `5.4.0`. The `4.x` note was out of date.
-  - U4: `vee-validate` with `@vee-validate/zod` for forms. Zod stays the schema source.
+  - U4: `vee-validate` for forms.
+  - U5: Yup `1.7.1` with `@vee-validate/yup` is the schema library.
+    - Zod is removed.
+    - Zod below `4.6.6` has a high-severity advisory with no 3.x fix (GHSA-mrhx-c7xc-m3w5).
+    - Yup has no known advisories.
+    - `npm audit` reports 0 vulnerabilities.
+  - Icons use `@lucide/vue` `1.67.0`. `lucide-vue-next` is deprecated.
 
 - **Frontend language is TypeScript.**
   - `ARCHITECTURE.md` §3.1 now requires TypeScript in strict mode.

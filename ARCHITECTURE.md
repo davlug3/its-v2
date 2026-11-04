@@ -17,7 +17,7 @@ Always look up the official getting-started / installation guide for the library
 | Language (FE)      | TypeScript (strict)                         | Checked with `vue-tsc` |
 | UI Components      | shadcn-vue 2.x + Reka UI 2.x                 | Copied source; follow `DESIGN.md` |
 | Styling            | Tailwind CSS 4.x (latest)                   | Utility-first |
-| Validation (FE)    | Zod 4.x + vee-validate                      | Schema-first |
+| Validation (FE)    | Yup 1.x + vee-validate                      | Schema-first |
 | Database           | MySQL / MariaDB                             | — |
 | Auth               | JWT (`php-open-source-saver/jwt-auth`)      | Stateless JWT + legacy MD5 support |
 | Containerization   | Docker + Docker Compose                     | Full local / CI / prod parity |
@@ -32,7 +32,7 @@ Always look up the official getting-started / installation guide for the library
 │   Vue 3 SPA         │  ◄──────────────────────────► │  Laravel 13 REST API     │
 │   (Vite + shadcn)   │                               │  (Strict, versioned)     │
 │                     │                               │                          │
-│  - Zod schemas      │                               │  Controllers (thin)      │
+│  - Yup schemas      │                               │  Controllers (thin)      │
 │  - Pinia stores     │                               │  Form Requests           │
 │  - Vue Router       │                               │  Policies / Gates        │
 │  - Composition API  │                               │  Services / Actions      │
@@ -191,8 +191,8 @@ All schema evolution must be additive only. If a column must change semantically
 - **Tailwind CSS 4.x** as the primary styling solution (utility-first).
 - **shadcn-vue 2.x** as the component source. Components are copied into `resources/js/components/ui/` and owned by this project.
 - **Reka UI 2.x** as the headless primitive layer for accessibility and keyboard behavior.
-- **vee-validate** with Zod for form state and field-level errors.
-- Schema validation with **Zod** on all forms and API payloads.
+- **vee-validate** with Yup for form state and field-level errors.
+- Schema validation with **Yup** on all forms and API payloads.
 - **TypeScript is required.** All frontend source files use `.ts`, or `.vue` with `<script setup lang="ts">`. Do not add plain JavaScript files to `src/`.
 - Type checking with `vue-tsc --noEmit` must pass in CI.
 - Use `strict` mode in `tsconfig.json`. Do not use `any` to bypass a check. Use a precise type or an explained alternative.
@@ -216,7 +216,7 @@ resources/js/
 ├── router/
 ├── services/            # API client modules
 ├── stores/              # Pinia
-├── schemas/             # Zod schemas
+├── schemas/             # Yup schemas
 ├── types/               # Shared types and API contracts
 ├── utils/
 ├── app.ts
@@ -228,9 +228,9 @@ Component files use `<script setup lang="ts">`.
 
 ### 3.3 Validation
 
-- Every form and every important API payload has a corresponding Zod schema.
-- Schemas are the single source of truth for client-side validation and TypeScript types (`z.infer<typeof schema>`).
-- Forms use `vee-validate` with `@vee-validate/zod`. The shadcn-vue `Form` components bind fields and errors.
+- Every form and every important API payload has a corresponding Yup schema.
+- Schemas are the single source of truth for client-side validation and TypeScript types (`InferType<typeof schema>`).
+- Forms use `vee-validate` with `@vee-validate/yup`. The shadcn-vue `Form` components bind fields and errors.
 - Server-side validation errors (422) are mapped back onto the form fields.
 
 ### 3.4 UI & Design System
@@ -278,8 +278,8 @@ Component files use `<script setup lang="ts">`.
 | Tailwind CSS          | 4.x (latest) |
 | shadcn-vue            | 2.x (component source, not a runtime library) |
 | Reka UI               | 2.x |
-| vee-validate          | 4.x with `@vee-validate/zod` |
-| Zod                   | 4.x |
+| vee-validate          | 4.x with `@vee-validate/yup` |
+| Yup                   | 1.x |
 | Pinia                 | Latest |
 | Vue Router            | 5.x |
 | php-open-source-saver/jwt-auth | Latest (v2.9+ for Laravel 13) |
@@ -450,7 +450,7 @@ Login flow (controller / action):
 - Store the access token securely (memory + `httpOnly` cookie is ideal; if pure SPA, use memory + silent refresh, or secure storage with short TTL).
 - Axios / fetch interceptor adds the `Authorization` header.
 - On 401 → attempt refresh once; if refresh fails → redirect to login.
-- Login form validated with Zod schema.
+- Login form validated with Yup schema.
 - After login, store token and user profile in a Pinia auth store.
 
 ### 8.7 Security Notes
@@ -584,7 +584,7 @@ Use API Resources / ResourceCollections exclusively. Never return raw Eloquent m
 | 500         | Server error               | `{ "message": "Server Error" }` (no sensitive details in production) |
 
 - Validation errors always use Laravel’s standard 422 format (`message` + `errors` object).
-- Frontend maps 422 `errors` onto form fields (Zod / form library).
+- Frontend maps 422 `errors` onto form fields (Yup / form library).
 - Do not leak stack traces, SQL, or internal paths in production responses.
 
 ### 10.3 Implementation Notes
@@ -775,7 +775,7 @@ The stack in sections 2 and 3 stands.
 - Laravel 13 with a strict REST API at `/api/v1`.
 - Vue 3.5 single-page application with Vite.
 - TypeScript in strict mode for all frontend code. Checked with `vue-tsc`.
-- shadcn-vue 2.x with Reka UI, Tailwind CSS 4, and vee-validate with Zod.
+- shadcn-vue 2.x with Reka UI, Tailwind CSS 4, and vee-validate with Yup.
 - JWT authentication with `php-open-source-saver/jwt-auth`.
 - Docker and Docker Compose.
 

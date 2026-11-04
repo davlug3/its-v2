@@ -1,0 +1,256 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Design tokens follow DESIGN.md.
+ * shadcn-vue components read the semantic variables below.
+ * The raw Attio palette lives in :root so components and pages can use it directly.
+ */
+:root {
+    /* Attio palette */
+    --color-page-canvas: #ffffff;
+    --color-ink-black: #1c1d1f;
+    --color-graphite: #232529;
+    --color-obsidian: #101113;
+    --color-carbon: #2e3238;
+    --color-slate-500: #505967;
+    --color-slate-600: #6f7988;
+    --color-slate-700: #8f99a8;
+    --color-fog-400: #9fa1a7;
+    --color-mist-300: #b5bdc9;
+    --color-cloud-200: #cad0d9;
+    --color-cloud-100: #d3d8df;
+    --color-mist-50: #e4e7ec;
+    --color-haze: #eeeff1;
+    --color-paper: #f4f5f6;
+    --color-cobalt-core: #266df0;
+    --color-cobalt-bright: #407ff2;
+    --color-cobalt-soft: #538bf3;
+    --color-periwinkle: #bad0fa;
+    --color-ice-wash: #e4edff;
+
+    /* Semantic tokens used by shadcn-vue */
+    --background: var(--color-page-canvas);
+    --foreground: var(--color-ink-black);
+
+    --card: var(--color-page-canvas);
+    --card-foreground: var(--color-ink-black);
+
+    --popover: var(--color-page-canvas);
+    --popover-foreground: var(--color-ink-black);
+
+    --primary: var(--color-graphite);
+    --primary-foreground: #ffffff;
+
+    --secondary: var(--color-paper);
+    --secondary-foreground: var(--color-ink-black);
+
+    --muted: var(--color-paper);
+    --muted-foreground: var(--color-slate-600);
+
+    --accent: var(--color-ice-wash);
+    --accent-foreground: var(--color-ink-black);
+
+    --destructive: #d92d20;
+    --destructive-foreground: #ffffff;
+
+    --border: var(--color-mist-50);
+    --input: var(--color-cloud-200);
+    --ring: var(--color-cobalt-core);
+
+    --chart-1: var(--color-cobalt-core);
+    --chart-2: var(--color-cobalt-bright);
+    --chart-3: var(--color-cobalt-soft);
+    --chart-4: var(--color-periwinkle);
+    --chart-5: var(--color-slate-600);
+
+    --sidebar: var(--color-paper);
+    --sidebar-foreground: var(--color-ink-black);
+    --sidebar-primary: var(--color-graphite);
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: var(--color-haze);
+    --sidebar-accent-foreground: var(--color-ink-black);
+    --sidebar-border: var(--color-mist-50);
+    --sidebar-ring: var(--color-cobalt-core);
+
+    --radius: 10px;
+
+    /* Attio shadows */
+    --shadow-attio-subtle: rgb(238 239 241) 0 0 0 1px inset;
+    --shadow-attio-subtle-2: rgb(28 40 64 / 10%) 0 2px 3px -2px, rgb(28 40 64 / 4%) 0 4px 6px -2px;
+    --shadow-attio-card: rgb(28 40 64 / 6%) 0 1px 2px 0, rgb(28 40 64 / 4%) 0 4px 12px -2px;
+}
+
+.dark {
+    --background: var(--color-obsidian);
+    --foreground: #f4f5f6;
+
+    --card: var(--color-carbon);
+    --card-foreground: #f4f5f6;
+
+    --popover: var(--color-carbon);
+    --popover-foreground: #f4f5f6;
+
+    --primary: #f4f5f6;
+    --primary-foreground: var(--color-graphite);
+
+    --secondary: var(--color-carbon);
+    --secondary-foreground: #f4f5f6;
+
+    --muted: var(--color-carbon);
+    --muted-foreground: var(--color-mist-300);
+
+    --accent: var(--color-carbon);
+    --accent-foreground: #f4f5f6;
+
+    --destructive: #f97066;
+    --destructive-foreground: var(--color-obsidian);
+
+    --border: rgb(255 255 255 / 12%);
+    --input: rgb(255 255 255 / 18%);
+    --ring: var(--color-cobalt-bright);
+
+    --sidebar: var(--color-obsidian);
+    --sidebar-foreground: #f4f5f6;
+    --sidebar-primary: var(--color-cobalt-bright);
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: var(--color-carbon);
+    --sidebar-accent-foreground: #f4f5f6;
+    --sidebar-border: rgb(255 255 255 / 12%);
+    --sidebar-ring: var(--color-cobalt-bright);
+}
+
+@theme inline {
+    --font-sans:
+        'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+        sans-serif;
+    --font-display:
+        'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+        sans-serif;
+
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+
+    --color-chart-1: var(--chart-1);
+    --color-chart-2: var(--chart-2);
+    --color-chart-3: var(--chart-3);
+    --color-chart-4: var(--chart-4);
+    --color-chart-5: var(--chart-5);
+
+    --color-sidebar: var(--sidebar);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-ring: var(--sidebar-ring);
+
+    /* Attio named colors */
+    --color-canvas: var(--color-page-canvas);
+    --color-ink: var(--color-ink-black);
+    --color-graphite: var(--color-graphite);
+    --color-obsidian: var(--color-obsidian);
+    --color-carbon: var(--color-carbon);
+    --color-slate-500: var(--color-slate-500);
+    --color-slate-600: var(--color-slate-600);
+    --color-slate-700: var(--color-slate-700);
+    --color-fog: var(--color-fog-400);
+    --color-mist: var(--color-mist-300);
+    --color-cloud: var(--color-cloud-200);
+    --color-haze: var(--color-haze);
+    --color-paper: var(--color-paper);
+    --color-cobalt: var(--color-cobalt-core);
+    --color-cobalt-bright: var(--color-cobalt-bright);
+    --color-cobalt-soft: var(--color-cobalt-soft);
+    --color-periwinkle: var(--color-periwinkle);
+    --color-ice: var(--color-ice-wash);
+
+    /* Attio radii */
+    --radius-sm: 7px;
+    --radius-md: 10px;
+    --radius-lg: 10px;
+    --radius-xl: 12px;
+    --radius-2xl: 14px;
+
+    /* Attio type scale */
+    --text-caption: 11px;
+    --text-caption--line-height: 1.42;
+    --text-caption--letter-spacing: -0.22px;
+    --text-body-lg: 16px;
+    --text-body-lg--line-height: 1.38;
+    --text-body-lg--letter-spacing: -0.16px;
+    --text-subheading: 20px;
+    --text-subheading--line-height: 1.3;
+    --text-subheading--letter-spacing: -0.2px;
+    --text-heading-sm: 32px;
+    --text-heading-sm--line-height: 1.19;
+    --text-heading-sm--letter-spacing: -0.32px;
+    --text-heading: 40px;
+    --text-heading--line-height: 1.1;
+    --text-heading--letter-spacing: -0.4px;
+
+    --tracking-caption: -0.22px;
+    --tracking-body-lg: -0.16px;
+    --tracking-subheading: -0.2px;
+    --tracking-heading-sm: -0.32px;
+    --tracking-heading: -0.4px;
+
+    /* Attio shadows */
+    --shadow-subtle: var(--shadow-attio-subtle);
+    --shadow-subtle-2: var(--shadow-attio-subtle-2);
+    --shadow-card: var(--shadow-attio-card);
+}
+
+@layer base {
+    * {
+        @apply border-border outline-ring/50;
+    }
+
+    html {
+        font-feature-settings: 'ss03' on;
+        -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+        @apply bg-background font-sans text-foreground antialiased;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+
+    @media (min-width: 768px) {
+        body {
+            font-size: 15px;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+            scroll-behavior: auto !important;
+        }
+    }
+}

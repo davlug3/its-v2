@@ -60,7 +60,6 @@ Thumbs.db
 /.phpactor.json
 /.homestead/
 /.vagrant/
-.docker/
 docker-compose.override.yml
 
 # ---- Local notes and scratch files ----
