@@ -65,3 +65,14 @@ EXPOSE 9000
 
 ENTRYPOINT ["entrypoint"]
 CMD ["php-fpm"]
+
+# Development tooling (not in the production image).
+FROM runtime AS dev
+USER root
+RUN apk add --no-cache nodejs npm git
+USER its
+
+EXPOSE 9000
+
+ENTRYPOINT ["entrypoint"]
+CMD ["php-fpm"]

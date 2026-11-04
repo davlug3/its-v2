@@ -51,6 +51,11 @@ Versions start at `0.1.0` when the scaffold is ready.
   - `docker compose up` serves the SPA on port 8080.
   - No secret committed. `.env` is ignored.
 
+- **Dev container (2026-11-04).**
+  - Added `.devcontainer/devcontainer.json` and `.devcontainer/docker-compose.yml`.
+  - Added a `dev` build target to `.docker/php/Dockerfile` with Node and git.
+  - The development image includes `pdo_sqlite`, so PHPUnit can use the default test configuration.
+
 ### Changed
 
 - **UI library changed to shadcn-vue (2026-11-04).**

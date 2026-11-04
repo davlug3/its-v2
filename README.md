@@ -187,6 +187,30 @@ Checks:
 - `./vendor/bin/pint --test`
 - `./vendor/bin/phpstan analyse --memory-limit=512M`
 
+## 9. Development in a container
+
+No local PHP, Node, or Composer is needed.
+
+**Option A — Compose only.**
+
+```bash
+docker compose --profile dev up -d
+docker compose exec app php artisan test
+docker compose exec app ./vendor/bin/pint --test
+docker compose exec app ./vendor/bin/phpstan analyse --memory-limit=512M
+docker compose exec node npm run typecheck
+docker compose exec node npm run build
+```
+
+**Option B — Dev container (VS Code / Cursor).**
+
+Open the folder in VS Code and choose "Reopen in Container".
+The `.devcontainer/devcontainer.json` file uses the existing Compose services.
+It installs dependencies on creation and configures the PHP, Vue, ESLint, Prettier, and Tailwind extensions.
+
+The development image includes Node, so the editor's TypeScript server works inside the container.
+It also includes `pdo_sqlite`, so PHPUnit can use the default test configuration.
+
 ---
 
 ## 9. Environment keys
