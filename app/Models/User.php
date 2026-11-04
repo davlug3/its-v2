@@ -2,31 +2,31 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Database\Factories\UserFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Attributes\Hidden;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Model;
 
-#[Fillable(['name', 'email', 'password'])]
-#[Hidden(['password', 'remember_token'])]
-class User extends Authenticatable
+/**
+ * Read-only view of the legacy `its.users` table.
+ *
+ * Identity, location, and state come from `jblmrhpayroll` at runtime.
+ * See DECISIONS.md C6 and C8.
+ */
+class User extends Model
 {
-    /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    protected $table = 'users';
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
+    protected $primaryKey = 'id';
+
+    public $timestamps = false;
+
+    protected $guarded = [];
+
+    public function save(array $options = []): bool
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        throw new \RuntimeException('its.users is read-only. Use user_profile for helpdesk attributes.');
+    }
+
+    public function delete(): ?bool
+    {
+        throw new \RuntimeException('its.users is read-only.');
     }
 }
