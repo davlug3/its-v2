@@ -9,9 +9,11 @@ use App\Models\UserProfile;
 use App\Services\PisSyncService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 
 class LoginController extends Controller
@@ -105,10 +107,15 @@ class LoginController extends Controller
 
         $token = JWTAuth::fromUser($user);
 
+        // Generate a CSRF token for mutations.
+        $csrfToken = Str::random(40);
+        Cache::put('csrf:'.(int) $user->id, $csrfToken, 3600);
+
         return response()->json([
             'token' => $token,
             'token_type' => 'bearer',
             'expires_in' => (int) config('jwt.ttl', 60) * 60,
+            'csrf_token' => $csrfToken,
         ]);
     }
 
@@ -120,6 +127,8 @@ class LoginController extends Controller
             JWTAuth::invalidate();
 
             if ($user instanceof PisUser) {
+                Cache::forget('csrf:'.(int) $user->id);
+
                 AuthAudit::create([
                     'user_id' => $user->id,
                     'username_attempted' => $user->username,

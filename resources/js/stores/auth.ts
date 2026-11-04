@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 
-import { api, setToken } from '@/services/api';
+import { api, setCsrfToken, setToken } from '@/services/api';
 import { loginSchema, type LoginInput } from '@/schemas/login';
 
 interface AuthUser {
@@ -23,12 +23,15 @@ export const useAuthStore = defineStore('auth', () => {
         error.value = null;
         try {
             const parsed = await loginSchema.validate(input, { abortEarly: false });
-            const response = await api<{ token: string }>('/auth/login', {
+            const response = await api<{ token: string; csrf_token?: string }>('/auth/login', {
                 method: 'POST',
                 body: JSON.stringify(parsed),
             });
             setToken(response.token);
             token.value = response.token;
+            if (response.csrf_token) {
+                setCsrfToken(response.csrf_token);
+            }
             await fetchMe();
             return true;
         } catch (e) {
@@ -54,6 +57,7 @@ export const useAuthStore = defineStore('auth', () => {
             // ignore
         });
         setToken(null);
+        setCsrfToken(null);
         token.value = null;
         user.value = null;
     }

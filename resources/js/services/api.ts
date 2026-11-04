@@ -1,6 +1,7 @@
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api/v1';
 
 let token: string | null = localStorage.getItem('auth_token');
+let csrfToken: string | null = localStorage.getItem('csrf_token');
 
 export function setToken(value: string | null): void {
     token = value;
@@ -8,6 +9,15 @@ export function setToken(value: string | null): void {
         localStorage.removeItem('auth_token');
     } else {
         localStorage.setItem('auth_token', value);
+    }
+}
+
+export function setCsrfToken(value: string | null): void {
+    csrfToken = value;
+    if (value === null) {
+        localStorage.removeItem('csrf_token');
+    } else {
+        localStorage.setItem('csrf_token', value);
     }
 }
 
@@ -28,6 +38,11 @@ export async function api<T = unknown>(path: string, options: RequestInit = {}):
     }
     if (token !== null) {
         headers.set('Authorization', `Bearer ${token}`);
+    }
+
+    const method = (options.method ?? 'GET').toUpperCase();
+    if (csrfToken !== null && method !== 'GET' && method !== 'HEAD' && method !== 'OPTIONS') {
+        headers.set('X-CSRF-TOKEN', csrfToken);
     }
 
     const response = await fetch(`${BASE_URL}${path}`, {
