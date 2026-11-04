@@ -438,6 +438,16 @@ asks.
 * Review the diff before you report completion.
 * Keep changes limited to the approved task.
 
+### Commit messages
+
+* Write descriptive and elaborate commit messages.
+* The subject line states what changed and why.
+* The body explains the reason, the approach, and any notable detail.
+* List affected files or areas when the change touches more than one.
+* Reference the relevant decision, defect, or phase (for example, C6, D27, Phase 3).
+* Do not use vague messages such as "fix" or "update".
+* Separate distinct changes into separate commits.
+
 ## Documentation quality
 
 Keep project documentation aligned with the actual code and approved
