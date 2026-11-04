@@ -191,6 +191,8 @@ Checks:
 
 No local PHP, Node, or Composer is needed.
 
+Port convention: if a port is already in use, increment by 1 and use the next port.
+
 **Option A — Compose only.**
 
 ```bash
