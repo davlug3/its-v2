@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('tickets_log', function (Blueprint $table) {
-            $table->string('action', 50)->nullable()->after('log');
+            $table->string('action', 50)->nullable()->after('data');
             $table->json('meta')->nullable()->after('action');
 
             $table->index('ticket_id', 'idx_tickets_log_ticket_id');
