@@ -444,7 +444,7 @@ asks.
 * The subject line states what changed and why.
 * The body explains the reason, the approach, and any notable detail.
 * List affected files or areas when the change touches more than one.
-* Reference the relevant decision, defect, or phase (for example, C6, D27, Phase 3).
+* Do not reference decisions, defects, or phases by ID (for example, C6, D27, Phase 3). Extract the relevant context and write it directly in the message. Flatten the reference into the description.
 * Do not use vague messages such as "fix" or "update".
 * Separate distinct changes into separate commits.
 
