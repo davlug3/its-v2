@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\AuthAudit;
 use App\Models\PisUser;
 use App\Models\UserProfile;
 use App\Services\PisSyncService;
@@ -29,6 +30,14 @@ class LoginController extends Controller
         if (RateLimiter::tooManyAttempts($key, 5)) {
             $seconds = RateLimiter::availableIn($key);
 
+            AuthAudit::create([
+                'user_id' => null,
+                'username_attempted' => $credentials['username'],
+                'event' => 'lockout',
+                'ip' => $request->ip(),
+                'user_agent' => substr((string) $request->userAgent(), 0, 500),
+            ]);
+
             return response()->json([
                 'message' => 'Too many login attempts. Try again later.',
                 'retry_after' => $seconds,
@@ -40,6 +49,14 @@ class LoginController extends Controller
         if ($user === null) {
             RateLimiter::hit($key, 900);
 
+            AuthAudit::create([
+                'user_id' => null,
+                'username_attempted' => $credentials['username'],
+                'event' => 'failure',
+                'ip' => $request->ip(),
+                'user_agent' => substr((string) $request->userAgent(), 0, 500),
+            ]);
+
             return response()->json(['message' => 'Invalid username or password.'], 401);
         }
 
@@ -48,10 +65,26 @@ class LoginController extends Controller
         if (! $valid) {
             RateLimiter::hit($key, 900);
 
+            AuthAudit::create([
+                'user_id' => $user->id,
+                'username_attempted' => $credentials['username'],
+                'event' => 'failure',
+                'ip' => $request->ip(),
+                'user_agent' => substr((string) $request->userAgent(), 0, 500),
+            ]);
+
             return response()->json(['message' => 'Invalid username or password.'], 401);
         }
 
         RateLimiter::clear($key);
+
+        AuthAudit::create([
+            'user_id' => $user->id,
+            'username_attempted' => $credentials['username'],
+            'event' => 'success',
+            'ip' => $request->ip(),
+            'user_agent' => substr((string) $request->userAgent(), 0, 500),
+        ]);
 
         // Ensure the helpdesk profile exists and is up to date.
         $this->sync->sync((int) $user->id);
@@ -83,12 +116,60 @@ class LoginController extends Controller
     {
         try {
             JWTAuth::parseToken();
+            $user = JWTAuth::user();
             JWTAuth::invalidate();
+
+            if ($user instanceof PisUser) {
+                AuthAudit::create([
+                    'user_id' => $user->id,
+                    'username_attempted' => $user->username,
+                    'event' => 'logout',
+                    'ip' => $request->ip(),
+                    'user_agent' => substr((string) $request->userAgent(), 0, 500),
+                ]);
+            }
         } catch (\Throwable $e) {
             // Token missing or invalid. Nothing to invalidate.
         }
 
         return response()->json(['message' => 'Logged out.']);
+    }
+
+    public function changePassword(Request $request): JsonResponse
+    {
+        $request->validate([
+            'current_password' => ['required', 'string'],
+            'new_password' => ['required', 'string', 'min:12'],
+        ]);
+
+        $user = auth('api')->user();
+        $profile = UserProfile::where('user_id', $user->id)->first();
+
+        // Verify current password.
+        $currentValid = false;
+        if ($profile !== null && ! empty($profile->password_v2)) {
+            $currentValid = Hash::check($request->input('current_password'), $profile->password_v2);
+        } else {
+            $currentValid = hash_equals((string) $user->password, md5($request->input('current_password')));
+        }
+
+        if (! $currentValid) {
+            return response()->json(['message' => 'Current password is incorrect.'], 422);
+        }
+
+        // Reject reuse.
+        if ($profile !== null && ! empty($profile->password_v2)) {
+            if (Hash::check($request->input('new_password'), $profile->password_v2)) {
+                return response()->json(['message' => 'New password must differ from the current password.'], 422);
+            }
+        }
+
+        $profile = UserProfile::firstOrNew(['user_id' => $user->id]);
+        $profile->password_v2 = Hash::make($request->input('new_password'));
+        $profile->fpc = 2;
+        $profile->save();
+
+        return response()->json(['message' => 'Password changed.']);
     }
 
     public function me(): JsonResponse
