@@ -32,8 +32,9 @@ Versions start at `0.1.0` when the scaffold is ready.
 - **Decisions recorded.**
   - C1 — protect the 8 real acl-9 users, not `users.id = 1`.
   - C2 — protect `categories.id = 1` and hide it from the admin list.
-  - C6 — PIS sync reads `jblmrhpayroll.payroll`.
+  - C6 (revised) — identity, location, and state come from `jblmrhpayroll`. Retire local copies.
   - C7 — override the broken `change_password` module row.
+  - C8 — retire `its.users` and `its.locations`. Add `user_profile` table.
   - D27 — staff-create tickets write `assigned_gid = 0`.
   - D53 — keep `assigned_gid` as legacy group ID; add `units_count`.
   - D74 — in-app notification bell.

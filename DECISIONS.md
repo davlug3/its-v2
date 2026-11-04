@@ -29,7 +29,8 @@ Related files:
 | A5 | Production database is authoritative | Approved |
 | C1 | Protect the real acl-9 users | Approved |
 | C2 | Protect and hide `categories.id = 1` | Approved |
-| C6 | PIS sync uses `jblmrhpayroll` | Approved |
+| C6 | User identity and location come from `jblmrhpayroll` | Approved |
+| C8 | Retire `its.users` and `its.locations`; add `user_profile` | Approved |
 | C7 | Override the broken `change_password` module row | Approved |
 | U1 | shadcn-vue replaces PrimeVue | Approved |
 | U2 | TypeScript version: 5.9.3 (7 blocked by `@volar/typescript` peer `<7`) | Approved |
@@ -345,39 +346,121 @@ Production row: `{"id":1,"category":"No Category","status":1}`.
 
 ---
 
-## C6 — PIS sync uses `jblmrhpayroll`
+## C6 — User identity and location come from `jblmrhpayroll`
 
 **Decision.**
-The PIS sync reads the `payroll` table in the `jblmrhpayroll` database.
-The join key is `its.users.id = jblmrhpayroll.payroll.id`.
-The column `payroll.department` maps to `its.locations.id`.
+The application reads user identity, location, and state from the `jblmrhpayroll` database at runtime.
+It does not store those fields locally.
+The source tables are `jblmrhpayroll.user`, `jblmrhpayroll.payroll`, and `jblmrhpayroll.department`.
+All three tables are **read-only**. The application never writes to them.
 
 **Reason.**
-`PROMPT.md` §7.3 says the source is `its.payroll`.
-No such table exists in `its`.
-Dave confirmed the source database and the shared credentials on 2026-11-04.
+Dave directed the change on 2026-11-04.
+The `jblmrhpayroll` tables are the system of record for people and departments.
+
+**Join chain.**
+
+```
+jblmrhpayroll.user.id
+    = jblmrhpayroll.payroll.id
+    = app user id (the helpdesk user id)
+
+jblmrhpayroll.payroll.department
+    = jblmrhpayroll.department.id
+    = app location id
+```
+
+**Field mapping.**
+
+| Field the app needs | Source |
+|---|---|
+| First name | `jblmrhpayroll.payroll.name` |
+| Middle name | `jblmrhpayroll.payroll.mname` |
+| Last name | `jblmrhpayroll.payroll.lname` |
+| Username | `jblmrhpayroll.user.username` |
+| Password (MD5) | `jblmrhpayroll.user.password` |
+| Location | `jblmrhpayroll.payroll.department` |
+| State | `jblmrhpayroll.payroll.status` — `A` = active, `I` = inactive |
+
+**ACL rule.**
+
+| Condition | `acl_id` |
+|---|---|
+| One of the 8 protected admins | 9 |
+| Department id 15 (INTEGRATED HOSPITAL OPERATIONS AND MANAGEMENT SECTION) | 3 |
+| Everyone else | 1 |
 
 **Evidence.**
 
-- `its` has 13 tables. None is `payroll`.
-- `jblmrhpayroll.payroll` exists and has 4,812 rows.
-- Sample join: users 200, 203, 209, 221, 229 match by id, and the names match.
-- `payroll.department` has 97 distinct values greater than 0.
-- All 97 values exist in `its.locations`.
+- `jblmrhpayroll.user` has 4,814 rows. `jblmrhpayroll.payroll` has 4,812 rows.
+- 4,806 rows join on `id`.
+- `payroll.department` has 98 distinct values. Only `0` is not a `department.id`.
+- `jblmrhpayroll.department` has 139 rows, ids 1–143.
+- `its.locations` has 100 rows. 41 department ids are not in `its.locations`.
+- `payroll.status` has `A` (3,146 rows) and `I` (1,666 rows).
+- `user.access` does not map to `its.users.acl_id`. It is not used.
 
 **Effect.**
 
-- The application has a second database connection named `payroll`.
+- The application has a second database connection for `jblmrhpayroll`.
 - The sync is one explicit service. It is not a middleware side effect.
-- The sync validates that the mapped location exists.
-- The sync fails closed. It never recurses.
+- The sync validates that the mapped department exists.
+- The sync fails closed. It never recurses. See D97.
 
 **Data risk.**
-31 users have `location_id = 0`.
 
-- 9 have `payroll.department > 0`. The sync can fix them.
-- 22 have `payroll.department = 0`. The legacy code would loop on these.
-  The new code must stop and report. See D97.
+- Department `0` means "no department". Fail closed. See D97.
+- 41 department ids are not in `its.locations`. Fail closed for those users.
+
+---
+
+## C8 — Retire `its.users` and `its.locations`
+
+**Decision.**
+Retire the local `its.users` and `its.locations` tables for identity, location, and state.
+Read those fields from `jblmrhpayroll` at runtime.
+Keep only the helpdesk-specific user attributes in a new local table.
+
+**Retired columns.**
+
+| Old column | Replacement |
+|---|---|
+| `its.users.fn` | `jblmrhpayroll.payroll.name` |
+| `its.users.ln` | `jblmrhpayroll.payroll.lname` |
+| `its.users.mail` | `jblmrhpayroll.user.username` |
+| `its.users.password` | `jblmrhpayroll.user.password` |
+| `its.users.location_id` | `jblmrhpayroll.payroll.department` |
+| `its.users.state` | `jblmrhpayroll.payroll.status` |
+| `its.users.profile_pic_path` | Retired. Not stored. |
+
+**Retired table.** `its.locations` is replaced by `jblmrhpayroll.department`.
+
+**New table.** `user_profile`.
+
+| Column | Purpose |
+|---|---|
+| `user_id` (PK) | Same value as `jblmrhpayroll.user.id` |
+| `acl_id` | Derived by the ACL rule in C6 |
+| `group_id` | Default 1 |
+| `fpc` | Default 1 |
+| `login_attempts` | Helpdesk login tracking |
+| `last_login_ip` | Helpdesk login tracking |
+| `last_login_dt` | Helpdesk login tracking |
+| `supervisor_id` | Helpdesk supervisor link |
+| `deleted_at` | Soft delete |
+
+**Reason.**
+Dave directed the retirement on 2026-11-04.
+The `jblmrhpayroll` tables are the system of record.
+Keeping a second copy of identity data would cause drift.
+
+**Effect.**
+
+- The app adds no `fn`, `ln`, `mail`, `password`, `location_id`, `state`, or `profile_pic_path` columns to any new user table.
+- Tickets, logs, and reports that show a user name read it from `jblmrhpayroll` through a join or a read model.
+- Location dropdowns and filters read `jblmrhpayroll.department`.
+- The 8 protected admins keep `acl_id = 9` in `user_profile`.
+- `its.users` and `its.locations` are left in place and untouched. They are not dropped.
 
 ---
 
@@ -640,3 +723,4 @@ These items need a decision from Dave. They do not block Phase 1.
 |---|---|
 | 2026-11-04 | Initial record. Added A1–A5, C1, C2, C6, C7, D27, D53, D74, T1, T2, P1, Q1. |
 | 2026-11-04 | Added U1 (shadcn-vue), U2 (TypeScript 5.9.3), U3 (Vue Router 5), U4 (vee-validate), U5 (Yup), U6 (port 8080). |
+| 2026-11-04 | Revised C6. Identity, location, and state now come from `jblmrhpayroll`. Added C8: retire `its.users` and `its.locations`, add `user_profile`. |

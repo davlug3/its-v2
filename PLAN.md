@@ -74,7 +74,8 @@ Full detail and reasons are in [`DECISIONS.md`](./DECISIONS.md).
 |---|---|
 | C1 | Protect the 8 real acl-9 users. Do not protect `users.id=1` (it is acl 1 in production). |
 | C2 | `categories.id=1` stays protected and hidden from the admin list. |
-| C6 | PIS sync reads `jblmrhpayroll.payroll` by `users.id = payroll.id`. `payroll.department` maps to `locations.id`. |
+| C6 | Identity, location, and state come from `jblmrhpayroll` (`user`, `payroll`, `department`), read-only. Join chain: `user.id = payroll.id`, `payroll.department = department.id`. |
+| C8 | Retire `its.users` and `its.locations`. Add `user_profile` for helpdesk-specific attributes. |
 | C7 | Override the broken `change_password` mods row with the real `?p=user_options` flow. |
 | D27 | Option A. New staff tickets write `assigned_gid = 0`. Skip the group log. |
 | D53 | `assigned_gid` stays a legacy group ID. Add new `units_count` column for units. |
@@ -147,10 +148,13 @@ Other facts:
 - `application_settings.title` = `IHOMS TICKETING SYSTEM`.
 - `acls`: 9 Administrator, 3 `iHOMS Help Desk`, 2 Technician, 1 End User.
 - 8 users have acl 9. They are the protected administrators.
-- `users.id=1` is `mail=admin`, acl 1, location 47.
+- User id 1 is `mail=admin`, acl 1, location 47.
 - 164 users have `state` not in (1,2). These need normalization (D71).
 - Duplicate `mail` values exist, including `admin` x3 (D72).
 - 31 users have `location_id = 0`. Of these, 9 have payroll department > 0 and 22 have department = 0.
+- `jblmrhpayroll.user` has no `department` field. Location comes from `jblmrhpayroll.payroll`.
+- 41 `jblmrhpayroll.department` ids are not in `its.locations`.
+- `payroll.status` has `A` (3,146 rows) and `I` (1,666 rows).
 - `notifications` holds 5 rows with plaintext passwords and malformed URLs.
 - `assigned_gid` matches an existing group ID on 30,716 tickets. 3 tickets have orphan values (66, 74, 100).
 - `mods.parent` uses `""` for some top-level rows and `"none"` for others. Handle both.
@@ -165,7 +169,7 @@ Other facts:
 | K2 | `mods.parent` mixes `""` and `"none"` | Treat both as top-level. |
 | K3 | `acls.id=3` label is `iHOMS Help Desk` | Use DB label. |
 | K4 | `application_settings.title` is `IHOMS TICKETING SYSTEM` | Use DB value. |
-| K5 | PIS source is `jblmrhpayroll`, not `its.payroll` | Separate connection. |
+| K5 | Identity, location, and state come from `jblmrhpayroll` | Read-only second connection. Retire local copies (C6, C8). |
 | K6 | 69 `mods` rows vs ~60 in Appendix B | Import all 69. Extra rows get real pages or "not migrated". |
 | K7 | `change_password` mods row is mis-registered | Override with real `?p=user_options` flow. |
 | K8 | `assigned_gid` is a legacy group ID | Keep it. Add `units_count`. |
@@ -234,8 +238,7 @@ Exit check: `docker compose up` works. App boots. `composer test`, `npm run type
 
 - [ ] Do **not** run the legacy DDL against production. Tables exist.
 - [ ] Create additive migrations from PROMPT §9.7:
-  - [ ] `users.deleted_at`, `users.last_login_ip_text`, indexes.
-  - [ ] `categories/groups/locations.deleted_at`.
+  - [ ] `categories/groups.deleted_at`.
   - [ ] `tickets.source`, `tickets.email_message_id`, `tickets.units_count`, indexes.
   - [ ] `tickets_log.action`, `tickets_log.meta`, index.
   - [ ] `attachements.storage_path`, `mime_type`, `size_bytes`, `sha256`, `uploaded_by`, `created_at`, index.
@@ -243,8 +246,10 @@ Exit check: `docker compose up` works. App boots. `composer test`, `npm run type
   - [ ] `auth_audit` table.
   - [ ] `admin_audit` table.
   - [ ] `email_ingest_log` table.
+  - [ ] `user_profile` table (new). See `DECISIONS.md` C8.
 - [ ] Add `tickets.updated_at` (nullable) for optimistic concurrency.
-- [ ] Create Eloquent models for all 13 legacy tables plus new tables.
+- [ ] Create Eloquent models for all 13 legacy tables plus `user_profile`, `auth_audit`, `admin_audit`, `email_ingest_log`.
+- [ ] `its.users` and `its.locations` are read-only legacy tables. Do not add columns to them. Do not write to them.
 - [ ] Disable automatic Eloquent timestamps in the models, or map the legacy columns. The legacy tables have no `created_at` or `updated_at`.
 - [ ] Add a rollback script for every destructive step (InnoDB conversion).
 - [ ] Preflight audit queries from PROMPT §36. Store before counts.
@@ -268,11 +273,15 @@ Exit check: migrations run on a staging copy. Row counts unchanged. Legacy colum
 - [ ] Self password change: require current password, minimum 12, reject reuse (D95, D96).
 - [ ] Admin password reset: ACL 9, CSRF, minimum 12, never prefill (D23).
 - [ ] PIS sync as one explicit service (D08, D97):
-  - [ ] Connect to `jblmrhpayroll`.
-  - [ ] Look up by `users.id = payroll.id`.
-  - [ ] Map `payroll.department` to `locations.id`. Validate it exists.
-  - [ ] Apply legacy defaults only when the account is unconfigured.
-  - [ ] Never recurse. Fail closed on department 0 or missing location.
+  - [ ] Connect to `jblmrhpayroll` (read-only).
+  - [ ] Join `jblmrhpayroll.user` by `its user id = user.id`.
+  - [ ] Join `jblmrhpayroll.payroll` on `user.id = payroll.id`.
+  - [ ] Map `payroll.department` to `jblmrhpayroll.department.id`. Validate it exists in `jblmrhpayroll.department`.
+  - [ ] Read identity from `payroll` (`name`, `mname`, `lname`) and `user` (`username`, `password`).
+  - [ ] Read state from `payroll.status` (`A` = active, `I` = inactive).
+  - [ ] Apply the ACL rule: protected admins → 9, IHOMS department → 3, others → 1.
+  - [ ] Create or update `user_profile` row. Never write to `jblmrhpayroll`.
+  - [ ] Never recurse. Fail closed on department 0 or missing department.
 - [ ] `auth_audit` writes for success, failure, lockout.
 - [ ] Bootstrap-admin CLI command. No seeded password.
 

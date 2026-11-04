@@ -781,38 +781,79 @@ The stack in sections 2 and 3 stands.
 
 Still excluded: Inertia, Sanctum as the primary auth system, and Breeze.
 
-### 19.3 Second database connection: payroll
+### 19.3 Second database connection: `jblmrhpayroll`
 
-The PIS sync needs a second connection.
+The application needs a second, read-only connection.
 
 | Item | Value |
 |---|---|
 | Connection name | `payroll` |
 | Host | Same host as the main database |
 | Database | `jblmrhpayroll` |
-| Table | `payroll` |
-| Join key | `its.users.id = payroll.id` |
-| Department mapping | `payroll.department` maps to `its.locations.id` |
-| Access | Read-only |
+| Source tables | `user`, `payroll`, `department` |
+| Access | Read-only. The application never writes to these tables. |
+
+Join chain:
+
+```
+jblmrhpayroll.user.id
+    = jblmrhpayroll.payroll.id
+    = app user id (the helpdesk user id)
+
+jblmrhpayroll.payroll.department
+    = jblmrhpayroll.department.id
+    = app location id
+```
+
+Field mapping:
+
+| Field | Source |
+|---|---|
+| First name | `payroll.name` |
+| Middle name | `payroll.mname` |
+| Last name | `payroll.lname` |
+| Username | `user.username` |
+| Password (MD5) | `user.password` |
+| Location | `payroll.department` |
+| State | `payroll.status` — `A` = active, `I` = inactive |
 
 Rules:
 
 - The sync is one explicit service. It is not a middleware side effect.
-- The sync validates that the mapped `locations` row exists.
-- The sync fails closed when `department = 0`.
+- The sync validates that the mapped `department` row exists.
+- The sync fails closed when `department = 0` or when the department is missing.
 - The sync never recurses.
+- Identity and location are read from `jblmrhpayroll` at runtime. They are not copied into local tables.
 
 ### 19.4 Schema additions required by the decisions
 
 Beyond the columns in `PROMPT.md` §9.7, the schema adds:
 
-| Column | Table | Purpose |
+| Column or table | Table | Purpose |
 |---|---|---|
 | `units_count` | `tickets` | Holds the units value. `assigned_gid` stays a legacy group ID. |
-| `password_v2` | `users` | Holds the modern password hash during the dual run. Pending approval of `DECISIONS.md` P1. |
+| `user_profile` | new | Holds the helpdesk-specific user attributes. Keyed by `user_id`. See below. |
 
-`users.group_id` and `tickets.assigned_gid` stay readable.
-No new query filters or groups by `users.group_id`.
+`user_profile` columns:
+
+| Column | Purpose |
+|---|---|
+| `user_id` (PK) | Same value as `jblmrhpayroll.user.id` |
+| `acl_id` | Derived by the ACL rule in `DECISIONS.md` C6 |
+| `group_id` | Default 1 |
+| `fpc` | Default 1 |
+| `login_attempts` | Helpdesk login tracking |
+| `last_login_ip` | Helpdesk login tracking |
+| `last_login_dt` | Helpdesk login tracking |
+| `supervisor_id` | Helpdesk supervisor link |
+| `deleted_at` | Soft delete |
+
+`user_profile.group_id` and `tickets.assigned_gid` stay readable.
+No new query filters or groups by `user_profile.group_id`.
+
+Retired local fields: `fn`, `ln`, `mail`, `password`, `location_id`, `state`, and `profile_pic_path`.
+See `DECISIONS.md` C8.
+A modern password hash column is not added to a local table. During the dual run, the hash is stored in `user_profile` when `DECISIONS.md` P1 is approved.
 
 ### 19.5 Retired features
 
@@ -827,7 +868,7 @@ The following modules return a "This feature is retired" page:
 - `process_delete_group`
 - `assigned_to_group`
 
-The `groups` table, its rows, the `users.group_id` column, and the affected `mods` rows all stay.
+The `groups` table, its rows, the `user_profile.group_id` column, and the affected `mods` rows all stay.
 No `mods` row is deleted.
 
 ### 19.6 Module registry
@@ -849,10 +890,11 @@ No `mods` row is deleted.
 
 ### 19.8 Administrator protection
 
-- The protected administrator set is the 8 users with `acl_id = 9`.
-- `users.id = 1` is not protected. Production shows `acl_id = 1`.
-- The user list still hides `users.id = 1` from display.
+- The protected administrator set is the 8 user ids with `acl_id = 9` in `user_profile`.
+- User id 1 is not protected. Production shows `acl_id = 1`.
+- The user list still hides user id 1 from display.
 - Hiding and protecting are separate rules.
+- The ACL rule for all other users is in `DECISIONS.md` C6.
 
 ### 19.9 Notifications
 

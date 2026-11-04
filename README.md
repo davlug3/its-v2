@@ -98,7 +98,7 @@ These rules are not optional.
 2. **Keep every legacy row.**
    `mods` has 69 rows. Keep all 69.
    `groups` has 59 rows. Keep all 59.
-   `users` has 4,709 rows. Keep all.
+   `users` has 4,709 rows. Keep all. The new app adds `user_profile` but does not touch `users`.
 
 3. **Keep the legacy `?p=` URLs and `#ticket=` deep links working.**
    The `mods` table drives a compatibility router.
@@ -106,7 +106,12 @@ These rules are not optional.
 4. **Keep the legacy log strings.**
    `tickets_log` messages are part of the audit record.
 
-5. **Never run the legacy DDL against production.**
+5. **Identity, location, and state come from `jblmrhpayroll`.**
+   `its.users` and `its.locations` are retired.
+   Read them at runtime from `jblmrhpayroll.user`, `jblmrhpayroll.payroll`, and `jblmrhpayroll.department`.
+   Never write to those tables.
+
+6. **Never run the legacy DDL against production.**
    The 13 tables already exist.
 
 ---
@@ -151,7 +156,8 @@ Full detail is in `PLAN.md` §5.
 |---|---|
 | C1 | Protect the 8 real acl-9 users. Not `users.id = 1`. |
 | C2 | Protect and hide `categories.id = 1`. |
-| C6 | PIS sync reads `jblmrhpayroll.payroll` by `users.id = payroll.id`. |
+| C6 | Identity, location, and state come from `jblmrhpayroll`. Retire local copies. |
+| C8 | Retire `its.users` and `its.locations`. Add `user_profile` table. |
 | C7 | Override the broken `change_password` module row with the real `?p=user_options` flow. |
 | D27 | Staff-create tickets write `assigned_gid = 0`. |
 | D53 | `assigned_gid` stays a legacy group ID. Units go in a new `units_count` column. |
