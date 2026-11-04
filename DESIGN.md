@@ -555,6 +555,10 @@ Use PrimeVue components.
 Style them with the Tailwind theme tokens above.
 Do not build a second component library.
 
+Write all components in TypeScript with `<script setup lang="ts">`.
+Props, emits, and API payloads use explicit types.
+Do not use `any` to silence a type error.
+
 | Need | Component |
 |---|---|
 | Buttons | PrimeVue `Button` |
@@ -600,6 +604,7 @@ Keep one spacing scale across the product.
 - Do not add animations the user did not ask for.
 - Do not use color as the only signal for ticket state.
 - Do not hide required fields behind a "more" control on small screens.
+- Do not add plain JavaScript files. All frontend code is TypeScript.
 
 ### Reference screens for the rebuild
 

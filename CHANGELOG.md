@@ -41,6 +41,17 @@ Versions start at `0.1.0` when the scaffold is ready.
 
 ### Changed
 
+- **Frontend language is TypeScript.**
+  - `ARCHITECTURE.md` §3.1 now requires TypeScript in strict mode.
+  - `ARCHITECTURE.md` §5 and §11.2 add the TypeScript version and the `vue-tsc` type check.
+  - `ARCHITECTURE.md` §19.2 records the requirement.
+  - `PLAN.md` stack table and Phase 1 add TypeScript, `tsconfig.json`, and `npm run typecheck`.
+  - `PLAN.md` Phase 13 adds the type check to CI.
+  - `README.md` stack and setup steps add TypeScript.
+  - `DECISIONS.md` A2 records the requirement and its effect.
+  - `DESIGN.md` application notes require typed components.
+  - Rule: no plain JavaScript files in `src/`. Component files use `<script setup lang="ts">`.
+
 - **`ARCHITECTURE.md`.**
   - Added "Approved Rebuild Decisions (2026-11-04)".
   - Recorded the second database connection for the PIS sync.

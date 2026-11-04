@@ -190,7 +190,9 @@ All schema evolution must be additive only. If a column must change semantically
 - **Tailwind CSS 4.x** as the primary styling solution (utility-first).
 - PrimeVue 5.x as the primary UI component library (styled/compatible with Tailwind).
 - Schema validation with **Zod** (preferred) or Yup on all forms and API payloads.
-- TypeScript strongly recommended.
+- **TypeScript is required.** All frontend source files use `.ts`, or `.vue` with `<script setup lang="ts">`. Do not add plain JavaScript files to `src/`.
+- Type checking with `vue-tsc --noEmit` must pass in CI.
+- Use `strict` mode in `tsconfig.json`. Do not use `any` to bypass a check. Use a precise type or an explained alternative.
 - Pinia for global/client state.
 - Vue Router for client-side routing.
 - Axios or ofetch / ky for HTTP (with interceptors for auth, errors, pagination).
@@ -209,9 +211,13 @@ src/
 ├── services/            # API client modules
 ├── stores/              # Pinia
 ├── schemas/             # Zod / Yup schemas
-├── types/
-└── utils/
+├── types/               # Shared types and API contracts
+├── utils/
+└── env.d.ts             # Vite and environment typings
 ```
+
+Every file in this tree is TypeScript.
+Component files use `<script setup lang="ts">`.
 
 ### 3.3 Validation
 
@@ -258,6 +264,7 @@ src/
 | PHP                   | 8.3 – 8.5 |
 | Laravel               | 13.x |
 | Vue                   | 3.5+ |
+| TypeScript            | 5.x (latest stable) |
 | Vite                  | Latest stable |
 | Tailwind CSS          | 4.x (latest) |
 | PrimeVue              | 5.x |
@@ -599,10 +606,13 @@ Use API Resources / ResourceCollections exclusively. Never return raw Eloquent m
 |------|--------|-------|
 | Component tests | UI behaviour, props, emits, basic interactions | Vue Test Utils + Vitest |
 | Composable / store tests | Business logic in isolation | Vitest |
+| Type checks | Strict TypeScript across `src/` and Vue SFCs | `vue-tsc --noEmit` |
 | E2E | Critical user flows and full cross-surface propagation of every create/edit/delete (see §11.4) | Playwright or Cypress |
 
 - Colocate or mirror source structure for tests.
 - Mock API calls in unit/component tests; use real API only in E2E.
+- Write tests in TypeScript.
+- A failing type check fails the build. Do not silence it with `any` or `@ts-ignore`.
 
 ### 11.3 Running Tests
 
@@ -614,6 +624,7 @@ docker compose exec app ./vendor/bin/pest
 
 # Frontend
 docker compose exec node npm run test
+docker compose exec node npm run typecheck
 ```
 
 Tests must pass in CI before merge.
@@ -752,6 +763,7 @@ The stack in sections 2 and 3 stands.
 
 - Laravel 13 with a strict REST API at `/api/v1`.
 - Vue 3.5 single-page application with Vite.
+- TypeScript in strict mode for all frontend code. Checked with `vue-tsc`.
 - PrimeVue 5 and Tailwind CSS 4.
 - Zod on the frontend.
 - JWT authentication with `php-open-source-saver/jwt-auth`.

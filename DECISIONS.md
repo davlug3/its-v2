@@ -70,6 +70,7 @@ Use the stack in `ARCHITECTURE.md`:
 | Backend | PHP 8.5 / Laravel 13.x |
 | API | Strict REST, versioned `/api/v1` |
 | Frontend | Vue 3.5 SPA + Vite |
+| Frontend language | TypeScript 5.x, strict mode |
 | UI components | PrimeVue 5.x |
 | Styling | Tailwind CSS 4.x |
 | Validation (frontend) | Zod |
@@ -88,6 +89,8 @@ Dave selected this stack.
 - No Sanctum as the primary auth system.
 - No Breeze scaffolding.
 - The API and the SPA are separate builds.
+- All frontend source is TypeScript in strict mode. Do not add plain JavaScript to `src/`.
+- `vue-tsc --noEmit` runs in CI and must pass.
 - Every dependency version is checked against the official release page before use.
 - No pre-release version is used.
 

@@ -93,7 +93,7 @@ From [`ARCHITECTURE.md`](./ARCHITECTURE.md):
 |---|---|
 | Backend | PHP 8.5 / Laravel 13.x |
 | API | Strict REST, versioned `/api/v1` |
-| Frontend | Vue 3.5 SPA + Vite |
+| Frontend | Vue 3.5 SPA + Vite + TypeScript (strict) |
 | UI | PrimeVue 5.x |
 | Styling | Tailwind CSS 4.x |
 | Validation (FE) | Zod |
@@ -106,6 +106,8 @@ Rules:
 
 - Additive migrations only.
 - No Inertia. No Sanctum as primary auth. No Breeze.
+- Frontend code is TypeScript in strict mode. No plain JavaScript in `src/`.
+- `vue-tsc --noEmit` must pass.
 - Follow official setup guides for each tool.
 - Pin versions in lockfiles.
 
@@ -192,7 +194,8 @@ Exit check: documentation set exists and matches the confirmed decisions.
 ### Phase 1 — Scaffold
 
 - [ ] Create a new Laravel 13 project in `/home/dave/its-v2` with the official installer.
-- [ ] Add Vue 3 + Vite via the official Laravel frontend setup.
+- [ ] Add Vue 3 + Vite + TypeScript via the official Laravel frontend setup.
+- [ ] Set `strict` in `tsconfig.json`. Add `vue-tsc` and an `npm run typecheck` script.
 - [ ] Add Tailwind CSS 4 via the official guide.
 - [ ] Add PrimeVue 5 and its Tailwind integration.
 - [ ] Add Zod on the frontend.
@@ -200,10 +203,10 @@ Exit check: documentation set exists and matches the confirmed decisions.
 - [ ] Add Docker + Docker Compose: `app`, `nginx`, `db`, `node`, optional `redis` and `queue`.
 - [ ] Create `.env.example` with all keys from PROMPT Appendix C. No secrets.
 - [ ] Point local `.env` at the dev DB (read-only user where possible).
-- [ ] Add Pint, PHPStan/Larastan, ESLint, Prettier.
+- [ ] Add Pint, PHPStan/Larastan, ESLint (TypeScript parser), Prettier.
 - [ ] Add Pest or PHPUnit.
 
-Exit check: `docker compose up` works. App boots. `composer test` and `npm run build` pass. No secret is committed.
+Exit check: `docker compose up` works. App boots. `composer test`, `npm run typecheck`, and `npm run build` pass. No secret is committed.
 
 ---
 
@@ -475,9 +478,9 @@ Exit check: AT-48 passes.
 ### Phase 13 — Tests, CI, documentation, cutover
 
 - [ ] Pest feature tests for AT-01 to AT-54.
-- [ ] Vitest component tests.
+- [ ] Vitest component tests in TypeScript.
 - [ ] Playwright E2E for every mutation, per ARCHITECTURE §11.4.
-- [ ] CI: lint, static analysis, tests, `composer audit`, `npm audit`, migration dry run.
+- [ ] CI: lint, `vue-tsc` type check, static analysis, tests, `composer audit`, `npm audit`, migration dry run.
 - [ ] Update `README.md` with setup and roles.
 - [ ] Write the data dictionary.
 - [ ] Write the route map (`?p=` → target route).
@@ -671,3 +674,4 @@ Summary: 78 defects. 3 decided, 2 open decisions, 73 not started.
 |---|---|
 | 2026-11-04 | Initial plan. Recorded decisions C1, C2, C6, C7, D27, D53, D74, teams retired. |
 | 2026-11-04 | Added document set, defect tracker, and corrected the Eloquent timestamp note. |
+| 2026-11-04 | Frontend language set to TypeScript in strict mode across all records. |

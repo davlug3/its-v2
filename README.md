@@ -74,6 +74,7 @@ The connection is read-only.
 | Framework | Laravel 13.x |
 | API style | Strict REST, versioned `/api/v1` |
 | Frontend | Vue 3.5 single-page application with Vite |
+| Language (frontend) | TypeScript 5.x in strict mode, checked with `vue-tsc` |
 | UI components | PrimeVue 5.x |
 | Styling | Tailwind CSS 4.x |
 | Frontend validation | Zod |
@@ -169,17 +170,18 @@ The agent will follow the official guides for each tool and record the exact ver
 Planned steps:
 
 1. Create the Laravel 13 project with the official installer.
-2. Add Vue 3 and Vite.
-3. Add Tailwind CSS 4.
-4. Add PrimeVue 5.
-5. Add Zod.
-6. Add `php-open-source-saver/jwt-auth` and generate `JWT_SECRET`.
-7. Add Docker Compose services: `app`, `nginx`, `db`, `node`, optional `redis`, optional `queue`.
-8. Create `.env.example` with every key from PROMPT Appendix C. No secrets.
-9. Point `.env` at the development database.
-10. Add Pint, PHPStan or Larastan, ESLint, Prettier, and the test runners.
+2. Add Vue 3, Vite, and TypeScript.
+3. Set `strict` in `tsconfig.json` and add a `typecheck` script that runs `vue-tsc --noEmit`.
+4. Add Tailwind CSS 4.
+5. Add PrimeVue 5.
+6. Add Zod.
+7. Add `php-open-source-saver/jwt-auth` and generate `JWT_SECRET`.
+8. Add Docker Compose services: `app`, `nginx`, `db`, `node`, optional `redis`, optional `queue`.
+9. Create `.env.example` with every key from PROMPT Appendix C. No secrets.
+10. Point `.env` at the development database.
+11. Add Pint, PHPStan or Larastan, ESLint, Prettier, and the test runners.
 
-Exit check: `docker compose up` works, the application boots, the API answers, `composer test` passes, and `npm run build` passes.
+Exit check: `docker compose up` works, the application boots, the API answers, `composer test` passes, `npm run typecheck` passes, and `npm run build` passes.
 
 ---
 
