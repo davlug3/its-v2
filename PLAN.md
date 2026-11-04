@@ -606,7 +606,7 @@ Exit check: all quality gates in PROMPT §40 pass.
 | 1 Scaffold | Done | 2026-11-04 | 2026-11-04 |
 | 2 Database | Done | 2026-11-04 | 2026-11-04 |
 | 3 Auth | In progress | 2026-11-04 | — |
-| 4 Routing | Not started | — | — |
+| 4 Routing | In progress | 2026-11-04 | — |
 | 5 Tickets | Not started | — | — |
 | 6 Administration | Not started | — | — |
 | 7 Lists/search/detail | Not started | — | — |
