@@ -9,6 +9,8 @@ class UserProfile extends Model
 {
     use SoftDeletes;
 
+    protected $connection = 'mysql';
+
     protected $table = 'user_profile';
 
     protected $primaryKey = 'user_id';
