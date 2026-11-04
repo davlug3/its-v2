@@ -26,7 +26,7 @@ const vitePort = await freePort(5173);
 console.log(`Laravel: http://localhost:${appPort}`);
 console.log(`Vite:    http://localhost:${vitePort}`);
 
-const vite = spawn('npm', ['run', 'dev', '--', '--port', String(vitePort)], {
+const vite = spawn('pnpm', ['dev', '--', '--port', String(vitePort)], {
     stdio: 'inherit',
 });
 const laravel = spawn('php', ['artisan', 'serve', `--port=${appPort}`], {

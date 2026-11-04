@@ -37,6 +37,7 @@ Related files:
 | U4 | Forms use vee-validate | Approved |
 | U5 | Schema library is Yup, not Zod | Approved |
 | U6 | Local application port is 8080 | Approved |
+| U7 | Package manager is pnpm | Approved |
 | D27 | Staff-create tickets write `assigned_gid = 0` | Approved |
 | D53 | `assigned_gid` stays a legacy group ID; add `units_count` | Approved |
 | D74 | In-app notification bell | Approved |
@@ -593,6 +594,27 @@ That project must not be displaced.
 - `APP_PORT` defaults to 8080 in `docker-compose.yml`.
 - `APP_URL` and `ITS_BASE_URL` use `http://localhost:8080` in `.env` and `.env.example`.
 - Use `php artisan serve --port=8080` for host-only development.
+
+---
+
+## U7 — Package manager is pnpm
+
+**Decision.**
+Use **pnpm** as the Node package manager.
+Do not use npm.
+
+**Reason.**
+Dave chose pnpm on 2026-11-04.
+pnpm is installed (10.22.0).
+pnpm handles optional dependencies (rolldown native bindings) more reliably than npm.
+pnpm uses a content-addressable store, which saves disk space.
+
+**Effect.**
+
+- `package-lock.json` is removed. `pnpm-lock.yaml` is committed.
+- `pnpm install` is used in all scripts, Dockerfiles, and the dev container.
+- `corepack enable` is used in containers to provide pnpm.
+- The `concurrently` dependency is kept but unused; it will be removed in a later cleanup.
 
 ---
 

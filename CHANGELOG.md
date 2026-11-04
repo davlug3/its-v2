@@ -56,6 +56,11 @@ Versions start at `0.1.0` when the scaffold is ready.
   - Added a `dev` build target to `.docker/php/Dockerfile` with Node and git.
   - The development image includes `pdo_sqlite`, so PHPUnit can use the default test configuration.
 
+- **Package manager changed to pnpm (2026-11-04).**
+  - Decision U7. `package-lock.json` removed, `pnpm-lock.yaml` committed.
+  - All scripts, Dockerfiles, and the dev container use `pnpm`.
+  - Node service switched to `node:24-bookworm` for native binding compatibility.
+
 ### Changed
 
 - **UI library changed to shadcn-vue (2026-11-04).**

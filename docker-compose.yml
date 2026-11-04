@@ -44,7 +44,7 @@ services:
             VITE_PORT: ${VITE_PORT:-5173}
         volumes:
             - .:/app
-        command: sh -c 'npm install && npm run dev -- --host 0.0.0.0 --port "$VITE_PORT"'
+        command: sh -c 'npm install -g --allow-scripts=pnpm pnpm && PNPM_CONFIG_MINIMUM_RELEASE_AGE=0 pnpm install && pnpm dev --host 0.0.0.0 --port "$VITE_PORT"'
         ports:
             - '${VITE_PORT:-5173}:${VITE_PORT:-5173}'
 

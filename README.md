@@ -170,8 +170,8 @@ Phase 1 is complete. Steps:
 2. `cp .env.example .env` and fill in the database and IMAP values.
 3. `php artisan key:generate`
 4. `php artisan jwt:secret`
-5. `npm install`
-6. `npm run build`
+5. `pnpm install`
+6. `pnpm build`
 7. `docker compose up -d app nginx`
 
 The application is at `http://localhost:8080`.
@@ -180,10 +180,10 @@ Port 8000 is used by another local project and must not be used.
 Checks:
 
 - `php artisan test`
-- `npm run typecheck`
-- `npm run build`
-- `npm run lint`
-- `npm run format:check`
+- `pnpm typecheck`
+- `pnpm build`
+- `pnpm lint`
+- `pnpm format:check`
 - `./vendor/bin/pint --test`
 - `./vendor/bin/phpstan analyse --memory-limit=512M`
 
@@ -192,14 +192,14 @@ Checks:
 No local PHP, Node, or Composer is needed.
 
 Port convention: if a port is already in use, increment by 1 and use the next port.
-The `npm run preview` and `npm run dev:all` scripts apply this automatically.
+The `pnpm preview` and `pnpm dev:all` scripts apply this automatically.
 
 Quick commands:
 
 ```bash
-npm run preview       # Docker stack, auto-picks free ports
-npm run preview:stop  # stop the stack
-npm run dev:all      # local Vite + Laravel, auto-picks free ports
+pnpm preview       # Docker stack, auto-picks free ports
+pnpm preview:stop  # stop the stack
+pnpm dev:all      # local Vite + Laravel, auto-picks free ports
 ```
 
 **Option A — Compose only.**
@@ -209,8 +209,8 @@ docker compose --profile dev up -d
 docker compose exec app php artisan test
 docker compose exec app ./vendor/bin/pint --test
 docker compose exec app ./vendor/bin/phpstan analyse --memory-limit=512M
-docker compose exec node npm run typecheck
-docker compose exec node npm run build
+docker compose exec node pnpm typecheck
+docker compose exec node pnpm build
 ```
 
 **Option B — Dev container (VS Code / Cursor).**

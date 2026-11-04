@@ -7,7 +7,7 @@
     "service": "app",
     "workspaceFolder": "/var/www/html",
     "shutdownAction": "stopCompose",
-    "postCreateCommand": "composer install --no-interaction && npm install",
+    "postCreateCommand": "composer install --no-interaction && npm install -g --allow-scripts=pnpm pnpm && PNPM_CONFIG_MINIMUM_RELEASE_AGE=0 pnpm install",
     "remoteUser": "its",
     "customizations": {
         "vscode": {

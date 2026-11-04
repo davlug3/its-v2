@@ -3,12 +3,12 @@
 # Frontend assets.
 FROM node:24-alpine AS assets
 WORKDIR /app
-COPY package.json package-lock.json ./
-RUN npm ci --ignore-scripts
+COPY package.json pnpm-lock.yaml .npmrc ./
+RUN npm install -g --allow-scripts=pnpm pnpm && PNPM_CONFIG_MINIMUM_RELEASE_AGE=0 pnpm install --frozen-lockfile
 COPY resources ./resources
 COPY public ./public
 COPY vite.config.ts tsconfig.json tsconfig.app.json tsconfig.node.json components.json ./
-RUN npm run build
+RUN pnpm build
 
 # PHP dependencies.
 FROM composer:2 AS vendor
@@ -69,7 +69,7 @@ CMD ["php-fpm"]
 # Development tooling (not in the production image).
 FROM runtime AS dev
 USER root
-RUN apk add --no-cache nodejs npm git
+RUN apk add --no-cache nodejs npm git && npm install -g --allow-scripts=pnpm pnpm
 USER its
 
 EXPOSE 9000
