@@ -1,5 +1,5 @@
 import { createServer } from 'node:net';
-import { execFileSync } from 'node:child_process';
+import { spawn } from 'node:child_process';
 
 async function isFree(port) {
     return new Promise((resolve) => {
@@ -26,7 +26,9 @@ const vitePort = await freePort(5173);
 console.log(`App:  http://localhost:${appPort}`);
 console.log(`Vite: http://localhost:${vitePort}`);
 
-execFileSync('docker', ['compose', '--profile', 'dev', 'up', '-d'], {
-    stdio: 'inherit',
+const child = spawn('docker', ['compose', '--profile', 'dev', 'up', '-d'], {
+    detached: true,
+    stdio: 'ignore',
     env: { ...process.env, APP_PORT: String(appPort), VITE_PORT: String(vitePort) },
 });
+child.unref();
