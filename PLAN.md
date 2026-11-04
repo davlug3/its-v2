@@ -548,7 +548,7 @@ Exit check: all quality gates in PROMPT §40 pass.
 | Q4 | `reports.php` external consumers | Dave | Open. Keep or remove (D12). |
 | Q5 | Data retention policy | Dave | Open. |
 | Q6 | Cutover date and dual-run window | Dave | Open. |
-| Q7 | Create `.gitignore` and initialize git before any code is added | Agent | Pending Phase 1. Do not commit `.env`. |
+| Q7 | Create `.gitignore` and initialize git before any code is added | Agent | Done 2026-11-04. `.env` is ignored. |
 | Q8 | Read-only database account for development | Dave / DB owner | Open. Reduces the risk of an accidental production write. |
 | Q9 | Rotate the development database credentials at cutover | Dave | Open (D19). |
 | Q10 | D45 badge scope and cutoff. D62 list name. | Dave | Open decisions. See `DECISIONS.md` Q1. |

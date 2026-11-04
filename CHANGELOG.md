@@ -11,6 +11,12 @@ Versions start at `0.1.0` when the scaffold is ready.
 
 ### Added
 
+- **Git repository (2026-11-04).**
+  - Initialized with branch `main`.
+  - Added `.gitignore` for secrets, PHP, Node, tests, editors, and local scratch files.
+  - `.env` is ignored and is not tracked.
+  - First commit: `docs: add rebuild plan, decisions, and production baseline`.
+
 - **Project records.**
   - `PLAN.md` — 13-phase plan, progress tracker, risk list, open items.
   - `DECISIONS.md` — approved decisions with reasons and evidence.
