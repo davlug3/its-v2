@@ -192,6 +192,15 @@ Checks:
 No local PHP, Node, or Composer is needed.
 
 Port convention: if a port is already in use, increment by 1 and use the next port.
+The `npm run preview` and `npm run dev:all` scripts apply this automatically.
+
+Quick commands:
+
+```bash
+npm run preview       # Docker stack, auto-picks free ports
+npm run preview:stop  # stop the stack
+npm run dev:all      # local Vite + Laravel, auto-picks free ports
+```
 
 **Option A — Compose only.**
 
