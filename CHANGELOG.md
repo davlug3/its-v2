@@ -62,6 +62,13 @@ Versions start at `0.1.0` when the scaffold is ready.
   - All scripts, Dockerfiles, and the dev container use `pnpm`.
   - Node service switched to `node:24-bookworm` for native binding compatibility.
 
+- **Phase 2 database complete (2026-11-04).**
+  - 8 additive migrations on a staging copy of `its`.
+  - New tables: `user_profile`, `auth_audit`, `admin_audit`, `email_ingest_log`.
+  - New columns on `tickets`, `tickets_log`, `attachements`, `categories`, `groups`, `notifications`.
+  - 17 Eloquent models. Legacy tables and columns untouched.
+  - `its.users` and `its.locations` are read-only. No columns added to them.
+
 ### Changed
 
 - **UI library changed to shadcn-vue (2026-11-04).**

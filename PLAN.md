@@ -257,6 +257,17 @@ Exit check: `docker compose up` works. App boots. `composer test`, `npm run type
 
 Exit check: migrations run on a staging copy. Row counts unchanged. Legacy columns untouched.
 
+**Phase 2 exit check result (2026-11-04).**
+
+- All 13 legacy tables preserved. No legacy column dropped or narrowed.
+- 8 additive migrations ran on a staging copy of `its`.
+- New tables: `user_profile`, `auth_audit`, `admin_audit`, `email_ingest_log`.
+- New columns: `categories.deleted_at`, `groups.deleted_at`, `tickets.source`, `tickets.email_message_id`, `tickets.units_count`, `tickets.updated_at`, `tickets_log.action`, `tickets_log.meta`, `attachements.storage_path`, `mime_type`, `size_bytes`, `sha256`, `uploaded_by`, `created_at`.
+- Indexes added to `tickets`, `tickets_log`, `notifications`, `attachements`.
+- Eloquent models created for all 13 legacy tables plus 4 new tables.
+- `its.users` and `its.locations` are read-only. No columns added to them.
+- `php artisan migrate`, `php artisan test`, `pint`, `phpstan` all pass.
+
 ---
 
 ### Phase 3 — Authentication and session
@@ -593,7 +604,7 @@ Exit check: all quality gates in PROMPT §40 pass.
 |---|---|---|---|
 | 0 Documentation | Done | 2026-11-04 | 2026-11-04 |
 | 1 Scaffold | Done | 2026-11-04 | 2026-11-04 |
-| 2 Database | Not started | — | — |
+| 2 Database | Done | 2026-11-04 | 2026-11-04 |
 | 3 Auth | Not started | — | — |
 | 4 Routing | Not started | — | — |
 | 5 Tickets | Not started | — | — |
@@ -706,3 +717,4 @@ Summary: 78 defects. 3 decided, 2 open decisions, 73 not started.
 | 2026-11-04 | Frontend language set to TypeScript in strict mode across all records. |
 | 2026-11-04 | UI library changed from PrimeVue to shadcn-vue + Reka UI. Vue Router set to 5.x. Forms use vee-validate. |
 | 2026-11-04 | Phase 1 scaffold complete. Laravel 13, Vue 3.5 + Vite 8 + TS 5.9.3, Tailwind 4, shadcn-vue + Reka UI, Yup + vee-validate, JWT, Docker Compose. All local checks pass. |
+| 2026-11-04 | Phase 2 database complete. 8 additive migrations, 4 new tables, 17 Eloquent models. Legacy tables untouched. |
