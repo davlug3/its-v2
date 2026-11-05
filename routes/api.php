@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\TicketController;
@@ -27,5 +28,7 @@ Route::middleware(['auth:api', 'fpc', 'csrf'])->group(function () {
         Route::post('/categories', [CategoryController::class, 'store']);
         Route::put('/categories/{id}', [CategoryController::class, 'update']);
         Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
+
+        Route::get('/permissions', [PermissionController::class, 'index']);
     });
 });

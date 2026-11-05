@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AdminAudit;
 use App\Models\UserProfile;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -60,8 +61,19 @@ class UserController extends Controller
         ]);
 
         $profile = UserProfile::firstOrNew(['user_id' => $id]);
+        $beforeAcl = $profile->exists ? $profile->acl_id : null;
         $profile->acl_id = (int) $validated['acl_id'];
         $profile->save();
+
+        AdminAudit::create([
+            'actor_user_id' => $request->user()->id,
+            'action' => 'update_access',
+            'entity' => 'user',
+            'entity_id' => $id,
+            'before' => json_encode(['acl_id' => $beforeAcl]),
+            'after' => json_encode(['acl_id' => $validated['acl_id']]),
+            'ip' => $request->ip(),
+        ]);
 
         return response()->json(['message' => 'Access updated.']);
     }
