@@ -98,15 +98,6 @@ class UserController extends Controller
         return response()->json(['message' => 'Supervisor updated.']);
     }
 
-    public function toggleFpc(Request $request, int $id): JsonResponse
-    {
-        $profile = UserProfile::firstOrNew(['user_id' => $id]);
-        $profile->fpc = $profile->fpc === 1 ? 2 : 1;
-        $profile->save();
-
-        return response()->json(['fpc' => $profile->fpc]);
-    }
-
     public function resetPassword(Request $request, int $id): JsonResponse
     {
         $actor = $request->user();
@@ -120,14 +111,10 @@ class UserController extends Controller
         $validated = $request->validate([
             'password' => ['required', 'string', 'min:12'],
             'confirm' => ['required', 'string', 'same:password'],
-            'force_change' => ['boolean'],
         ]);
-
-        $forceChange = (bool) ($validated['force_change'] ?? true);
 
         $profile = UserProfile::firstOrNew(['user_id' => $id]);
         $profile->password_v2 = Hash::make($validated['password']);
-        $profile->fpc = $forceChange ? 1 : 2;
         $profile->save();
 
         AdminAudit::create([

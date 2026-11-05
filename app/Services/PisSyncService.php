@@ -60,7 +60,6 @@ class PisSyncService
         if (! $profile->exists) {
             $profile->acl_id = $aclId;
             $profile->group_id = 1;
-            $profile->fpc = 1;
             $profile->login_attempts = (int) $user->failed_attempts;
             $profile->save();
         } else {

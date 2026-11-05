@@ -95,7 +95,6 @@ class LoginController extends Controller
         if (! $profile->exists) {
             $profile->acl_id = 1;
             $profile->group_id = 1;
-            $profile->fpc = 1;
             $profile->save();
         }
 
@@ -175,7 +174,6 @@ class LoginController extends Controller
 
         $profile = UserProfile::firstOrNew(['user_id' => $user->id]);
         $profile->password_v2 = Hash::make($request->input('new_password'));
-        $profile->fpc = 2;
         $profile->save();
 
         return response()->json(['message' => 'Password changed.']);

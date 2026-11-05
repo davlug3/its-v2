@@ -11,9 +11,9 @@ Route::post('/auth/login', [LoginController::class, 'login']);
 Route::post('/auth/logout', [LoginController::class, 'logout'])->middleware('auth:api');
 Route::get('/auth/me', [LoginController::class, 'me'])->middleware('auth:api');
 Route::post('/auth/change-password', [LoginController::class, 'changePassword'])
-    ->middleware(['auth:api', 'fpc', 'csrf']);
+    ->middleware(['auth:api', 'csrf']);
 
-Route::middleware(['auth:api', 'fpc', 'csrf'])->group(function () {
+Route::middleware(['auth:api', 'csrf'])->group(function () {
     Route::post('/tickets', [TicketController::class, 'store']);
     Route::post('/tickets/end-user', [TicketController::class, 'endUserStore']);
     Route::get('/tickets', [TicketController::class, 'index']);
@@ -25,7 +25,6 @@ Route::middleware(['auth:api', 'fpc', 'csrf'])->group(function () {
         Route::get('/users', [UserController::class, 'index']);
         Route::patch('/users/{id}/access', [UserController::class, 'updateAccess']);
         Route::patch('/users/{id}/supervisor', [UserController::class, 'updateSupervisor']);
-        Route::patch('/users/{id}/fpc', [UserController::class, 'toggleFpc']);
         Route::post('/users/{id}/reset-password', [UserController::class, 'resetPassword']);
         Route::get('/users/{id}/supervisor-tree', [UserController::class, 'supervisorTree']);
         Route::delete('/users/{id}', [UserController::class, 'softDelete']);

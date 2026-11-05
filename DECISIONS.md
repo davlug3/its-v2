@@ -724,3 +724,11 @@ These items need a decision from Dave. They do not block Phase 1.
 | 2026-11-04 | Initial record. Added A1–A5, C1, C2, C6, C7, D27, D53, D74, T1, T2, P1, Q1. |
 | 2026-11-04 | Added U1 (shadcn-vue), U2 (TypeScript 5.9.3), U3 (Vue Router 5), U4 (vee-validate), U5 (Yup), U6 (port 8080). |
 | 2026-11-04 | Revised C6. Identity, location, and state now come from `jblmrhpayroll`. Added C8: retire `its.users` and `its.locations`, add `user_profile`. |
+
+## U8 — Retire forced password change (fpc)
+
+* Date: 2026-11-05
+* Decision: The forced-password-change feature is retired. The `user_profile.fpc` column is retained for legacy compatibility but is no longer enforced, written, or read by application code.
+* Reason: User direction. The `ForcePasswordChange` middleware, the `?p=change_password` redirect, and the `fpc = 2` requirement for admin-created accounts are all dropped.
+* Effect: D06 fix is superseded (no forced-change guard). Section 7.4 login redirect table no longer branches on `fpc`. AT-04 is retired. `PROMPT.md` sections 7.4, 7.5, 7.6, and D23 should be read as "retired" rather than "fixed".
+* Voluntary self-service password change (`/auth/change-password`) remains available.

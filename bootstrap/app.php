@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Middleware\ForcePasswordChange;
 use App\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -25,7 +24,6 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         $middleware->alias([
-            'fpc' => ForcePasswordChange::class,
             'csrf' => VerifyCsrfToken::class,
         ]);
     })
