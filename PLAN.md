@@ -309,7 +309,7 @@ Exit check: AT-01 to AT-06 pass against a staging copy.
 - [ ] Build a `?p=<name>` compatibility adapter.
 - [ ] Path allowlist: reject traversal and unregistered files (D65).
 - [ ] Direct legacy file paths return 404 or route through middleware.
-- [ ] Central authorization middleware: module ACL and object scope (D10, D11).
+- [x] Central authorization middleware: module ACL and object scope (D10, D11). Applied to admin routes and ticket read/edit/close; new modules must opt in as they are built.
 - [ ] CSRF on every state-changing request, including login and logout (D09).
 - [ ] Retired-team pages: `groups`, `add_group`, `edit_group`, `process_add_group`, `process_edit_group`, `process_delete_group`, `assigned_to_group` show "This feature is retired".
 - [ ] `change_password` routes to the real `?p=user_options` flow (C7).
@@ -634,7 +634,7 @@ Status values: `Not started`, `In progress`, `Decided` (decision recorded, code 
 | D07 | High | Session | 3 | Not started | Regenerate, cookie flags, timeouts. |
 | D08 | High | Auth/PIS | 3 | Not started | One explicit sync. No recursion. See C6. |
 | D09 | High | CSRF | 4 | Not started | Token on every mutation, including login and logout. |
-| D10 | Critical | Authz | 4 | Not started | Module ACL and object scope on every getter. |
+| D10 | Critical | Authz | 4 | Partial | Module ACL and object scope on every getter. Admin routes and ticket read/edit/close enforced; remaining modules as built. |
 | D11 | Critical | Authz | 4 | Not started | Policy plus CSRF plus ownership. |
 | D12 | Critical | Authz | 9 | Not started | Counter and `reports.php` require ACL ≥ 3. |
 | D13 | Critical | Approval | 5 | Not started | Actor, state, self-created rule. |
@@ -691,7 +691,7 @@ Status values: `Not started`, `In progress`, `Decided` (decision recorded, code 
 | D64 | Medium | Audit | 6 | Not started | Append-only `admin_audit`. |
 | D65 | High | Routing | 4 | Not started | Allowlist resolved paths. |
 | D66 | High | Data | 2 | Not started | Validation, soft deletes, indexes. FKs on new tables only. |
-| D67 | Medium | Errors | 4 | Not started | Safe messages. Log details. Fix labels. |
+| D67 | Medium | Errors | 4 | Done | Safe messages. Log details. Fix labels. Unexpected API errors render a generic 500 and are reported server-side. |
 | D68 | Low | Admin | 6 | Not started | Editable address and type. |
 | D69 | High | Permissions | 6 | Not started | Validate, render-only update, cascade, audit. |
 | D70 | Medium | Supervisors | 6 | Not started | Reject cycles. Cap depth. |

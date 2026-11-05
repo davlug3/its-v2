@@ -1,10 +1,13 @@
 <?php
 
+use App\Http\Middleware\EnsureAcl;
 use App\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -24,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         $middleware->alias([
+            'acl' => EnsureAcl::class,
             'csrf' => VerifyCsrfToken::class,
         ]);
     })
@@ -31,4 +35,19 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+
+        // Never leak stack traces or SQL from unexpected API failures.
+        $exceptions->render(function (Throwable $e, Request $request) {
+            if (! $request->is('api/*') && ! $request->expectsJson()) {
+                return null;
+            }
+
+            if ($e instanceof ValidationException || $e instanceof HttpExceptionInterface) {
+                return null;
+            }
+
+            report($e);
+
+            return response()->json(['message' => 'An unexpected error occurred.'], 500);
+        });
     })->create();

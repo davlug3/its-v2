@@ -71,6 +71,17 @@ class TicketController extends Controller
     {
         $user = $request->user();
 
+        $ticket = Ticket::find($id);
+        if ($ticket === null) {
+            return response()->json(['message' => 'Ticket not found.'], 404);
+        }
+
+        $canEdit = $this->aclOf($request) >= 3 || $ticket->created_uid === (int) $user->id;
+
+        if (! $canEdit) {
+            return response()->json(['message' => 'Forbidden.'], 403);
+        }
+
         $result = $this->tickets->edit($id, $request->all(), (int) $user->id);
 
         if (! $result['ok']) {
@@ -90,11 +101,9 @@ class TicketController extends Controller
             return response()->json(['message' => 'Ticket not found.'], 404);
         }
 
-        $profile = UserProfile::where('user_id', $user->id)->first();
-        $acl = $profile !== null ? $profile->acl_id : 1;
         $canClose = $ticket->created_uid === (int) $user->id
             || $ticket->assigned_uid === (int) $user->id
-            || $acl >= 3;
+            || $this->aclOf($request) >= 3;
 
         $result = $this->tickets->close($id, (int) $user->id, $canClose);
 
@@ -105,7 +114,7 @@ class TicketController extends Controller
         return response()->json(['message' => $result['message']]);
     }
 
-    public function show(int $id): JsonResponse
+    public function show(Request $request, int $id): JsonResponse
     {
         $ticket = Ticket::find($id);
 
@@ -113,6 +122,30 @@ class TicketController extends Controller
             return response()->json(['message' => 'Ticket not found.'], 404);
         }
 
+        $userId = (int) $request->user()->id;
+
+        $canView = $this->aclOf($request) >= 3
+            || $ticket->created_uid === $userId
+            || $ticket->assigned_uid === $userId
+            || $ticket->eu_uid === $userId;
+
+        if (! $canView) {
+            return response()->json(['message' => 'Forbidden.'], 403);
+        }
+
         return response()->json($ticket);
+    }
+
+    private function aclOf(Request $request): int
+    {
+        $user = $request->user();
+
+        if ($user === null) {
+            return 1;
+        }
+
+        $profile = UserProfile::where('user_id', $user->id)->first();
+
+        return $profile !== null ? (int) $profile->acl_id : 1;
     }
 }

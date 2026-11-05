@@ -22,18 +22,22 @@ Route::middleware(['auth:api', 'csrf'])->group(function () {
     Route::post('/tickets/{id}/close', [TicketController::class, 'close']);
 
     Route::prefix('admin')->group(function () {
-        Route::get('/users', [UserController::class, 'index']);
-        Route::patch('/users/{id}/access', [UserController::class, 'updateAccess']);
-        Route::patch('/users/{id}/supervisor', [UserController::class, 'updateSupervisor']);
-        Route::post('/users/{id}/reset-password', [UserController::class, 'resetPassword']);
-        Route::get('/users/{id}/supervisor-tree', [UserController::class, 'supervisorTree']);
-        Route::delete('/users/{id}', [UserController::class, 'softDelete']);
+        Route::middleware('acl:3')->group(function () {
+            Route::get('/users', [UserController::class, 'index']);
+            Route::patch('/users/{id}/access', [UserController::class, 'updateAccess']);
+            Route::patch('/users/{id}/supervisor', [UserController::class, 'updateSupervisor']);
+            Route::post('/users/{id}/reset-password', [UserController::class, 'resetPassword']);
+            Route::get('/users/{id}/supervisor-tree', [UserController::class, 'supervisorTree']);
+            Route::delete('/users/{id}', [UserController::class, 'softDelete']);
 
-        Route::get('/categories', [CategoryController::class, 'index']);
-        Route::post('/categories', [CategoryController::class, 'store']);
-        Route::put('/categories/{id}', [CategoryController::class, 'update']);
-        Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
+            Route::get('/categories', [CategoryController::class, 'index']);
+            Route::post('/categories', [CategoryController::class, 'store']);
+            Route::put('/categories/{id}', [CategoryController::class, 'update']);
+            Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
+        });
 
-        Route::get('/permissions', [PermissionController::class, 'index']);
+        Route::middleware('acl:9')->group(function () {
+            Route::get('/permissions', [PermissionController::class, 'index']);
+        });
     });
 });
