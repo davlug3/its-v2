@@ -17,10 +17,12 @@ class UserController extends Controller
         $search = trim((string) $request->query('search', ''));
         $acl = $request->query('acl');
 
+        // Identity and payroll live in the PIS database; helpdesk attributes live
+        // in the its database. The two cannot be joined in one query, so the
+        // profile rows are fetched separately and merged into the page.
         $query = DB::connection('payroll')
             ->table('user as u')
             ->join('payroll as p', 'u.id', '=', 'p.id')
-            ->leftJoin('user_profile as up', 'u.id', '=', 'up.user_id')
             ->select([
                 'u.id',
                 'u.username',
@@ -29,13 +31,6 @@ class UserController extends Controller
                 'p.lname',
                 'p.department',
                 'p.status',
-                'up.acl_id',
-                'up.group_id',
-                'up.fpc',
-                'up.login_attempts',
-                'up.last_login_dt',
-                'up.supervisor_id',
-                'up.deleted_at',
             ]);
 
         if ($search !== '') {
@@ -47,12 +42,60 @@ class UserController extends Controller
         }
 
         if ($acl !== null && $acl !== '') {
-            $query->where('up.acl_id', (int) $acl);
+            $ids = UserProfile::withTrashed()
+                ->where('acl_id', (int) $acl)
+                ->pluck('user_id')
+                ->all();
+
+            if ($ids === []) {
+                return response()->json([
+                    'data' => [],
+                    'current_page' => 1,
+                    'last_page' => 1,
+                    'total' => 0,
+                    'per_page' => 40,
+                ]);
+            }
+
+            $query->whereIn('u.id', $ids);
         }
 
         $users = $query->orderBy('p.lname')->paginate(40);
 
-        return response()->json($users);
+        $profiles = UserProfile::withTrashed()
+            ->whereIn('user_id', $users->pluck('id')->all())
+            ->get()
+            ->keyBy('user_id');
+
+        $rows = array_map(function (object $user) use ($profiles): array {
+            $id = (int) $user->id;
+            $profile = $profiles->get($id);
+
+            return [
+                'id' => $id,
+                'username' => $user->username,
+                'name' => $user->name,
+                'mname' => $user->mname,
+                'lname' => $user->lname,
+                'department' => $user->department,
+                'status' => $user->status,
+                'acl_id' => $profile->acl_id ?? null,
+                'group_id' => $profile->group_id ?? null,
+                'fpc' => $profile->fpc ?? null,
+                'login_attempts' => $profile->login_attempts ?? null,
+                'last_login_dt' => $profile->last_login_dt ?? null,
+                'supervisor_id' => $profile->supervisor_id ?? null,
+                'deleted_at' => $profile->deleted_at ?? null,
+            ];
+        }, $users->items());
+
+        return response()->json([
+            'data' => $rows,
+            'current_page' => $users->currentPage(),
+            'last_page' => $users->lastPage(),
+            'per_page' => $users->perPage(),
+            'total' => $users->total(),
+        ]);
     }
 
     public function updateAccess(Request $request, int $id): JsonResponse

@@ -36,6 +36,29 @@ const router = createRouter({
                     name: 'ticket-detail',
                     component: () => import('@/pages/TicketDetailPage.vue'),
                 },
+                {
+                    path: 'user-options',
+                    name: 'user-options',
+                    component: () => import('@/pages/UserOptionsPage.vue'),
+                },
+                {
+                    path: 'admin/users',
+                    name: 'admin-users',
+                    component: () => import('@/pages/admin/AdminUsersPage.vue'),
+                    meta: { acl: 3 },
+                },
+                {
+                    path: 'admin/categories',
+                    name: 'admin-categories',
+                    component: () => import('@/pages/admin/AdminCategoriesPage.vue'),
+                    meta: { acl: 3 },
+                },
+                {
+                    path: 'admin/permissions',
+                    name: 'admin-permissions',
+                    component: () => import('@/pages/admin/AdminPermissionsPage.vue'),
+                    meta: { acl: 9 },
+                },
             ],
         },
         {
@@ -58,6 +81,11 @@ router.beforeEach(async (to) => {
 
     if (auth.isAuthenticated && auth.user === null) {
         await auth.fetchMe();
+    }
+
+    const required = to.meta.acl;
+    if (typeof required === 'number' && (auth.user?.acl ?? 1) < required) {
+        return { name: 'dashboard' };
     }
 
     return true;
