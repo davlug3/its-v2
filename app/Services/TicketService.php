@@ -51,6 +51,7 @@ class TicketService
             $ticket->assigned_gid = 0;
             $ticket->assigned_uid = 0;
             $ticket->state_id = 1;
+            $ticket->eu_uid = $actorId;
             $ticket->approved_by_supervisor = 0;
             $ticket->source = $isStaff ? 'staff' : 'enduser';
             $ticket->units_count = (int) ($data['units_count'] ?? 0);

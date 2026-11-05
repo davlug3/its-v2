@@ -55,15 +55,19 @@ class PisSyncService
 
         $state = $payroll->status === 'A' ? 1 : 2;
 
-        UserProfile::updateOrCreate(
-            ['user_id' => $userId],
-            [
-                'acl_id' => $aclId,
-                'group_id' => 1,
-                'fpc' => 1,
-                'login_attempts' => (int) $user->failed_attempts,
-            ]
-        );
+        $profile = UserProfile::firstOrNew(['user_id' => $userId]);
+
+        if (! $profile->exists) {
+            $profile->acl_id = $aclId;
+            $profile->group_id = 1;
+            $profile->fpc = 1;
+            $profile->login_attempts = (int) $user->failed_attempts;
+            $profile->save();
+        } else {
+            // Update ACL in case the department changed.
+            $profile->acl_id = $aclId;
+            $profile->save();
+        }
 
         return ['ok' => true, 'message' => 'Synced. Location: '.$departmentId];
     }
