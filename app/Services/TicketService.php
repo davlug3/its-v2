@@ -178,6 +178,39 @@ class TicketService
     }
 
     /**
+     * List tickets involving the given user.
+     *
+     * @return array{tickets: array<int, array<string, mixed>>, total: int, page: int, per_page: int}
+     */
+    public function listForUser(int $userId, int $page = 1, int $perPage = 20, ?int $stateId = null): array
+    {
+        $query = Ticket::query()->where(function ($q) use ($userId): void {
+            $q->where('created_uid', $userId)
+                ->orWhere('assigned_uid', $userId)
+                ->orWhere('eu_uid', $userId);
+        });
+
+        if ($stateId !== null) {
+            $query->where('state_id', $stateId);
+        }
+
+        $total = (int) $query->count();
+
+        $tickets = $query
+            ->orderByDesc('created_date')
+            ->skip(($page - 1) * $perPage)
+            ->take($perPage)
+            ->get();
+
+        return [
+            'tickets' => $tickets->toArray(),
+            'total' => $total,
+            'page' => $page,
+            'per_page' => $perPage,
+        ];
+    }
+
+    /**
      * Close a ticket.
      *
      * @return array{ok: bool, message: string}

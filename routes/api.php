@@ -16,6 +16,7 @@ Route::post('/auth/change-password', [LoginController::class, 'changePassword'])
 Route::middleware(['auth:api', 'fpc', 'csrf'])->group(function () {
     Route::post('/tickets', [TicketController::class, 'store']);
     Route::post('/tickets/end-user', [TicketController::class, 'endUserStore']);
+    Route::get('/tickets', [TicketController::class, 'index']);
     Route::get('/tickets/{id}', [TicketController::class, 'show']);
     Route::put('/tickets/{id}', [TicketController::class, 'update']);
     Route::post('/tickets/{id}/close', [TicketController::class, 'close']);

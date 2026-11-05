@@ -195,10 +195,13 @@ class LoginController extends Controller
             $fullname = trim($payroll->name.' '.$payroll->mname.' '.$payroll->lname);
         }
 
+        $profile = UserProfile::where('user_id', $user->id)->first();
+
         return response()->json([
             'id' => $user->id,
             'username' => $user->username,
             'fullname' => $fullname,
+            'acl' => $profile !== null ? $profile->acl_id : 1,
         ]);
     }
 

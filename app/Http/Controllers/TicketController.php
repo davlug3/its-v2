@@ -12,6 +12,21 @@ class TicketController extends Controller
 {
     public function __construct(private TicketService $tickets) {}
 
+    public function index(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $page = max(1, (int) $request->query('page', 1));
+        $perPage = min(100, max(1, (int) $request->query('per_page', 20)));
+
+        $stateId = $request->query('state_id');
+        $stateId = $stateId === null ? null : (int) $stateId;
+
+        $result = $this->tickets->listForUser((int) $user->id, $page, $perPage, $stateId);
+
+        return response()->json($result);
+    }
+
     public function store(Request $request): JsonResponse
     {
         $user = $request->user();
@@ -76,7 +91,7 @@ class TicketController extends Controller
         }
 
         $profile = UserProfile::where('user_id', $user->id)->first();
-        $acl = $profile->acl_id ?? 1;
+        $acl = $profile !== null ? $profile->acl_id : 1;
         $canClose = $ticket->created_uid === (int) $user->id
             || $ticket->assigned_uid === (int) $user->id
             || $acl >= 3;
