@@ -607,7 +607,7 @@ Exit check: all quality gates in PROMPT §40 pass.
 | 2 Database | Done | 2026-11-04 | 2026-11-04 |
 | 3 Auth | In progress | 2026-11-04 | — |
 | 4 Routing | In progress | 2026-11-04 | — |
-| 5 Tickets | Not started | — | — |
+| 5 Tickets | In progress | 2026-11-05 | — |
 | 6 Administration | Not started | — | — |
 | 7 Lists/search/detail | Not started | — | — |
 | 8 Dashboard | Not started | — | — |
