@@ -8,6 +8,7 @@ use App\Models\UserProfile;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
@@ -106,6 +107,40 @@ class UserController extends Controller
         return response()->json(['fpc' => $profile->fpc]);
     }
 
+    public function resetPassword(Request $request, int $id): JsonResponse
+    {
+        $actor = $request->user();
+
+        // Only ACL 9 can reset passwords.
+        $actorProfile = UserProfile::where('user_id', $actor->id)->first();
+        if ($actorProfile === null || (int) $actorProfile->acl_id !== 9) {
+            return response()->json(['message' => 'Forbidden.'], 403);
+        }
+
+        $validated = $request->validate([
+            'password' => ['required', 'string', 'min:12'],
+            'confirm' => ['required', 'string', 'same:password'],
+            'force_change' => ['boolean'],
+        ]);
+
+        $forceChange = (bool) ($validated['force_change'] ?? true);
+
+        $profile = UserProfile::firstOrNew(['user_id' => $id]);
+        $profile->password_v2 = Hash::make($validated['password']);
+        $profile->fpc = $forceChange ? 1 : 2;
+        $profile->save();
+
+        AdminAudit::create([
+            'actor_user_id' => $actor->id,
+            'action' => 'reset_password',
+            'entity' => 'user',
+            'entity_id' => $id,
+            'ip' => $request->ip(),
+        ]);
+
+        return response()->json(['message' => 'Password reset.']);
+    }
+
     public function softDelete(int $id): JsonResponse
     {
         $protectedAdmins = [334, 2194, 2415, 3040, 4735, 4862, 4991, 4992];
@@ -123,6 +158,31 @@ class UserController extends Controller
         $profile->delete();
 
         return response()->json(['message' => 'User disabled.']);
+    }
+
+    public function supervisorTree(int $id): JsonResponse
+    {
+        $tree = [];
+        $current = $id;
+        $depth = 0;
+
+        while ($current !== null && $depth < 10) {
+            $profile = UserProfile::where('user_id', $current)->first();
+
+            if ($profile === null) {
+                break;
+            }
+
+            $tree[] = [
+                'user_id' => $current,
+                'supervisor_id' => $profile->supervisor_id,
+            ];
+
+            $current = $profile->supervisor_id;
+            $depth++;
+        }
+
+        return response()->json($tree);
     }
 
     private function wouldCreateCycle(int $userId, int $supervisorId): bool

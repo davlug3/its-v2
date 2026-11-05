@@ -22,6 +22,8 @@ Route::middleware(['auth:api', 'fpc', 'csrf'])->group(function () {
         Route::patch('/users/{id}/access', [UserController::class, 'updateAccess']);
         Route::patch('/users/{id}/supervisor', [UserController::class, 'updateSupervisor']);
         Route::patch('/users/{id}/fpc', [UserController::class, 'toggleFpc']);
+        Route::post('/users/{id}/reset-password', [UserController::class, 'resetPassword']);
+        Route::get('/users/{id}/supervisor-tree', [UserController::class, 'supervisorTree']);
         Route::delete('/users/{id}', [UserController::class, 'softDelete']);
 
         Route::get('/categories', [CategoryController::class, 'index']);
