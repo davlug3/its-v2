@@ -21,6 +21,21 @@ const router = createRouter({
                     name: 'dashboard',
                     component: () => import('@/pages/DashboardPage.vue'),
                 },
+                {
+                    path: 'my-tickets',
+                    name: 'my-tickets',
+                    component: () => import('@/pages/MyTicketsPage.vue'),
+                },
+                {
+                    path: 'tickets/new',
+                    name: 'new-ticket',
+                    component: () => import('@/pages/NewTicketPage.vue'),
+                },
+                {
+                    path: 'tickets/:id',
+                    name: 'ticket-detail',
+                    component: () => import('@/pages/TicketDetailPage.vue'),
+                },
             ],
         },
         {

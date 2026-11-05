@@ -8,6 +8,7 @@ interface AuthUser {
     id: number;
     username: string;
     fullname: string;
+    acl: number;
 }
 
 export const useAuthStore = defineStore('auth', () => {

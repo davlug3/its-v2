@@ -1,9 +1,26 @@
 <script setup lang="ts">
-import { RouterView } from 'vue-router';
+import { computed } from 'vue';
+import { RouterLink, RouterView } from 'vue-router';
 
 import { useAuthStore } from '@/stores/auth';
+import { navGroups, type NavItem } from '@/config/nav';
 
 const auth = useAuthStore();
+
+const acl = computed(() => auth.user?.acl ?? 1);
+
+const visibleGroups = computed(() =>
+    navGroups
+        .map((group) => ({
+            ...group,
+            items: group.items.filter((item: NavItem) => (item.acl ?? 1) <= acl.value),
+        }))
+        .filter((group) => group.items.length > 0),
+);
+
+function iconClass(): string {
+    return 'h-4 w-4';
+}
 </script>
 
 <template>
@@ -12,13 +29,22 @@ const auth = useAuthStore();
             <div class="flex h-14 items-center border-b border-border px-4">
                 <span class="text-sm font-semibold text-foreground">IHOMS</span>
             </div>
-            <nav class="p-2">
-                <RouterLink
-                    to="/"
-                    class="block rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-haze hover:text-foreground"
-                >
-                    Dashboard
-                </RouterLink>
+            <nav class="space-y-4 p-2">
+                <div v-for="group in visibleGroups" :key="group.label">
+                    <p class="px-3 pt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        {{ group.label }}
+                    </p>
+                    <RouterLink
+                        v-for="item in group.items"
+                        :key="item.to"
+                        :to="item.to"
+                        class="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-haze hover:text-foreground"
+                        active-class="bg-haze text-foreground"
+                    >
+                        <component :is="item.icon" :class="iconClass()" />
+                        {{ item.label }}
+                    </RouterLink>
+                </div>
             </nav>
         </aside>
 
