@@ -69,6 +69,14 @@ Versions start at `0.1.0` when the scaffold is ready.
   - 17 Eloquent models. Legacy tables and columns untouched.
   - `its.users` and `its.locations` are read-only. No columns added to them.
 
+- **Phase 6 administration complete (2026-11-05).**
+  - Admin user list reads from PIS with ITS attributes overlaid.
+  - Access, supervisor, fpc toggle, soft delete, and password reset endpoints.
+  - Category CRUD with protected id 1.
+  - Permission endpoint lists ACLs.
+  - Admin audit writes on all admin mutations.
+  - Supervisor tree with cycle detection.
+
 ### Changed
 
 - **UI library changed to shadcn-vue (2026-11-04).**
