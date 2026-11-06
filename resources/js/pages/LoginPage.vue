@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useForm } from 'vee-validate';
 import { toTypedSchema } from '@vee-validate/yup';
+import { useRoute, useRouter } from 'vue-router';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +11,8 @@ import { useAuthStore } from '@/stores/auth';
 import { loginSchema } from '@/schemas/login';
 
 const auth = useAuthStore();
+const router = useRouter();
+const route = useRoute();
 
 const { handleSubmit, errors, defineField } = useForm({
     validationSchema: toTypedSchema(loginSchema),
@@ -19,7 +22,11 @@ const [username, usernameAttrs] = defineField('username');
 const [password, passwordAttrs] = defineField('password');
 
 const onSubmit = handleSubmit(async (values) => {
-    await auth.login(values);
+    const ok = await auth.login(values);
+    if (ok) {
+        const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/';
+        await router.push(redirect);
+    }
 });
 </script>
 
