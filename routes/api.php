@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\TicketController;
 use Illuminate\Support\Facades\Route;
 
@@ -19,6 +20,11 @@ Route::middleware(['auth:api', 'csrf', 'idempotency'])->group(function () {
     Route::get('/tickets', [TicketController::class, 'index']);
     Route::get('/tickets/by-subordinates', [TicketController::class, 'bySubordinates']);
     Route::get('/tickets/pending-review-count', [TicketController::class, 'pendingReviewCount']);
+
+    Route::middleware('acl:3')->group(function () {
+        Route::get('/reports/tickets', [ReportController::class, 'tickets']);
+        Route::get('/reports/monthly', [ReportController::class, 'monthly']);
+    });
     Route::get('/tickets/{id}', [TicketController::class, 'show']);
     Route::put('/tickets/{id}', [TicketController::class, 'update']);
     Route::patch('/tickets/{id}/assign', [TicketController::class, 'assign']);

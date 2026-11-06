@@ -54,6 +54,12 @@ const router = createRouter({
                     component: () => import('@/pages/UserOptionsPage.vue'),
                 },
                 {
+                    path: 'reports',
+                    name: 'reports',
+                    component: () => import('@/pages/ReportsPage.vue'),
+                    meta: { acl: 3 },
+                },
+                {
                     path: 'admin/users',
                     name: 'admin-users',
                     component: () => import('@/pages/admin/AdminUsersPage.vue'),
