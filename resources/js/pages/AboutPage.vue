@@ -2,6 +2,7 @@
 import { onMounted, ref } from 'vue';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import PageHeader from '@/components/common/PageHeader.vue';
 import { api } from '@/services/api';
 import { APP_VERSION } from '@/version';
 
@@ -36,7 +37,7 @@ onMounted(async () => {
 
 <template>
     <div class="space-y-4">
-        <h1 class="text-subheading font-semibold text-foreground">About</h1>
+        <PageHeader title="About" description="Application and environment information." />
 
         <Card>
             <CardHeader>

@@ -4,6 +4,7 @@ import { computed, onMounted, ref } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import PageHeader from '@/components/common/PageHeader.vue';
 import {
     Dialog,
     DialogContent,
@@ -177,7 +178,7 @@ onMounted(load);
 
 <template>
     <div class="space-y-4">
-        <h1 class="text-subheading font-semibold text-foreground">Users</h1>
+        <PageHeader title="Users" description="Manage access, supervisors, and passwords." />
 
         <Card>
             <CardHeader>

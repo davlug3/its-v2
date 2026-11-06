@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import PageHeader from '@/components/common/PageHeader.vue';
 import {
     Dialog,
     DialogContent,
@@ -222,7 +223,7 @@ onMounted(load);
 
 <template>
     <div class="space-y-4">
-        <h1 class="text-subheading font-semibold text-foreground">Tickets by subordinates</h1>
+        <PageHeader title="Tickets by subordinates" description="Review and approve subordinate tickets." />
 
         <Card>
             <CardHeader>

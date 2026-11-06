@@ -4,6 +4,7 @@ import { ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import PageHeader from '@/components/common/PageHeader.vue';
 import { Label } from '@/components/ui/label';
 import { api } from '@/services/api';
 import { useAuthStore } from '@/stores/auth';
@@ -49,7 +50,7 @@ const submit = async (): Promise<void> => {
 
 <template>
     <div class="space-y-4">
-        <h1 class="text-subheading font-semibold text-foreground">User options</h1>
+        <PageHeader title="User options" description="Account details and password change." />
 
         <Card>
             <CardHeader>

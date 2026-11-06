@@ -3,6 +3,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import PageHeader from '@/components/common/PageHeader.vue';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
     Table,
@@ -101,10 +102,11 @@ onUnmounted(() => {
 
 <template>
     <div class="space-y-4">
-        <div class="flex items-center justify-between">
-            <h1 class="text-subheading font-semibold text-foreground">Monitoring</h1>
-            <span class="text-xs text-muted-foreground">Last update: {{ lastUpdated || '—' }}</span>
-        </div>
+        <PageHeader title="Monitoring" description="Live open-ticket grid.">
+            <template #actions>
+                <span class="text-xs text-muted-foreground">Last update: {{ lastUpdated || '—' }}</span>
+            </template>
+        </PageHeader>
 
         <Card>
             <CardHeader>

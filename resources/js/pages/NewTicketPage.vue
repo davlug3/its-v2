@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import PageHeader from '@/components/common/PageHeader.vue';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -85,7 +86,7 @@ const submit = async (): Promise<void> => {
 
 <template>
     <div class="space-y-4">
-        <h1 class="text-subheading font-semibold text-foreground">New ticket</h1>
+        <PageHeader title="New ticket" description="Create a new support ticket." />
 
         <Card>
             <CardHeader>

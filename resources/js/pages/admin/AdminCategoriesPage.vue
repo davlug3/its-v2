@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import PageHeader from '@/components/common/PageHeader.vue';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -131,7 +132,7 @@ onMounted(load);
 
 <template>
     <div class="space-y-4">
-        <h1 class="text-subheading font-semibold text-foreground">Categories</h1>
+        <PageHeader title="Categories" description="Create, rename, or remove ticket categories." />
 
         <Card>
             <CardHeader>

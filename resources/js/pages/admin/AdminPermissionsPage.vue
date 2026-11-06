@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import PageHeader from '@/components/common/PageHeader.vue';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
     Table,
@@ -68,7 +69,7 @@ onMounted(load);
 
 <template>
     <div class="space-y-4">
-        <h1 class="text-subheading font-semibold text-foreground">Permissions</h1>
+        <PageHeader title="Permissions" description="Access levels used across the system." />
 
         <Card>
             <CardHeader>

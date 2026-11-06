@@ -3,6 +3,7 @@ import { ref } from 'vue';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import PageHeader from '@/components/common/PageHeader.vue';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { api, getToken } from '@/services/api';
@@ -71,7 +72,7 @@ const generate = async (): Promise<void> => {
 
 <template>
     <div class="space-y-4">
-        <h1 class="text-subheading font-semibold text-foreground">Reports</h1>
+        <PageHeader title="Reports" description="Generate per-ticket and monthly reports." />
 
         <Card>
             <CardHeader>
