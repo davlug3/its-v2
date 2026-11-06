@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\DB;
 
 class TicketService
 {
+    public function __construct(private NotificationService $notifications) {}
+
     /**
      * Create a ticket.
      *
@@ -69,6 +71,12 @@ class TicketService
 
             return $ticket;
         });
+
+        $this->notifications->notify(
+            (int) $ticket->eu_uid,
+            'Ticket Created - '.$ticket->id,
+            'This is a confirmation email letting you know that your ticket was successfully created.<br /><br />Ticket ID: '.$ticket->id,
+        );
 
         return ['ok' => true, 'ticket_id' => $ticket->id, 'message' => 'Ticket created.'];
     }
@@ -305,6 +313,14 @@ class TicketService
             $log->save();
         });
 
+        if ((int) $ticket->assigned_uid > 0) {
+            $this->notifications->notify(
+                (int) $ticket->assigned_uid,
+                'Ticket Assigned - '.$ticket->id,
+                'You have been assigned ticket #'.$ticket->id.'.',
+            );
+        }
+
         return ['ok' => true, 'message' => 'Ticket assigned.'];
     }
 
@@ -420,6 +436,12 @@ class TicketService
             $log->save();
         });
 
+        $this->notifications->notify(
+            (int) $ticket->created_uid,
+            'Ticket Approved - '.$ticket->id,
+            'Ticket #'.$ticket->id.' has been approved.',
+        );
+
         return ['ok' => true, 'message' => 'Ticket approved.'];
     }
 
@@ -483,6 +505,12 @@ class TicketService
             $log->meta = ['approved_by_supervisor' => 2];
             $log->save();
         });
+
+        $this->notifications->notify(
+            (int) $ticket->created_uid,
+            'Ticket Disapproved - '.$ticket->id,
+            'Ticket #'.$ticket->id.' has been disapproved.',
+        );
 
         return ['ok' => true, 'message' => 'Ticket disapproved.'];
     }
@@ -837,9 +865,15 @@ class TicketService
             $log->date = $now;
             $log->time = $now;
             $log->action = 'close';
-            $log->meta = ['state_id' => 3];
+            $log->meta = ['state_id' => 2];
             $log->save();
         });
+
+        $this->notifications->notify(
+            (int) $ticket->created_uid,
+            'Ticket Closed - '.$ticket->id,
+            'Ticket #'.$ticket->id.' has been closed.',
+        );
 
         return ['ok' => true, 'message' => 'Ticket closed.'];
     }

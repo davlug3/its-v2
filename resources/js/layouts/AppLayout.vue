@@ -1,9 +1,20 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { RouterLink, RouterView } from 'vue-router';
+
+import { Bell } from '@lucide/vue';
 
 import { useAuthStore } from '@/stores/auth';
 import { navGroups, type NavItem } from '@/config/nav';
+import { api } from '@/services/api';
+
+interface Notification {
+    id: number;
+    subject: string;
+    data: string;
+    dt: number;
+    state: number;
+}
 
 const auth = useAuthStore();
 
@@ -18,9 +29,65 @@ const visibleGroups = computed(() =>
         .filter((group) => group.items.length > 0),
 );
 
-function iconClass(): string {
-    return 'h-4 w-4';
-}
+const notificationsOpen = ref(false);
+const notifications = ref<Notification[]>([]);
+const unreadCount = ref(0);
+let pollTimer: ReturnType<typeof setInterval> | null = null;
+
+const loadUnread = async (): Promise<void> => {
+    try {
+        const res = await api<{ count: number }>('/notifications/unread-count');
+        unreadCount.value = res.count ?? 0;
+    } catch {
+        unreadCount.value = 0;
+    }
+};
+
+const loadNotifications = async (): Promise<void> => {
+    try {
+        notifications.value = await api<Notification[]>('/notifications');
+    } catch {
+        notifications.value = [];
+    }
+};
+
+const toggleNotifications = async (): Promise<void> => {
+    notificationsOpen.value = !notificationsOpen.value;
+    if (notificationsOpen.value) {
+        await loadNotifications();
+    }
+};
+
+const markRead = async (n: Notification): Promise<void> => {
+    if (n.state === 1) {
+        try {
+            await api(`/notifications/${n.id}/read`, { method: 'POST' });
+            n.state = 2;
+            unreadCount.value = Math.max(0, unreadCount.value - 1);
+        } catch {
+            // ignore
+        }
+    }
+};
+
+const markAllRead = async (): Promise<void> => {
+    try {
+        await api('/notifications/read-all', { method: 'POST' });
+        notifications.value = notifications.value.map((n) => ({ ...n, state: 2 }));
+        unreadCount.value = 0;
+    } catch {
+        // ignore
+    }
+};
+
+onMounted(() => {
+    void loadUnread();
+    pollTimer = setInterval(() => void loadUnread(), 60000);
+});
+
+onUnmounted(() => {
+    if (pollTimer) clearInterval(pollTimer);
+});
 </script>
 
 <template>
@@ -41,7 +108,7 @@ function iconClass(): string {
                         class="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-haze hover:text-foreground"
                         active-class="bg-haze text-foreground"
                     >
-                        <component :is="item.icon" :class="iconClass()" />
+                        <component :is="item.icon" class="h-4 w-4" />
                         {{ item.label }}
                     </RouterLink>
                 </div>
@@ -52,6 +119,52 @@ function iconClass(): string {
             <header class="flex h-14 items-center justify-between border-b border-border px-4">
                 <span class="text-sm font-medium text-foreground md:hidden">IHOMS</span>
                 <div class="ml-auto flex items-center gap-2">
+                    <div class="relative">
+                        <button
+                            type="button"
+                            class="relative rounded-md p-2 text-muted-foreground hover:bg-haze hover:text-foreground"
+                            @click="toggleNotifications"
+                        >
+                            <Bell class="h-5 w-5" />
+                            <span
+                                v-if="unreadCount > 0"
+                                class="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground"
+                            >
+                                {{ unreadCount > 99 ? '99+' : unreadCount }}
+                            </span>
+                        </button>
+                        <div
+                            v-if="notificationsOpen"
+                            class="absolute right-0 top-12 z-50 w-80 rounded-md border border-border bg-background shadow-lg"
+                        >
+                            <div class="flex items-center justify-between border-b border-border px-3 py-2">
+                                <span class="text-sm font-semibold">Notifications</span>
+                                <button
+                                    type="button"
+                                    class="text-xs text-muted-foreground hover:text-foreground"
+                                    @click="markAllRead"
+                                >
+                                    Mark all read
+                                </button>
+                            </div>
+                            <div class="max-h-80 overflow-y-auto">
+                                <p v-if="notifications.length === 0" class="p-3 text-sm text-muted-foreground">
+                                    No notifications.
+                                </p>
+                                <button
+                                    v-for="n in notifications"
+                                    :key="n.id"
+                                    type="button"
+                                    class="block w-full border-b border-border px-3 py-2 text-left text-sm hover:bg-haze"
+                                    :class="n.state === 1 ? 'font-medium' : 'text-muted-foreground'"
+                                    @click="markRead(n)"
+                                >
+                                    <div class="font-medium">{{ n.subject || 'Notification' }}</div>
+                                    <div class="text-xs" v-html="n.data"></div>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                     <span class="text-sm text-muted-foreground">{{ auth.user?.username }}</span>
                     <button
                         type="button"
