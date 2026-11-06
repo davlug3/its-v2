@@ -6,17 +6,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import PageHeader from '@/components/common/PageHeader.vue';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Label } from '@/components/ui/label';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
+import DataTable from '@/components/common/DataTable.vue';
+import PageHeader from '@/components/common/PageHeader.vue';
 import { api } from '@/services/api';
 
 interface Ticket {
@@ -27,7 +19,6 @@ interface Ticket {
     created_uid: number;
     created_date: number;
     assigned_uid: number;
-    preview: string;
 }
 
 const router = useRouter();
@@ -46,25 +37,16 @@ const assignedFilter = ref('');
 const sortKey = ref('created');
 const sortDir = ref<'asc' | 'desc'>('desc');
 
-const toggleSort = (key: string): void => {
-    if (sortKey.value === key) {
-        sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
-    } else {
-        sortKey.value = key;
-        sortDir.value = 'desc';
-    }
-    page.value = 1;
-    void load();
-};
-
-const sortIndicator = (key: string): string => {
-    if (sortKey.value !== key) return '';
-    return sortDir.value === 'asc' ? ' ▲' : ' ▼';
-};
+const columns = [
+    { key: 'id', label: 'ID', sortable: true, width: 80, resizable: true },
+    { key: 'subject', label: 'Subject', sortable: true, resizable: true },
+    { key: 'state_id', label: 'State', sortable: true, width: 110, resizable: true },
+    { key: 'created_uid', label: 'Created by', sortable: true, width: 100, resizable: true },
+    { key: 'assigned_uid', label: 'Assigned', sortable: true, width: 100, resizable: true },
+    { key: 'created_date', label: 'Created', sortable: true, width: 130, resizable: true },
+];
 
 const stateLabel = (id: number): string => (id === 1 ? 'Open' : id === 2 ? 'Closed' : `State ${id}`);
-
-const stateVariant = (id: number): 'default' | 'secondary' | 'outline' => (id === 3 ? 'secondary' : id === 2 ? 'default' : 'outline');
 
 const formatDate = (ts: number): string => (ts ? new Date(ts * 1000).toLocaleDateString() : '—');
 
@@ -72,7 +54,7 @@ const load = async (): Promise<void> => {
     loading.value = true;
     error.value = null;
     try {
-        const params = new URLSearchParams({ scope: 'all', page: String(page.value), per_page: '40' });
+        const params = new URLSearchParams({ scope: 'all', page: String(page.value), per_page: '20' });
         if (search.value.trim() !== '') params.set('search', search.value.trim());
         if (stateFilter.value !== '') params.set('state_id', stateFilter.value);
         if (assignedFilter.value.trim() !== '') params.set('assigned_uid', assignedFilter.value.trim());
@@ -98,9 +80,16 @@ const apply = async (): Promise<void> => {
     await load();
 };
 
-const go = async (target: number): Promise<void> => {
-    page.value = Math.min(Math.max(1, target), lastPage.value);
-    await load();
+const onSort = (key: string, dir: 'asc' | 'desc'): void => {
+    sortKey.value = key;
+    sortDir.value = dir;
+    page.value = 1;
+    void load();
+};
+
+const onPageChange = (p: number): void => {
+    page.value = p;
+    void load();
 };
 
 onMounted(load);
@@ -149,57 +138,30 @@ onMounted(load);
             </CardHeader>
             <CardContent class="space-y-4">
                 <p v-if="error" class="text-sm text-destructive">{{ error }}</p>
-                <div v-if="loading" class="space-y-2">
-                    <Skeleton class="h-8 w-full" />
-                    <Skeleton class="h-8 w-full" />
-                    <Skeleton class="h-8 w-full" />
-                </div>
-                <p v-else-if="tickets.length === 0" class="text-sm text-muted-foreground">No tickets.</p>
 
-                <Table v-else>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead class="w-20 cursor-pointer select-none" @click="toggleSort('id')">ID{{ sortIndicator('id') }}</TableHead>
-                            <TableHead class="cursor-pointer select-none" @click="toggleSort('subject')">Subject{{ sortIndicator('subject') }}</TableHead>
-                            <TableHead class="w-32 cursor-pointer select-none" @click="toggleSort('state')">State{{ sortIndicator('state') }}</TableHead>
-                            <TableHead class="w-24 cursor-pointer select-none" @click="toggleSort('creator')">Created by{{ sortIndicator('creator') }}</TableHead>
-                            <TableHead class="w-24 cursor-pointer select-none" @click="toggleSort('assigned')">Assigned{{ sortIndicator('assigned') }}</TableHead>
-                            <TableHead class="w-28 cursor-pointer select-none" @click="toggleSort('created')">Created{{ sortIndicator('created') }}</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        <TableRow
-                            v-for="t in tickets"
-                            :key="t.id"
-                            class="cursor-pointer"
-                            @click="router.push(`/tickets/${t.id}`)"
-                        >
-                            <TableCell class="font-mono text-sm">{{ t.id }}</TableCell>
-                            <TableCell>{{ t.subject }}</TableCell>
-                            <TableCell>
-                                <Badge :variant="stateVariant(t.state_id)">{{ stateLabel(t.state_id) }}</Badge>
-                            </TableCell>
-                            <TableCell class="text-sm">{{ t.created_uid }}</TableCell>
-                            <TableCell class="text-sm">{{ t.assigned_uid || '—' }}</TableCell>
-                            <TableCell class="text-sm text-muted-foreground">
-                                {{ formatDate(t.created_date) }}
-                            </TableCell>
-                        </TableRow>
-                    </TableBody>
-                </Table>
-
-                <div class="flex items-center justify-between text-sm text-muted-foreground">
-                    <span>{{ total }} tickets</span>
-                    <div class="flex gap-2">
-                        <Button variant="outline" size="sm" :disabled="page <= 1" @click="go(page - 1)">
-                            Previous
-                        </Button>
-                        <span class="py-1">Page {{ page }} of {{ lastPage }}</span>
-                        <Button variant="outline" size="sm" :disabled="page >= lastPage" @click="go(page + 1)">
-                            Next
-                        </Button>
-                    </div>
-                </div>
+                <DataTable
+                    table-id="all-tickets"
+                    :columns="columns"
+                    :rows="tickets"
+                    :loading="loading"
+                    empty-message="No tickets."
+                    pagination="server"
+                    :page-size="20"
+                    :total="total"
+                    :page="page"
+                    :sort-key="sortKey"
+                    :sort-dir="sortDir"
+                    @sort="onSort"
+                    @page-change="onPageChange"
+                    @row-click="(row) => router.push(`/tickets/${row.id}`)"
+                >
+                    <template #cell-state_id="{ value }">
+                        <Badge :variant="value === 2 ? 'secondary' : 'outline'">{{ stateLabel(value as number) }}</Badge>
+                    </template>
+                    <template #cell-created_date="{ value }">
+                        <span class="text-sm text-muted-foreground">{{ formatDate(value as number) }}</span>
+                    </template>
+                </DataTable>
             </CardContent>
         </Card>
     </div>

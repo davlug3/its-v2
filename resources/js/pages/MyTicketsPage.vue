@@ -1,94 +1,44 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import EmptyState from '@/components/common/EmptyState.vue';
+import DataTable from '@/components/common/DataTable.vue';
 import PageHeader from '@/components/common/PageHeader.vue';
-import { Skeleton } from '@/components/ui/skeleton';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
 import { api } from '@/services/api';
 
 interface Ticket {
     id: number;
     subject: string;
     state_id: number;
-    category_id: number;
-    location_id: number;
-    created_uid: number;
     created_date: number;
-    assigned_uid: number;
-    preview: string;
 }
 
 const router = useRouter();
+
 const tickets = ref<Ticket[]>([]);
 const total = ref(0);
 const loading = ref(true);
 const error = ref<string | null>(null);
 
-const sortKey = ref('created_date');
-const sortDir = ref<'asc' | 'desc'>('desc');
+const columns = [
+    { key: 'id', label: 'ID', sortable: true, width: 80, resizable: true },
+    { key: 'subject', label: 'Subject', sortable: true, resizable: true },
+    { key: 'state_id', label: 'State', sortable: true, width: 120, resizable: true },
+    { key: 'created_date', label: 'Created', sortable: true, width: 140, resizable: true },
+];
 
-const sortedTickets = computed(() => {
-    const arr = [...tickets.value];
-    arr.sort((a, b) => {
-        const av = (a as Record<string, unknown>)[sortKey.value];
-        const bv = (b as Record<string, unknown>)[sortKey.value];
-        if (av === bv) return 0;
-        const cmp = av! < bv! ? -1 : 1;
-        return sortDir.value === 'asc' ? cmp : -cmp;
-    });
-    return arr;
-});
+const stateLabel = (id: number): string => (id === 1 ? 'Open' : id === 2 ? 'Closed' : `State ${id}`);
 
-const toggleSort = (key: string): void => {
-    if (sortKey.value === key) {
-        sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
-    } else {
-        sortKey.value = key;
-        sortDir.value = 'desc';
-    }
-};
-
-const sortIndicator = (key: string): string => {
-    if (sortKey.value !== key) return '';
-    return sortDir.value === 'asc' ? ' ▲' : ' ▼';
-};
-
-const stateLabel = (id: number): string => {
-    if (id === 1) return 'Open';
-    if (id === 2) return 'Closed';
-    return `State ${id}`;
-};
-
-const stateVariant = (id: number): 'default' | 'secondary' | 'outline' => {
-    if (id === 3) return 'secondary';
-    if (id === 2) return 'default';
-    return 'outline';
-};
-
-const formatDate = (ts: number): string => {
-    if (!ts) return '—';
-    return new Date(ts * 1000).toLocaleString();
-};
+const formatDate = (ts: number): string => (ts ? new Date(ts * 1000).toLocaleDateString() : '—');
 
 const load = async (): Promise<void> => {
     loading.value = true;
     error.value = null;
     try {
-        const res = await api<{ tickets: Ticket[]; total: number }>(
-            '/tickets?page=1&per_page=50',
-        );
+        const res = await api<{ tickets: Ticket[]; total: number }>('/tickets?page=1&per_page=50');
         tickets.value = res.tickets ?? [];
         total.value = res.total ?? 0;
     } catch (e) {
@@ -99,10 +49,6 @@ const load = async (): Promise<void> => {
 };
 
 onMounted(load);
-
-const openTicket = (id: number): void => {
-    void router.push(`/tickets/${id}`);
-};
 </script>
 
 <template>
@@ -113,50 +59,30 @@ const openTicket = (id: number): void => {
             </template>
         </PageHeader>
 
+        <p v-if="error" class="text-sm text-destructive">{{ error }}</p>
+
         <Card>
             <CardHeader>
                 <CardTitle>Tickets involving you</CardTitle>
             </CardHeader>
             <CardContent>
-                <div v-if="loading" class="space-y-2">
-                    <Skeleton class="h-8 w-full" />
-                    <Skeleton class="h-8 w-full" />
-                    <Skeleton class="h-8 w-full" />
-                </div>
-                <p v-else-if="error" class="text-sm text-destructive">{{ error }}</p>
-                <EmptyState v-else-if="tickets.length === 0" message="No tickets yet.">
-                    <template #action>
-                        <Button variant="outline" @click="router.push('/tickets/new')">Create one</Button>
+                <DataTable
+                    table-id="my-tickets"
+                    :columns="columns"
+                    :rows="tickets"
+                    :loading="loading"
+                    empty-message="No tickets yet."
+                    pagination="client"
+                    :page-size="10"
+                    @row-click="(row) => router.push(`/tickets/${row.id}`)"
+                >
+                    <template #cell-state_id="{ value }">
+                        <Badge :variant="value === 2 ? 'secondary' : 'outline'">{{ stateLabel(value as number) }}</Badge>
                     </template>
-                </EmptyState>
-                <Table v-else>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead class="w-20 cursor-pointer select-none" @click="toggleSort('id')">ID{{ sortIndicator('id') }}</TableHead>
-                            <TableHead class="cursor-pointer select-none" @click="toggleSort('subject')">Subject{{ sortIndicator('subject') }}</TableHead>
-                            <TableHead class="w-32 cursor-pointer select-none" @click="toggleSort('state_id')">State{{ sortIndicator('state_id') }}</TableHead>
-                            <TableHead class="w-44 cursor-pointer select-none" @click="toggleSort('created_date')">Created{{ sortIndicator('created_date') }}</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        <TableRow
-                            v-for="t in sortedTickets"
-                            :key="t.id"
-                            class="cursor-pointer"
-                            @click="openTicket(t.id)"
-                        >
-                            <TableCell class="font-mono text-sm">{{ t.id }}</TableCell>
-                            <TableCell>{{ t.subject }}</TableCell>
-                            <TableCell>
-                                <Badge :variant="stateVariant(t.state_id)">{{ stateLabel(t.state_id) }}</Badge>
-                            </TableCell>
-                            <TableCell class="text-sm text-muted-foreground">
-                                {{ formatDate(t.created_date) }}
-                            </TableCell>
-                        </TableRow>
-                    </TableBody>
-                </Table>
-
+                    <template #cell-created_date="{ value }">
+                        <span class="text-sm text-muted-foreground">{{ formatDate(value as number) }}</span>
+                    </template>
+                </DataTable>
                 <p v-if="!loading && total > 0" class="mt-3 text-xs text-muted-foreground">
                     Showing {{ tickets.length }} of {{ total }}.
                 </p>

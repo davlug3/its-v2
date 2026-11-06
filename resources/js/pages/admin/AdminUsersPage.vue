@@ -4,27 +4,12 @@ import { computed, onMounted, ref } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import PageHeader from '@/components/common/PageHeader.vue';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Skeleton } from '@/components/ui/skeleton';
+import DataTable from '@/components/common/DataTable.vue';
+import PageHeader from '@/components/common/PageHeader.vue';
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
 import { api } from '@/services/api';
 import { useAuthStore } from '@/stores/auth';
 
@@ -37,19 +22,19 @@ interface AdminUser {
     department: number;
     status: string;
     acl_id: number | null;
-    group_id: number | null;
-    supervisor_id: number | null;
     deleted_at: string | null;
 }
 
-interface Paginated<T> {
-    data: T[];
+interface Page {
+    data: AdminUser[];
     current_page: number;
     last_page: number;
     total: number;
+    per_page: number;
 }
 
 const auth = useAuthStore();
+
 const rows = ref<AdminUser[]>([]);
 const loading = ref(true);
 const error = ref<string | null>(null);
@@ -63,36 +48,25 @@ const total = ref(0);
 const sortKey = ref('name');
 const sortDir = ref<'asc' | 'desc'>('asc');
 
-const toggleSort = (key: string): void => {
-    if (sortKey.value === key) {
-        sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
-    } else {
-        sortKey.value = key;
-        sortDir.value = 'asc';
-    }
-    page.value = 1;
-    void load();
-};
-
-const sortIndicator = (key: string): string => {
-    if (sortKey.value !== key) return '';
-    return sortDir.value === 'asc' ? ' ▲' : ' ▼';
-};
+const columns = [
+    { key: 'id', label: 'ID', sortable: true, width: 70, resizable: true },
+    { key: 'username', label: 'User', sortable: true, resizable: true },
+    { key: 'department', label: 'Dept', sortable: true, width: 70, resizable: true },
+    { key: 'acl_id', label: 'Access', sortable: true, width: 150, resizable: true },
+    { key: 'actions', label: 'Actions', sortable: false, width: 220, resizable: true },
+];
 
 const resetOpen = ref(false);
-
-const disableOpen = ref(false);
-const disableTarget = ref<AdminUser | null>(null);
 const resetTarget = ref<AdminUser | null>(null);
 const resetPassword = ref('');
 const resetConfirm = ref('');
 const resetSaving = ref(false);
 const resetError = ref<string | null>(null);
 
-const canResetPassword = computed(() => auth.user?.acl === 9);
+const disableOpen = ref(false);
+const disableTarget = ref<AdminUser | null>(null);
 
-const fullName = (u: AdminUser): string =>
-    [u.name, u.mname, u.lname].filter(Boolean).join(' ').trim() || '—';
+const canResetPassword = computed(() => auth.user?.acl === 9);
 
 const aclLabel = (acl: number | null): string => {
     if (acl === 9) return 'Admin';
@@ -108,7 +82,8 @@ const load = async (): Promise<void> => {
         if (search.value.trim() !== '') params.set('search', search.value.trim());
         if (aclFilter.value !== 'all') params.set('acl', aclFilter.value);
         if (statusFilter.value !== 'all') params.set('status', statusFilter.value);
-        const res = await api<Paginated<AdminUser>>(`/admin/users?${params.toString()}`);
+
+        const res = await api<Page>(`/admin/users?${params.toString()}`);
         rows.value = res.data;
         page.value = res.current_page;
         lastPage.value = res.last_page;
@@ -118,6 +93,23 @@ const load = async (): Promise<void> => {
     } finally {
         loading.value = false;
     }
+};
+
+const applyFilters = async (): Promise<void> => {
+    page.value = 1;
+    await load();
+};
+
+const onSort = (key: string, dir: 'asc' | 'desc'): void => {
+    sortKey.value = key;
+    sortDir.value = dir;
+    page.value = 1;
+    void load();
+};
+
+const onPageChange = (p: number): void => {
+    page.value = p;
+    void load();
 };
 
 const updateAccess = async (user: AdminUser, acl: number): Promise<void> => {
@@ -180,11 +172,6 @@ const confirmDisable = async (): Promise<void> => {
     }
 };
 
-const go = async (target: number): Promise<void> => {
-    page.value = Math.min(Math.max(1, target), lastPage.value);
-    await load();
-};
-
 onMounted(load);
 </script>
 
@@ -197,7 +184,7 @@ onMounted(load);
                 <CardTitle>Directory</CardTitle>
             </CardHeader>
             <CardContent class="space-y-4">
-                <form class="flex flex-wrap gap-2" @submit.prevent="go(1)">
+                <form class="flex flex-wrap gap-2" @submit.prevent="applyFilters">
                     <Input v-model="search" placeholder="Search username or name" />
                     <select v-model="aclFilter" class="h-9 rounded-md border border-input bg-background px-2 text-sm">
                         <option value="all">All access</option>
@@ -214,83 +201,69 @@ onMounted(load);
                 </form>
 
                 <p v-if="error" class="text-sm text-destructive">{{ error }}</p>
-                <div v-if="loading" class="space-y-2">
-                    <Skeleton class="h-8 w-full" />
-                    <Skeleton class="h-8 w-full" />
-                    <Skeleton class="h-8 w-full" />
-                </div>
-                <p v-else-if="rows.length === 0" class="text-sm text-muted-foreground">
-                    No users found.
-                </p>
 
-                <Table v-else>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead class="w-16 cursor-pointer select-none" @click="toggleSort('id')">ID{{ sortIndicator('id') }}</TableHead>
-                            <TableHead class="cursor-pointer select-none" @click="toggleSort('username')">User{{ sortIndicator('username') }}</TableHead>
-                            <TableHead class="w-20 cursor-pointer select-none" @click="toggleSort('department')">Dept{{ sortIndicator('department') }}</TableHead>
-                            <TableHead class="w-36 cursor-pointer select-none" @click="toggleSort('acl')">Access{{ sortIndicator('acl') }}</TableHead>
-                            <TableHead class="w-64">Actions</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        <TableRow v-for="u in rows" :key="u.id">
-                            <TableCell class="font-mono text-sm">{{ u.id }}</TableCell>
-                            <TableCell>
-                                <div class="font-medium">{{ u.username }}</div>
-                                <div class="text-xs text-muted-foreground">{{ fullName(u) }}</div>
-                            </TableCell>
-                            <TableCell>{{ u.department }}</TableCell>
-                            <TableCell>
-                                <select
-                                    :value="u.acl_id ?? 1"
-                                    class="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
-                                    @change="updateAccess(u, Number(($event.target as HTMLSelectElement).value))"
-                                >
-                                    <option :value="1">End user</option>
-                                    <option :value="3">Helpdesk</option>
-                                    <option :value="9">Admin</option>
-                                </select>
-                                <Badge variant="outline" class="mt-1">{{ aclLabel(u.acl_id) }}</Badge>
-                            </TableCell>
-                            <TableCell class="space-x-2">
-                                <Button
-                                    v-if="canResetPassword"
-                                    size="sm"
-                                    variant="outline"
-                                    @click="openReset(u)"
-                                >
-                                    Reset password
-                                </Button>
-                                <Button
-                                    size="sm"
-                                    variant="destructive"
-                                    :disabled="u.deleted_at !== null"
-                                    @click="requestDisable(u)"
-                                >
-                                    {{ u.deleted_at !== null ? 'Disabled' : 'Disable' }}
-                                </Button>
-                            </TableCell>
-                        </TableRow>
-                    </TableBody>
-                </Table>
+                <DataTable
+                    table-id="admin-users"
+                    :columns="columns"
+                    :rows="rows"
+                    :loading="loading"
+                    empty-message="No users found."
+                    pagination="server"
+                    :page-size="40"
+                    :total="total"
+                    :page="page"
+                    :sort-key="sortKey"
+                    :sort-dir="sortDir"
+                    @sort="onSort"
+                    @page-change="onPageChange"
+                >
+                    <template #cell-username="{ row }">
+                        <div class="font-medium">{{ (row as unknown as AdminUser).username }}</div>
+                        <div class="text-xs text-muted-foreground">
+                            {{ [ (row as unknown as AdminUser).name, (row as unknown as AdminUser).mname, (row as unknown as AdminUser).lname ].filter(Boolean).join(' ').trim() || '—' }}
+                        </div>
+                    </template>
+                    <template #cell-acl_id="{ row }">
+                        <div class="flex items-center gap-2">
+                            <select
+                                :value="(row as unknown as AdminUser).acl_id ?? 1"
+                                class="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+                                @change="updateAccess(row as unknown as AdminUser, Number(($event.target as HTMLSelectElement).value))"
+                            >
+                                <option :value="1">End user</option>
+                                <option :value="3">Helpdesk</option>
+                                <option :value="9">Admin</option>
+                            </select>
+                            <Badge variant="outline" class="whitespace-nowrap">
+                                {{ aclLabel((row as unknown as AdminUser).acl_id) }}
+                            </Badge>
+                        </div>
+                    </template>
+                    <template #cell-actions="{ row }">
+                        <div class="flex gap-2">
+                            <Button
+                                v-if="canResetPassword"
+                                size="sm"
+                                variant="outline"
+                                @click="openReset(row as unknown as AdminUser)"
+                            >
+                                Reset password
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant="destructive"
+                                :disabled="(row as unknown as AdminUser).deleted_at !== null"
+                                @click="requestDisable(row as unknown as AdminUser)"
+                            >
+                                {{ (row as unknown as AdminUser).deleted_at !== null ? 'Disabled' : 'Disable' }}
+                            </Button>
+                        </div>
+                    </template>
+                </DataTable>
 
                 <div class="flex items-center justify-between text-sm text-muted-foreground">
                     <span>{{ total }} users</span>
-                    <div class="flex gap-2">
-                        <Button variant="outline" size="sm" :disabled="page <= 1" @click="go(page - 1)">
-                            Previous
-                        </Button>
-                        <span class="py-1">Page {{ page }} of {{ lastPage }}</span>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            :disabled="page >= lastPage"
-                            @click="go(page + 1)"
-                        >
-                            Next
-                        </Button>
-                    </div>
+                    <span>Page {{ page }} of {{ lastPage }}</span>
                 </div>
             </CardContent>
         </Card>
