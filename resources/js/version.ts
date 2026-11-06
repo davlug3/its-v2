@@ -1,1 +1,1 @@
-export const APP_VERSION = "0749b5a_20261106-1500_local";
+export const APP_VERSION = "1190386_20261106-1501_local";

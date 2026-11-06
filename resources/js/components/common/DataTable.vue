@@ -189,7 +189,7 @@ watch(() => props.tableId, loadWidths);
                         <TableHead
                             v-for="col in columns"
                             :key="col.key"
-                            class="relative select-none"
+                            class="relative select-none border-r border-border last:border-r-0"
                             :style="{ width: colWidth(col) + 'px' }"
                         >
                             <span
@@ -202,7 +202,7 @@ watch(() => props.tableId, loadWidths);
                             <span v-else>{{ col.label }}</span>
                             <span
                                 v-if="col.resizable !== false"
-                                class="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-cobalt-core/40"
+                                class="absolute right-0 top-0 z-10 h-full w-2 cursor-col-resize bg-border/40 transition-colors hover:bg-cobalt-core"
                                 @mousedown="startResize($event, col)"
                             />
                         </TableHead>
@@ -230,7 +230,7 @@ watch(() => props.tableId, loadWidths);
                             class="cursor-pointer hover:bg-haze/50"
                             @click="emit('row-click', row)"
                         >
-                            <TableCell v-for="col in columns" :key="col.key" :style="{ width: colWidth(col) + 'px' }">
+                            <TableCell v-for="col in columns" :key="col.key" class="border-r border-border last:border-r-0" :style="{ width: colWidth(col) + 'px' }">
                                 <slot :name="`cell-${col.key}`" :row="row" :value="row[col.key]">
                                     {{ row[col.key] }}
                                 </slot>
