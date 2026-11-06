@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureAcl;
+use App\Http\Middleware\Idempotency;
 use App\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -29,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'acl' => EnsureAcl::class,
             'csrf' => VerifyCsrfToken::class,
+            'idempotency' => Idempotency::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

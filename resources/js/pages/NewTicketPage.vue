@@ -19,6 +19,7 @@ const contact = ref('');
 const unitsCount = ref(0);
 const submitting = ref(false);
 const error = ref<string | null>(null);
+const idempotencyKey = ref<string | null>(null);
 
 const submit = async (): Promise<void> => {
     error.value = null;
@@ -28,18 +29,26 @@ const submit = async (): Promise<void> => {
     }
     submitting.value = true;
     try {
-        const res = await api<{ ticket_id: number }>('/tickets', {
-            method: 'POST',
-            body: JSON.stringify({
-                subject: subject.value.trim(),
-                issue: issue.value.trim(),
-                category_id: categoryId.value,
-                location_id: locationId.value,
-                place: place.value.trim(),
-                contact: contact.value.trim(),
-                units_count: unitsCount.value,
-            }),
-        });
+        if (idempotencyKey.value === null) {
+            idempotencyKey.value = crypto.randomUUID();
+        }
+        const res = await api<{ ticket_id: number }>(
+            '/tickets',
+            {
+                method: 'POST',
+                body: JSON.stringify({
+                    subject: subject.value.trim(),
+                    issue: issue.value.trim(),
+                    category_id: categoryId.value,
+                    location_id: locationId.value,
+                    place: place.value.trim(),
+                    contact: contact.value.trim(),
+                    units_count: unitsCount.value,
+                }),
+            },
+            idempotencyKey.value,
+        );
+        idempotencyKey.value = null;
         void router.push(`/tickets/${res.ticket_id}`);
     } catch (e) {
         error.value = (e as { message?: string }).message ?? 'Failed to create ticket.';

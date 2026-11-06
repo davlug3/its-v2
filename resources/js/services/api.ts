@@ -30,7 +30,11 @@ export interface ApiError {
     errors?: Record<string, string[]>;
 }
 
-export async function api<T = unknown>(path: string, options: RequestInit = {}): Promise<T> {
+export async function api<T = unknown>(
+    path: string,
+    options: RequestInit = {},
+    idempotencyKey?: string,
+): Promise<T> {
     const headers = new Headers(options.headers);
     headers.set('Accept', 'application/json');
     if (options.body !== undefined && !headers.has('Content-Type')) {
@@ -43,6 +47,10 @@ export async function api<T = unknown>(path: string, options: RequestInit = {}):
     const method = (options.method ?? 'GET').toUpperCase();
     if (csrfToken !== null && method !== 'GET' && method !== 'HEAD' && method !== 'OPTIONS') {
         headers.set('X-CSRF-TOKEN', csrfToken);
+    }
+
+    if (idempotencyKey) {
+        headers.set('Idempotency-Key', idempotencyKey);
     }
 
     const response = await fetch(`${BASE_URL}${path}`, {

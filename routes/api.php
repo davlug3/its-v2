@@ -13,7 +13,7 @@ Route::get('/auth/me', [LoginController::class, 'me'])->middleware('auth:api');
 Route::post('/auth/change-password', [LoginController::class, 'changePassword'])
     ->middleware(['auth:api', 'csrf']);
 
-Route::middleware(['auth:api', 'csrf'])->group(function () {
+Route::middleware(['auth:api', 'csrf', 'idempotency'])->group(function () {
     Route::post('/tickets', [TicketController::class, 'store']);
     Route::post('/tickets/end-user', [TicketController::class, 'endUserStore']);
     Route::get('/tickets', [TicketController::class, 'index']);
