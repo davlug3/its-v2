@@ -2,13 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Attachement;
 use App\Models\Ticket;
+use App\Models\TicketLog;
 use App\Models\UserProfile;
 use App\Services\SupervisorService;
 use App\Services\TicketService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class TicketController extends Controller
 {
@@ -426,6 +431,144 @@ class TicketController extends Controller
         $value = (int) $row->setting;
 
         return $value > 0 ? $value : $default;
+    }
+
+    public function attachments(Request $request, int $id): JsonResponse
+    {
+        $ticket = Ticket::find($id);
+        if ($ticket === null) {
+            return response()->json(['message' => 'Ticket not found.'], 404);
+        }
+
+        if (! $this->canViewTicket($request, $ticket)) {
+            return response()->json(['message' => 'Forbidden.'], 403);
+        }
+
+        $items = Attachement::where('ticket_id', $id)->orderBy('created_at')->get();
+
+        return response()->json($items);
+    }
+
+    public function uploadAttachment(Request $request, int $id): JsonResponse
+    {
+        $ticket = Ticket::find($id);
+        if ($ticket === null) {
+            return response()->json(['message' => 'Ticket not found.'], 404);
+        }
+
+        if (! $this->canViewTicket($request, $ticket)) {
+            return response()->json(['message' => 'Forbidden.'], 403);
+        }
+
+        $validated = $request->validate([
+            'file' => ['required', 'file', 'max:10240', 'mimes:pdf,jpg,jpeg,png,gif,doc,docx,xls,xlsx,txt,zip'],
+        ]);
+
+        $file = $validated['file'];
+
+        $directory = 'attachments/'.$id;
+        $storedName = (string) Str::uuid().'.'.$file->getClientOriginalExtension();
+        $path = $file->storeAs($directory, $storedName, 'local');
+
+        $attachment = new Attachement;
+        $attachment->file_name_org = $file->getClientOriginalName();
+        $attachment->file_name = 0;
+        $attachment->ticket_id = $id;
+        $attachment->storage_path = $path;
+        $attachment->mime_type = $file->getClientMimeType();
+        $attachment->size_bytes = $file->getSize();
+        $attachment->sha256 = hash_file('sha256', $file->getRealPath());
+        $attachment->uploaded_by = (int) $request->user()->id;
+        $attachment->created_at = now();
+        $attachment->save();
+
+        $now = time();
+        $log = new TicketLog;
+        $log->ticket_id = $id;
+        $log->user_id = (int) $request->user()->id;
+        $log->data = 'Attachment uploaded: '.$file->getClientOriginalName();
+        $log->date = $now;
+        $log->time = $now;
+        $log->action = 'attachment';
+        $log->meta = ['attachment_id' => $attachment->id];
+        $log->save();
+
+        return response()->json($attachment, 201);
+    }
+
+    public function downloadAttachment(Request $request, int $id, int $attachmentId): StreamedResponse|JsonResponse
+    {
+        $ticket = Ticket::find($id);
+        if ($ticket === null) {
+            return response()->json(['message' => 'Ticket not found.'], 404);
+        }
+
+        if (! $this->canViewTicket($request, $ticket)) {
+            return response()->json(['message' => 'Forbidden.'], 403);
+        }
+
+        $attachment = Attachement::where('id', $attachmentId)->where('ticket_id', $id)->first();
+
+        if ($attachment === null) {
+            return response()->json(['message' => 'Attachment not found.'], 404);
+        }
+
+        if (! Storage::disk('local')->exists($attachment->storage_path)) {
+            return response()->json(['message' => 'File missing on disk.'], 404);
+        }
+
+        return Storage::disk('local')->download($attachment->storage_path, $attachment->file_name_org);
+    }
+
+    public function deleteAttachment(Request $request, int $id, int $attachmentId): JsonResponse
+    {
+        $ticket = Ticket::find($id);
+        if ($ticket === null) {
+            return response()->json(['message' => 'Ticket not found.'], 404);
+        }
+
+        if (! $this->canViewTicket($request, $ticket)) {
+            return response()->json(['message' => 'Forbidden.'], 403);
+        }
+
+        $attachment = Attachement::where('id', $attachmentId)->where('ticket_id', $id)->first();
+
+        if ($attachment === null) {
+            return response()->json(['message' => 'Attachment not found.'], 404);
+        }
+
+        $userId = (int) $request->user()->id;
+        $acl = $this->aclOf($request);
+
+        if ($attachment->uploaded_by !== $userId && $acl < 3) {
+            return response()->json(['message' => 'Forbidden.'], 403);
+        }
+
+        Storage::disk('local')->delete($attachment->storage_path);
+        $attachment->delete();
+
+        $now = time();
+        $log = new TicketLog;
+        $log->ticket_id = $id;
+        $log->user_id = $userId;
+        $log->data = 'Attachment removed: '.$attachment->file_name_org;
+        $log->date = $now;
+        $log->time = $now;
+        $log->action = 'attachment';
+        $log->meta = ['attachment_id' => $attachmentId];
+        $log->save();
+
+        return response()->json(['message' => 'Attachment deleted.']);
+    }
+
+    private function canViewTicket(Request $request, Ticket $ticket): bool
+    {
+        $userId = (int) $request->user()->id;
+
+        return $this->aclOf($request) >= 3
+            || $ticket->created_uid === $userId
+            || $ticket->assigned_uid === $userId
+            || $ticket->eu_uid === $userId;
     }
 
     private function aclOf(Request $request): int

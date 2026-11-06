@@ -37,7 +37,8 @@ export async function api<T = unknown>(
 ): Promise<T> {
     const headers = new Headers(options.headers);
     headers.set('Accept', 'application/json');
-    if (options.body !== undefined && !headers.has('Content-Type')) {
+    const isFormData = options.body instanceof FormData;
+    if (options.body !== undefined && !isFormData && !headers.has('Content-Type')) {
         headers.set('Content-Type', 'application/json');
     }
     if (token !== null) {

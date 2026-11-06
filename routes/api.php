@@ -26,6 +26,11 @@ Route::middleware(['auth:api', 'csrf', 'idempotency'])->group(function () {
     Route::get('/tickets/{id}/log', [TicketController::class, 'logs']);
     Route::post('/tickets/{id}/comment', [TicketController::class, 'comment']);
 
+    Route::get('/tickets/{id}/attachments', [TicketController::class, 'attachments']);
+    Route::post('/tickets/{id}/attachments', [TicketController::class, 'uploadAttachment']);
+    Route::get('/tickets/{id}/attachments/{attachmentId}/download', [TicketController::class, 'downloadAttachment']);
+    Route::delete('/tickets/{id}/attachments/{attachmentId}', [TicketController::class, 'deleteAttachment']);
+
     Route::post('/tickets/{id}/approve', [TicketController::class, 'approve']);
     Route::post('/tickets/{id}/disapprove', [TicketController::class, 'disapprove']);
     Route::post('/tickets/{id}/undo-approve', [TicketController::class, 'undoApprove']);

@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { api } from '@/services/api';
+import { api, getToken } from '@/services/api';
 import { useAuthStore } from '@/stores/auth';
 
 interface Ticket {
@@ -40,6 +40,17 @@ interface TicketLog {
     meta: Record<string, unknown> | null;
 }
 
+interface Attachment {
+    id: number;
+    file_name_org: string;
+    ticket_id: number;
+    storage_path: string;
+    mime_type: string;
+    size_bytes: number;
+    uploaded_by: number;
+    created_at: string;
+}
+
 const route = useRoute();
 const router = useRouter();
 const auth = useAuthStore();
@@ -65,6 +76,11 @@ const commentText = ref('');
 const commenting = ref(false);
 const commentError = ref<string | null>(null);
 
+const attachments = ref<Attachment[]>([]);
+const uploading = ref(false);
+const uploadError = ref<string | null>(null);
+const fileInput = ref<HTMLInputElement | null>(null);
+
 const stateLabel = (s: number): string => (s === 1 ? 'Open' : s === 2 ? 'Closed' : `State ${s}`);
 
 const loadLogs = async (): Promise<void> => {
@@ -72,6 +88,14 @@ const loadLogs = async (): Promise<void> => {
         logs.value = await api<TicketLog[]>(`/tickets/${id}/log`);
     } catch {
         logs.value = [];
+    }
+};
+
+const loadAttachments = async (): Promise<void> => {
+    try {
+        attachments.value = await api<Attachment[]>(`/tickets/${id}/attachments`);
+    } catch {
+        attachments.value = [];
     }
 };
 
@@ -84,6 +108,7 @@ const load = async (): Promise<void> => {
         issue.value = ticket.value.issue;
         assignUid.value = ticket.value.assigned_uid;
         await loadLogs();
+        await loadAttachments();
     } catch (e) {
         error.value = (e as { message?: string }).message ?? 'Failed to load ticket.';
     } finally {
@@ -135,6 +160,64 @@ const doAssign = async (): Promise<void> => {
     } finally {
         assigning.value = false;
     }
+};
+
+const onFileChange = async (event: Event): Promise<void> => {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    uploading.value = true;
+    uploadError.value = null;
+    try {
+        const form = new FormData();
+        form.append('file', file);
+        await api(`/tickets/${id}/attachments`, { method: 'POST', body: form });
+        await loadAttachments();
+        await loadLogs();
+        if (fileInput.value) fileInput.value.value = '';
+    } catch (e) {
+        uploadError.value = (e as { message?: string }).message ?? 'Upload failed.';
+    } finally {
+        uploading.value = false;
+    }
+};
+
+const downloadAttachment = async (attachment: Attachment): Promise<void> => {
+    try {
+        const token = getToken();
+        const response = await fetch(`/api/v1/tickets/${id}/attachments/${attachment.id}/download`, {
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        if (!response.ok) throw new Error('Download failed.');
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = attachment.file_name_org;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+    } catch (e) {
+        uploadError.value = (e as { message?: string }).message ?? 'Download failed.';
+    }
+};
+
+const deleteAttachment = async (attachmentId: number): Promise<void> => {
+    if (!window.confirm('Delete this attachment?')) return;
+    try {
+        await api(`/tickets/${id}/attachments/${attachmentId}`, { method: 'DELETE' });
+        await loadAttachments();
+        await loadLogs();
+    } catch (e) {
+        uploadError.value = (e as { message?: string }).message ?? 'Delete failed.';
+    }
+};
+
+const formatBytes = (bytes: number): string => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 };
 
 const submitComment = async (): Promise<void> => {
@@ -228,6 +311,44 @@ onMounted(load);
                         </Button>
                         <p v-if="assignError" class="text-sm text-destructive">{{ assignError }}</p>
                     </div>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Attachments</CardTitle>
+                </CardHeader>
+                <CardContent class="space-y-4">
+                    <p v-if="uploadError" class="text-sm text-destructive">{{ uploadError }}</p>
+                    <div class="flex items-center gap-2">
+                        <input
+                            ref="fileInput"
+                            type="file"
+                            class="text-sm"
+                            :disabled="uploading"
+                            @change="onFileChange"
+                        />
+                        <span v-if="uploading" class="text-sm text-muted-foreground">Uploading…</span>
+                    </div>
+                    <ul v-if="attachments.length" class="space-y-2">
+                        <li
+                            v-for="a in attachments"
+                            :key="a.id"
+                            class="flex items-center justify-between rounded-md border border-border p-2 text-sm"
+                        >
+                            <button
+                                type="button"
+                                class="hover:underline"
+                                @click="downloadAttachment(a)"
+                            >
+                                {{ a.file_name_org }} ({{ formatBytes(a.size_bytes) }})
+                            </button>
+                            <Button size="sm" variant="destructive" @click="deleteAttachment(a.id)">
+                                Delete
+                            </Button>
+                        </li>
+                    </ul>
+                    <p v-else class="text-sm text-muted-foreground">No attachments.</p>
                 </CardContent>
             </Card>
 
