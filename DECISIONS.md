@@ -739,3 +739,10 @@ These items need a decision from Dave. They do not block Phase 1.
 * Decision: The legacy `?p=page_name` compatibility adapter, `LegacyController`, and the nginx `/index.php?p=X -> /?p=X` rewrite are removed. All navigation uses Vue Router.
 * Reason: User direction; proper frontend routing replaces the legacy module registry.
 * Effect: D65 (path allowlist) is retired, not fixed. The `mods` table and `application_settings` remain as historical data, but nothing routes through them. Any external caller of `?p=...` receives a 404.
+
+## U10 — Retire email ingestion
+
+* Date: 2026-11-06
+* Decision: The email-to-ticket ingestion pipeline is retired. No ingestion endpoints, workers, or UI will be built.
+* Reason: User direction.
+* Effect: The `email_ingest_log` table and `tickets.email_message_id` column remain for compatibility (additive migrations only), but nothing reads or writes them. `EmailIngestLog` model stays as a read-only artifact. `PROMPT.md` email-ingestion sections are superseded.
