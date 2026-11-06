@@ -149,7 +149,7 @@ onUnmounted(() => {
                     <SheetTrigger as-child>
                         <button
                             type="button"
-                            class="rounded-md p-2 text-muted-foreground hover:bg-haze hover:text-foreground md:hidden"
+                            class="rounded-md p-2 text-muted-foreground transition-colors hover:bg-haze hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden"
                         >
                             <Menu class="h-5 w-5" />
                         </button>
@@ -190,7 +190,7 @@ onUnmounted(() => {
                     <div class="relative">
                         <button
                             type="button"
-                            class="relative rounded-md p-2 text-muted-foreground hover:bg-haze hover:text-foreground"
+                            class="relative rounded-md p-2 text-muted-foreground transition-colors hover:bg-haze hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                             @click="toggleNotifications"
                         >
                             <Bell class="h-5 w-5" />
@@ -239,7 +239,7 @@ onUnmounted(() => {
                         <DropdownMenuTrigger as-child>
                             <button
                                 type="button"
-                                class="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-haze hover:text-foreground"
+                                class="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-haze hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                             >
                                 <Avatar class="h-7 w-7">
                                     <AvatarFallback class="text-xs">{{ initials }}</AvatarFallback>

@@ -5,6 +5,7 @@ import { RouterLink } from 'vue-router';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { api } from '@/services/api';
 import { useAuthStore } from '@/stores/auth';
 
@@ -65,13 +66,19 @@ onMounted(async () => {
             <Card>
                 <CardHeader class="pb-2">
                     <CardDescription>Open</CardDescription>
-                    <CardTitle class="text-2xl">{{ loading ? '—' : counts.open }}</CardTitle>
+                    <CardTitle class="text-2xl">
+                        <Skeleton v-if="loading" class="h-7 w-10" />
+                        <span v-else>{{ counts.open }}</span>
+                    </CardTitle>
                 </CardHeader>
             </Card>
             <Card>
                 <CardHeader class="pb-2">
                     <CardDescription>Closed</CardDescription>
-                    <CardTitle class="text-2xl">{{ loading ? '—' : counts.closed }}</CardTitle>
+                    <CardTitle class="text-2xl">
+                        <Skeleton v-if="loading" class="h-7 w-10" />
+                        <span v-else>{{ counts.closed }}</span>
+                    </CardTitle>
                 </CardHeader>
             </Card>
         </div>
@@ -82,7 +89,11 @@ onMounted(async () => {
                 <CardDescription>Your latest activity.</CardDescription>
             </CardHeader>
             <CardContent>
-                <p v-if="loading" class="text-sm text-muted-foreground">Loading…</p>
+                <div v-if="loading" class="space-y-2">
+                    <Skeleton class="h-6 w-full" />
+                    <Skeleton class="h-6 w-5/6" />
+                    <Skeleton class="h-6 w-4/6" />
+                </div>
                 <p v-else-if="recent.length === 0" class="text-sm text-muted-foreground">
                     No tickets yet. <RouterLink to="/tickets/new" class="underline">Create one</RouterLink>.
                 </p>
