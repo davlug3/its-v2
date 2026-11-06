@@ -267,7 +267,7 @@ watch(() => props.tableId, loadWidths);
                     <template v-else>
                         <TableRow
                             v-for="(row, idx) in displayedRows"
-                            :key="idx"
+                            :key="(row.id as string | number | undefined) ?? idx"
                             class="cursor-pointer hover:bg-haze/50"
                             @click="emit('row-click', row)"
                         >

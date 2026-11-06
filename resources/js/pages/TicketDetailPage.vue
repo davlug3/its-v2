@@ -71,6 +71,16 @@ const id = Number(route.params.id);
 
 const canAssign = computed(() => (auth.user?.acl ?? 1) >= 3);
 
+const canEdit = computed(() => {
+    if (!ticket.value || !auth.user) return false;
+    if (ticket.value.created_uid !== auth.user.id) return false;
+    const touched =
+        ticket.value.assigned_uid !== 0 ||
+        ticket.value.resolved_uid !== 0 ||
+        ticket.value.state_id !== 1;
+    return !touched;
+});
+
 const ticket = ref<Ticket | null>(null);
 const loading = ref(true);
 const error = ref<string | null>(null);
@@ -359,7 +369,7 @@ onMounted(() => {
                     <div v-else class="space-y-3">
                         <p class="whitespace-pre-wrap text-sm">{{ ticket.issue }}</p>
                         <div class="flex gap-2">
-                            <Button variant="outline" @click="editing = true">Edit</Button>
+                            <Button v-if="canEdit" variant="outline" @click="editing = true">Edit</Button>
                             <Button
                                 v-if="ticket.state_id !== 3"
                                 :disabled="closing"
