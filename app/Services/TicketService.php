@@ -309,6 +309,62 @@ class TicketService
     }
 
     /**
+     * List the audit/comment log for a ticket.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function logs(int $ticketId): array
+    {
+        return TicketLog::where('ticket_id', $ticketId)
+            ->orderBy('date')
+            ->orderBy('id')
+            ->get()
+            ->toArray();
+    }
+
+    /**
+     * Add a comment to a ticket.
+     *
+     * @return array{ok: bool, message: string}
+     */
+    public function comment(int $ticketId, string $text, int $actorId, bool $canView): array
+    {
+        $ticket = Ticket::find($ticketId);
+
+        if ($ticket === null) {
+            return ['ok' => false, 'message' => 'Ticket not found.'];
+        }
+
+        if (! $canView) {
+            return ['ok' => false, 'message' => 'You do not have permission to comment on this ticket.'];
+        }
+
+        $text = trim($text);
+
+        if ($text === '') {
+            return ['ok' => false, 'message' => 'Comment cannot be empty.'];
+        }
+
+        if (mb_strlen($text) > 4000) {
+            $text = mb_substr($text, 0, 4000);
+        }
+
+        $now = time();
+
+        $log = new TicketLog;
+        $log->ticket_id = $ticketId;
+        $log->user_id = $actorId;
+        $log->data = $text;
+        $log->date = $now;
+        $log->time = $now;
+        $log->action = 'comment';
+        $log->meta = null;
+        $log->save();
+
+        return ['ok' => true, 'message' => 'Comment added.'];
+    }
+
+    /**
      * Close a ticket.
      *
      * @return array{ok: bool, message: string}

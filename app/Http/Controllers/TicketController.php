@@ -173,6 +173,54 @@ class TicketController extends Controller
         return response()->json($ticket);
     }
 
+    public function logs(Request $request, int $id): JsonResponse
+    {
+        $ticket = Ticket::find($id);
+
+        if ($ticket === null) {
+            return response()->json(['message' => 'Ticket not found.'], 404);
+        }
+
+        $userId = (int) $request->user()->id;
+        $canView = $this->aclOf($request) >= 3
+            || $ticket->created_uid === $userId
+            || $ticket->assigned_uid === $userId
+            || $ticket->eu_uid === $userId;
+
+        if (! $canView) {
+            return response()->json(['message' => 'Forbidden.'], 403);
+        }
+
+        return response()->json($this->tickets->logs($id));
+    }
+
+    public function comment(Request $request, int $id): JsonResponse
+    {
+        $ticket = Ticket::find($id);
+
+        if ($ticket === null) {
+            return response()->json(['message' => 'Ticket not found.'], 404);
+        }
+
+        $userId = (int) $request->user()->id;
+        $canView = $this->aclOf($request) >= 3
+            || $ticket->created_uid === $userId
+            || $ticket->assigned_uid === $userId
+            || $ticket->eu_uid === $userId;
+
+        $validated = $request->validate([
+            'text' => ['required', 'string', 'max:4000'],
+        ]);
+
+        $result = $this->tickets->comment($id, (string) $validated['text'], $userId, $canView);
+
+        if (! $result['ok']) {
+            return response()->json(['message' => $result['message']], 422);
+        }
+
+        return response()->json(['message' => $result['message']]);
+    }
+
     private function aclOf(Request $request): int
     {
         $user = $request->user();

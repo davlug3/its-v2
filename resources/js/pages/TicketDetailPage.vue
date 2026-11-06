@@ -29,6 +29,17 @@ interface Ticket {
     eu_uid: number;
 }
 
+interface TicketLog {
+    id: number;
+    ticket_id: number;
+    user_id: number;
+    data: string;
+    date: number;
+    time: number;
+    action: string | null;
+    meta: Record<string, unknown> | null;
+}
+
 const route = useRoute();
 const router = useRouter();
 const auth = useAuthStore();
@@ -49,7 +60,20 @@ const assignUid = ref(0);
 const assigning = ref(false);
 const assignError = ref<string | null>(null);
 
+const logs = ref<TicketLog[]>([]);
+const commentText = ref('');
+const commenting = ref(false);
+const commentError = ref<string | null>(null);
+
 const stateLabel = (s: number): string => (s === 1 ? 'Open' : s === 2 ? 'In progress' : s === 3 ? 'Closed' : `State ${s}`);
+
+const loadLogs = async (): Promise<void> => {
+    try {
+        logs.value = await api<TicketLog[]>(`/tickets/${id}/log`);
+    } catch {
+        logs.value = [];
+    }
+};
 
 const load = async (): Promise<void> => {
     loading.value = true;
@@ -59,6 +83,7 @@ const load = async (): Promise<void> => {
         subject.value = ticket.value.subject;
         issue.value = ticket.value.issue;
         assignUid.value = ticket.value.assigned_uid;
+        await loadLogs();
     } catch (e) {
         error.value = (e as { message?: string }).message ?? 'Failed to load ticket.';
     } finally {
@@ -111,6 +136,26 @@ const doAssign = async (): Promise<void> => {
         assigning.value = false;
     }
 };
+
+const submitComment = async (): Promise<void> => {
+    if (commentText.value.trim() === '') return;
+    commenting.value = true;
+    commentError.value = null;
+    try {
+        await api(`/tickets/${id}/comment`, {
+            method: 'POST',
+            body: JSON.stringify({ text: commentText.value.trim() }),
+        });
+        commentText.value = '';
+        await loadLogs();
+    } catch (e) {
+        commentError.value = (e as { message?: string }).message ?? 'Failed to add comment.';
+    } finally {
+        commenting.value = false;
+    }
+};
+
+const formatLogDate = (ts: number): string => (ts ? new Date(ts * 1000).toLocaleString() : '—');
 
 onMounted(load);
 </script>
@@ -183,6 +228,33 @@ onMounted(load);
                         </Button>
                         <p v-if="assignError" class="text-sm text-destructive">{{ assignError }}</p>
                     </div>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>History and comments</CardTitle>
+                </CardHeader>
+                <CardContent class="space-y-4">
+                    <ul v-if="logs.length" class="space-y-3">
+                        <li v-for="entry in logs" :key="entry.id" class="rounded-md border border-border p-3">
+                            <div class="flex items-center justify-between text-xs text-muted-foreground">
+                                <span>User {{ entry.user_id }} · {{ entry.action ?? 'note' }}</span>
+                                <span>{{ formatLogDate(entry.date) }}</span>
+                            </div>
+                            <p class="mt-1 whitespace-pre-wrap text-sm">{{ entry.data }}</p>
+                        </li>
+                    </ul>
+                    <p v-else class="text-sm text-muted-foreground">No history yet.</p>
+
+                    <form class="space-y-2 border-t border-border pt-3" @submit.prevent="submitComment">
+                        <Label for="comment">Add comment</Label>
+                        <Textarea id="comment" v-model="commentText" rows="3" />
+                        <p v-if="commentError" class="text-sm text-destructive">{{ commentError }}</p>
+                        <Button type="submit" :disabled="commenting">
+                            {{ commenting ? 'Posting…' : 'Post comment' }}
+                        </Button>
+                    </form>
                 </CardContent>
             </Card>
         </template>
