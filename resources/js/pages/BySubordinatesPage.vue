@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import ConfirmDialog from '@/components/common/ConfirmDialog.vue';
 import PageHeader from '@/components/common/PageHeader.vue';
 import {
     Dialog,
@@ -196,9 +197,15 @@ const submitDisapprove = async (): Promise<void> => {
     }
 };
 
-const batchApprove = async (): Promise<void> => {
+const batchApproveOpen = ref(false);
+
+const requestBatchApprove = (): void => {
     if (selected.value.size === 0) return;
-    if (!window.confirm(`Approve ${selected.value.size} selected ticket(s)?`)) return;
+    batchApproveOpen.value = true;
+};
+
+const confirmBatchApprove = async (): Promise<void> => {
+    batchApproveOpen.value = false;
     try {
         const res = await api<{ success: number; message: string }>('/tickets/batch-approve', {
             method: 'POST',
@@ -249,7 +256,7 @@ onMounted(load);
                     <div class="flex gap-2">
                         <Button size="sm" variant="outline" @click="selectAll">Check all</Button>
                         <Button size="sm" variant="outline" @click="clearSelection">Clear</Button>
-                        <Button size="sm" :disabled="selectedCount === 0" @click="batchApprove">
+                        <Button size="sm" :disabled="selectedCount === 0" @click="requestBatchApprove">
                             Approve selected ({{ selectedCount }})
                         </Button>
                         <Button
@@ -348,5 +355,15 @@ onMounted(load);
                 </DialogFooter>
             </DialogContent>
         </Dialog>
+
+        <ConfirmDialog
+            :open="batchApproveOpen"
+            title="Approve selected"
+            :message="`Approve ${selectedCount} selected ticket(s)?`"
+            confirm-label="Approve"
+            @update:open="batchApproveOpen = $event"
+            @confirm="confirmBatchApprove"
+            @cancel="batchApproveOpen = false"
+        />
     </div>
 </template>

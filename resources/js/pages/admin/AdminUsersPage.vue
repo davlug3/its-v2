@@ -16,6 +16,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
+import ConfirmDialog from '@/components/common/ConfirmDialog.vue';
 import {
     Table,
     TableBody,
@@ -79,6 +80,9 @@ const sortIndicator = (key: string): string => {
 };
 
 const resetOpen = ref(false);
+
+const disableOpen = ref(false);
+const disableTarget = ref<AdminUser | null>(null);
 const resetTarget = ref<AdminUser | null>(null);
 const resetPassword = ref('');
 const resetConfirm = ref('');
@@ -158,13 +162,21 @@ const submitReset = async (): Promise<void> => {
     }
 };
 
-const disableUser = async (user: AdminUser): Promise<void> => {
-    if (!window.confirm(`Disable ${user.username}? This keeps their tickets.`)) return;
+const requestDisable = (user: AdminUser): void => {
+    disableTarget.value = user;
+    disableOpen.value = true;
+};
+
+const confirmDisable = async (): Promise<void> => {
+    if (disableTarget.value === null) return;
     try {
-        await api(`/admin/users/${user.id}`, { method: 'DELETE' });
+        await api(`/admin/users/${disableTarget.value.id}`, { method: 'DELETE' });
+        disableOpen.value = false;
+        disableTarget.value = null;
         await load();
     } catch (e) {
         error.value = (e as { message?: string }).message ?? 'Failed to disable user.';
+        disableOpen.value = false;
     }
 };
 
@@ -254,7 +266,7 @@ onMounted(load);
                                     size="sm"
                                     variant="destructive"
                                     :disabled="u.deleted_at !== null"
-                                    @click="disableUser(u)"
+                                    @click="requestDisable(u)"
                                 >
                                     {{ u.deleted_at !== null ? 'Disabled' : 'Disable' }}
                                 </Button>
@@ -310,5 +322,16 @@ onMounted(load);
                 </DialogFooter>
             </DialogContent>
         </Dialog>
+
+        <ConfirmDialog
+            :open="disableOpen"
+            title="Disable user"
+            :message="`Disable ${disableTarget?.username ?? ''}? Their tickets are preserved.`"
+            confirm-label="Disable"
+            :destructive="true"
+            @update:open="disableOpen = $event"
+            @confirm="confirmDisable"
+            @cancel="disableOpen = false"
+        />
     </div>
 </template>

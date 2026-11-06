@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import ConfirmDialog from '@/components/common/ConfirmDialog.vue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PageHeader from '@/components/common/PageHeader.vue';
 import { Input } from '@/components/ui/input';
@@ -91,6 +92,9 @@ const attachments = ref<Attachment[]>([]);
 const uploading = ref(false);
 const uploadError = ref<string | null>(null);
 const fileInput = ref<HTMLInputElement | null>(null);
+
+const deleteAttachmentOpen = ref(false);
+const deleteAttachmentTarget = ref<number | null>(null);
 
 const helpdeskUsers = ref<HelpdeskUser[]>([]);
 
@@ -254,14 +258,22 @@ const downloadAttachment = async (attachment: Attachment): Promise<void> => {
     }
 };
 
-const deleteAttachment = async (attachmentId: number): Promise<void> => {
-    if (!window.confirm('Delete this attachment?')) return;
+const requestDeleteAttachment = (attachmentId: number): void => {
+    deleteAttachmentTarget.value = attachmentId;
+    deleteAttachmentOpen.value = true;
+};
+
+const confirmDeleteAttachment = async (): Promise<void> => {
+    if (deleteAttachmentTarget.value === null) return;
     try {
-        await api(`/tickets/${id}/attachments/${attachmentId}`, { method: 'DELETE' });
+        await api(`/tickets/${id}/attachments/${deleteAttachmentTarget.value}`, { method: 'DELETE' });
+        deleteAttachmentOpen.value = false;
+        deleteAttachmentTarget.value = null;
         await loadAttachments();
         await loadLogs();
     } catch (e) {
         uploadError.value = (e as { message?: string }).message ?? 'Delete failed.';
+        deleteAttachmentOpen.value = false;
     }
 };
 
@@ -411,7 +423,7 @@ onMounted(() => {
                             >
                                 {{ a.file_name_org }} ({{ formatBytes(a.size_bytes) }})
                             </button>
-                            <Button size="sm" variant="destructive" @click="deleteAttachment(a.id)">
+                            <Button size="sm" variant="destructive" @click="requestDeleteAttachment(a.id)">
                                 Delete
                             </Button>
                         </li>
@@ -447,5 +459,15 @@ onMounted(() => {
                 </CardContent>
             </Card>
         </template>
+    <ConfirmDialog
+        :open="deleteAttachmentOpen"
+        title="Delete attachment"
+        message="Delete this attachment?"
+        confirm-label="Delete"
+        :destructive="true"
+        @update:open="deleteAttachmentOpen = $event"
+        @confirm="confirmDeleteAttachment"
+        @cancel="deleteAttachmentOpen = false"
+    />
     </div>
 </template>

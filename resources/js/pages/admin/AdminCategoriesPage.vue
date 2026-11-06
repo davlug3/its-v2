@@ -7,6 +7,7 @@ import PageHeader from '@/components/common/PageHeader.vue';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
+import ConfirmDialog from '@/components/common/ConfirmDialog.vue';
 import {
     Table,
     TableBody,
@@ -63,6 +64,9 @@ const editingId = ref<number | null>(null);
 const editingName = ref('');
 const savingId = ref<number | null>(null);
 
+const deleteOpen = ref(false);
+const deleteTarget = ref<Category | null>(null);
+
 const load = async (): Promise<void> => {
     loading.value = true;
     error.value = null;
@@ -116,14 +120,22 @@ const saveEdit = async (): Promise<void> => {
     }
 };
 
-const remove = async (category: Category): Promise<void> => {
-    if (!window.confirm(`Delete category "${category.category}"?`)) return;
+const requestDelete = (category: Category): void => {
+    deleteTarget.value = category;
+    deleteOpen.value = true;
+};
+
+const confirmDelete = async (): Promise<void> => {
+    if (deleteTarget.value === null) return;
     error.value = null;
     try {
-        await api(`/admin/categories/${category.id}`, { method: 'DELETE' });
+        await api(`/admin/categories/${deleteTarget.value.id}`, { method: 'DELETE' });
+        deleteOpen.value = false;
+        deleteTarget.value = null;
         await load();
     } catch (e) {
         error.value = (e as { message?: string }).message ?? 'Failed to delete category.';
+        deleteOpen.value = false;
     }
 };
 
@@ -197,7 +209,7 @@ onMounted(load);
                                     <Button size="sm" variant="outline" @click="startEdit(c)">
                                         Edit
                                     </Button>
-                                    <Button size="sm" variant="destructive" @click="remove(c)">
+                                    <Button size="sm" variant="destructive" @click="requestDelete(c)">
                                         Delete
                                     </Button>
                                 </template>
@@ -207,5 +219,16 @@ onMounted(load);
                 </Table>
             </CardContent>
         </Card>
+
+        <ConfirmDialog
+            :open="deleteOpen"
+            title="Delete category"
+            :message="'Delete category ' + (deleteTarget?.category ?? '') + '?'"
+            confirm-label="Delete"
+            :destructive="true"
+            @update:open="deleteOpen = $event"
+            @confirm="confirmDelete"
+            @cancel="deleteOpen = false"
+        />
     </div>
 </template>
