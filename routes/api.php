@@ -20,6 +20,8 @@ Route::middleware(['auth:api', 'csrf', 'idempotency'])->group(function () {
     Route::post('/tickets/end-user', [TicketController::class, 'endUserStore']);
     Route::get('/tickets', [TicketController::class, 'index']);
     Route::get('/tickets/by-subordinates', [TicketController::class, 'bySubordinates']);
+
+    Route::get('/categories', [CategoryController::class, 'list']);
     Route::get('/tickets/pending-review-count', [TicketController::class, 'pendingReviewCount']);
 
     Route::get('/monitoring/tickets', [TicketController::class, 'monitoring']);

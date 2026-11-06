@@ -20,6 +20,15 @@ class CategoryController extends Controller
         return response()->json($categories);
     }
 
+    public function list(): JsonResponse
+    {
+        $categories = Category::whereNull('deleted_at')
+            ->orderBy('category')
+            ->get(['id', 'category']);
+
+        return response()->json($categories);
+    }
+
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
