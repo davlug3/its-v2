@@ -43,10 +43,14 @@ const onSubmit = handleSubmit(async (values) => {
                         <Label for="username">Username</Label>
                         <Input
                             id="username"
+                            name="username"
                             v-model="username"
                             v-bind="usernameAttrs"
                             type="text"
                             autocomplete="username"
+                            autocapitalize="none"
+                            autocorrect="off"
+                            spellcheck="false"
                         />
                         <p v-if="errors.username" class="text-xs text-destructive">
                             {{ errors.username }}
@@ -57,10 +61,14 @@ const onSubmit = handleSubmit(async (values) => {
                         <Label for="password">Password</Label>
                         <Input
                             id="password"
+                            name="password"
                             v-model="password"
                             v-bind="passwordAttrs"
                             type="password"
                             autocomplete="current-password"
+                            autocapitalize="none"
+                            autocorrect="off"
+                            spellcheck="false"
                         />
                         <p v-if="errors.password" class="text-xs text-destructive">
                             {{ errors.password }}
