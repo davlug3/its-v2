@@ -19,6 +19,7 @@ class AboutController extends Controller
 
         $data = [
             'app_name' => config('app.name'),
+            'app_description' => config('app.description'),
             'app_env' => config('app.env'),
             'app_url' => config('app.url'),
             'app_timezone' => config('app.timezone'),

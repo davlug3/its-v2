@@ -7,13 +7,14 @@ return [
     | Application Name
     |--------------------------------------------------------------------------
     |
-    | This value is the name of your application, which will be used when the
-    | framework needs to place the application's name in a notification or
-    | other UI elements where an application name needs to be displayed.
+    | Resolved from APP_NAME first, falling back to the package.json "name"
+    | field, then a final default.
     |
     */
 
-    'name' => env('APP_NAME', 'Laravel'),
+    'name' => env('APP_NAME', (json_decode((string) file_get_contents(base_path('package.json')), true)['name'] ?? 'Laravel')),
+
+    'description' => env('APP_DESCRIPTION', (json_decode((string) file_get_contents(base_path('package.json')), true)['description'] ?? '')),
 
     /*
     |--------------------------------------------------------------------------

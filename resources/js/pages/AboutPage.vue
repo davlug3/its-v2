@@ -7,6 +7,7 @@ import { APP_VERSION } from '@/version';
 
 interface AboutInfo {
     app_name: string;
+    app_description: string;
     app_env: string;
     app_url: string;
     app_timezone: string;
@@ -48,6 +49,10 @@ onMounted(async () => {
                     <div>
                         <dt class="text-xs font-medium text-muted-foreground">Name</dt>
                         <dd>{{ info?.app_name }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs font-medium text-muted-foreground">Description</dt>
+                        <dd>{{ info?.app_description }}</dd>
                     </div>
                     <div>
                         <dt class="text-xs font-medium text-muted-foreground">Environment</dt>
