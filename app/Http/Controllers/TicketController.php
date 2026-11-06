@@ -19,12 +19,49 @@ class TicketController extends Controller
         $page = max(1, (int) $request->query('page', 1));
         $perPage = min(100, max(1, (int) $request->query('per_page', 20)));
 
+        $scope = (string) $request->query('scope', 'mine');
+
+        if ($scope === 'all' && $this->aclOf($request) >= 2) {
+            $filters = [
+                'state_id' => $request->query('state_id'),
+                'category_id' => $request->query('category_id'),
+                'assigned_uid' => $request->query('assigned_uid'),
+                'created_uid' => $request->query('created_uid'),
+                'search' => $request->query('search'),
+            ];
+
+            $result = $this->tickets->listAll($page, $perPage, $filters);
+
+            return response()->json($result);
+        }
+
         $stateId = $request->query('state_id');
         $stateId = $stateId === null ? null : (int) $stateId;
 
         $result = $this->tickets->listForUser((int) $user->id, $page, $perPage, $stateId);
 
         return response()->json($result);
+    }
+
+    public function assign(Request $request, int $id): JsonResponse
+    {
+        $user = $request->user();
+
+        $ticket = Ticket::find($id);
+        if ($ticket === null) {
+            return response()->json(['message' => 'Ticket not found.'], 404);
+        }
+
+        // Only helpdesk/admin can assign; end users cannot.
+        $canAssign = $this->aclOf($request) >= 3;
+
+        $result = $this->tickets->assign($id, $request->all(), (int) $user->id, $canAssign);
+
+        if (! $result['ok']) {
+            return response()->json(['message' => $result['message']], 422);
+        }
+
+        return response()->json(['message' => $result['message']]);
     }
 
     public function store(Request $request): JsonResponse

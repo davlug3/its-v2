@@ -1,5 +1,6 @@
 import type { Component } from 'vue';
 import {
+    ClipboardList,
     FileText,
     Inbox,
     LayoutDashboard,
@@ -29,6 +30,7 @@ export const navGroups: NavGroup[] = [
     {
         label: 'Tickets',
         items: [
+            { label: 'All tickets', to: '/all-tickets', icon: ClipboardList, acl: 2 },
             { label: 'My tickets', to: '/my-tickets', icon: Inbox },
             { label: 'New ticket', to: '/tickets/new', icon: FileText },
         ],

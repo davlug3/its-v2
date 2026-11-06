@@ -19,6 +19,7 @@ Route::middleware(['auth:api', 'csrf'])->group(function () {
     Route::get('/tickets', [TicketController::class, 'index']);
     Route::get('/tickets/{id}', [TicketController::class, 'show']);
     Route::put('/tickets/{id}', [TicketController::class, 'update']);
+    Route::patch('/tickets/{id}/assign', [TicketController::class, 'assign']);
     Route::post('/tickets/{id}/close', [TicketController::class, 'close']);
 
     Route::prefix('admin')->group(function () {

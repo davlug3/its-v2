@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { api } from '@/services/api';
+import { useAuthStore } from '@/stores/auth';
 
 interface Ticket {
     id: number;
@@ -30,7 +31,10 @@ interface Ticket {
 
 const route = useRoute();
 const router = useRouter();
+const auth = useAuthStore();
 const id = Number(route.params.id);
+
+const canAssign = computed(() => (auth.user?.acl ?? 1) >= 3);
 
 const ticket = ref<Ticket | null>(null);
 const loading = ref(true);
@@ -41,6 +45,9 @@ const closing = ref(false);
 
 const subject = ref('');
 const issue = ref('');
+const assignUid = ref(0);
+const assigning = ref(false);
+const assignError = ref<string | null>(null);
 
 const stateLabel = (s: number): string => (s === 1 ? 'Open' : s === 2 ? 'In progress' : s === 3 ? 'Closed' : `State ${s}`);
 
@@ -51,6 +58,7 @@ const load = async (): Promise<void> => {
         ticket.value = await api<Ticket>(`/tickets/${id}`);
         subject.value = ticket.value.subject;
         issue.value = ticket.value.issue;
+        assignUid.value = ticket.value.assigned_uid;
     } catch (e) {
         error.value = (e as { message?: string }).message ?? 'Failed to load ticket.';
     } finally {
@@ -85,6 +93,22 @@ const close = async (): Promise<void> => {
         error.value = (e as { message?: string }).message ?? 'Failed to close.';
     } finally {
         closing.value = false;
+    }
+};
+
+const doAssign = async (): Promise<void> => {
+    assigning.value = true;
+    assignError.value = null;
+    try {
+        await api(`/tickets/${id}/assign`, {
+            method: 'PATCH',
+            body: JSON.stringify({ assigned_uid: assignUid.value }),
+        });
+        await load();
+    } catch (e) {
+        assignError.value = (e as { message?: string }).message ?? 'Failed to assign.';
+    } finally {
+        assigning.value = false;
     }
 };
 
@@ -148,6 +172,17 @@ onMounted(load);
                         <div><dt class="font-medium">Created by</dt><dd>{{ ticket.created_uid }}</dd></div>
                         <div><dt class="font-medium">Assigned to</dt><dd>{{ ticket.assigned_uid || '—' }}</dd></div>
                     </dl>
+
+                    <div v-if="canAssign" class="flex items-end gap-2 border-t border-border pt-3">
+                        <div class="space-y-1">
+                            <Label for="assign-uid">Assign to user ID</Label>
+                            <Input id="assign-uid" v-model.number="assignUid" type="number" min="0" />
+                        </div>
+                        <Button :disabled="assigning" @click="doAssign">
+                            {{ assigning ? 'Assigning…' : 'Assign' }}
+                        </Button>
+                        <p v-if="assignError" class="text-sm text-destructive">{{ assignError }}</p>
+                    </div>
                 </CardContent>
             </Card>
         </template>

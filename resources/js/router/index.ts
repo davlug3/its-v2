@@ -27,6 +27,12 @@ const router = createRouter({
                     component: () => import('@/pages/MyTicketsPage.vue'),
                 },
                 {
+                    path: 'all-tickets',
+                    name: 'all-tickets',
+                    component: () => import('@/pages/AllTicketsPage.vue'),
+                    meta: { acl: 2 },
+                },
+                {
                     path: 'tickets/new',
                     name: 'new-ticket',
                     component: () => import('@/pages/NewTicketPage.vue'),

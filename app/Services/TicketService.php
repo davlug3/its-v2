@@ -211,6 +211,104 @@ class TicketService
     }
 
     /**
+     * List all tickets (staff view) with optional filters.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return array{tickets: array<int, array<string, mixed>>, total: int, page: int, per_page: int}
+     */
+    public function listAll(int $page = 1, int $perPage = 20, array $filters = []): array
+    {
+        $query = Ticket::query();
+
+        if (isset($filters['state_id']) && $filters['state_id'] !== '') {
+            $query->where('state_id', (int) $filters['state_id']);
+        }
+
+        if (isset($filters['category_id']) && $filters['category_id'] !== '') {
+            $query->where('category_id', (int) $filters['category_id']);
+        }
+
+        if (isset($filters['assigned_uid']) && $filters['assigned_uid'] !== '') {
+            $query->where('assigned_uid', (int) $filters['assigned_uid']);
+        }
+
+        if (isset($filters['created_uid']) && $filters['created_uid'] !== '') {
+            $query->where('created_uid', (int) $filters['created_uid']);
+        }
+
+        if (! empty($filters['search'])) {
+            $term = '%'.trim((string) $filters['search']).'%';
+            $query->where('subject', 'like', $term);
+        }
+
+        $total = (int) $query->count();
+
+        $tickets = $query
+            ->orderByDesc('created_date')
+            ->skip(($page - 1) * $perPage)
+            ->take($perPage)
+            ->get();
+
+        return [
+            'tickets' => $tickets->toArray(),
+            'total' => $total,
+            'page' => $page,
+            'per_page' => $perPage,
+        ];
+    }
+
+    /**
+     * Assign a ticket to a user/group.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array{ok: bool, message: string}
+     */
+    public function assign(int $ticketId, array $data, int $actorId, bool $canAssign): array
+    {
+        $ticket = Ticket::find($ticketId);
+
+        if ($ticket === null) {
+            return ['ok' => false, 'message' => 'Ticket not found.'];
+        }
+
+        if (! $canAssign) {
+            return ['ok' => false, 'message' => 'You do not have permission to assign this ticket.'];
+        }
+
+        $now = time();
+
+        DB::transaction(function () use ($ticket, $data, $actorId, $now): void {
+            if (array_key_exists('assigned_uid', $data)) {
+                $ticket->assigned_uid = (int) $data['assigned_uid'];
+                $ticket->assigned_date = $now;
+                $ticket->assigned_time = $now;
+            }
+
+            if (array_key_exists('assigned_gid', $data)) {
+                $ticket->assigned_gid = (int) $data['assigned_gid'];
+            }
+
+            $ticket->updated_at = now();
+            $ticket->save();
+
+            $log = new TicketLog;
+            $log->ticket_id = $ticket->id;
+            $log->user_id = $actorId;
+            $log->data = 'Ticket assigned.';
+            $log->date = $now;
+            $log->time = $now;
+            $log->action = 'assign';
+            $log->meta = [
+                'assigned_uid' => $ticket->assigned_uid,
+                'assigned_gid' => $ticket->assigned_gid,
+            ];
+            $log->save();
+        });
+
+        return ['ok' => true, 'message' => 'Ticket assigned.'];
+    }
+
+    /**
      * Close a ticket.
      *
      * @return array{ok: bool, message: string}
