@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AboutController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\UserController;
@@ -16,6 +17,7 @@ Route::post('/auth/change-password', [LoginController::class, 'changePassword'])
     ->middleware(['auth:api', 'csrf']);
 
 Route::middleware(['auth:api', 'csrf', 'idempotency'])->group(function () {
+    Route::get('/about', [AboutController::class, 'show']);
     Route::post('/tickets', [TicketController::class, 'store']);
     Route::post('/tickets/end-user', [TicketController::class, 'endUserStore']);
     Route::get('/tickets', [TicketController::class, 'index']);

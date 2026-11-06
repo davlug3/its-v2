@@ -5,8 +5,8 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "vite build",
-        "dev": "vite",
+        "build": "node scripts/gen-version.mjs && vite build",
+        "dev": "node scripts/gen-version.mjs && vite",
         "dev:all": "node scripts/dev.mjs",
         "serve": "php artisan serve --port=8080",
         "preview": "node scripts/preview.mjs",

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useForm } from 'vee-validate';
 import { toTypedSchema } from '@vee-validate/yup';
-import { useRoute, useRouter } from 'vue-router';
+import { RouterLink, useRoute, useRouter } from 'vue-router';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -69,6 +69,10 @@ const onSubmit = handleSubmit(async (values) => {
 
                     <p v-if="auth.error" class="text-xs text-destructive">
                         {{ auth.error }}
+                    </p>
+
+                    <p class="text-center text-xs text-muted-foreground">
+                        <RouterLink to="/about" class="underline">About this app</RouterLink>
                     </p>
 
                     <Button type="submit" class="w-full" :disabled="auth.loading">

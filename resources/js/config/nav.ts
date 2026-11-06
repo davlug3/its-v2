@@ -2,6 +2,7 @@ import type { Component } from 'vue';
 import {
     BarChart3,
     ClipboardList,
+    Info,
     Monitor,
     FileText,
     Inbox,
@@ -53,6 +54,9 @@ export const navGroups: NavGroup[] = [
     },
     {
         label: 'Account',
-        items: [{ label: 'User options', to: '/user-options', icon: UserCog }],
+        items: [
+            { label: 'User options', to: '/user-options', icon: UserCog },
+            { label: 'About', to: '/about', icon: Info },
+        ],
     },
 ];
