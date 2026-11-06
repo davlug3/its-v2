@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { Badge } from '@/components/ui/badge';
@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import SearchableSelect from '@/components/common/SearchableSelect.vue';
+import type { SelectOption } from '@/components/common/SearchableSelect.vue';
 import DataTable from '@/components/common/DataTable.vue';
 import PageHeader from '@/components/common/PageHeader.vue';
 import { api } from '@/services/api';
@@ -42,7 +44,22 @@ const error = ref<string | null>(null);
 
 const search = ref('');
 const stateFilter = ref('');
-const assignedFilter = ref('');
+const assignedFilter = ref<string | null>('');
+
+const stateOptions: SelectOption[] = [
+    { value: '', label: 'All' },
+    { value: '1', label: 'Open' },
+    { value: '2', label: 'Closed' },
+];
+
+const assignedOptions = computed(() =>
+    [{ value: '', label: 'All' } as SelectOption].concat(
+        helpdeskUsers.value.map((u) => ({
+            value: String(u.id),
+            label: [u.name, u.mname, u.lname].filter(Boolean).join(' ').trim() || u.username,
+        })),
+    ),
+);
 
 const helpdeskUsers = ref<HelpdeskUser[]>([]);
 
@@ -78,10 +95,7 @@ const loadHelpdeskUsers = async (): Promise<void> => {
     }
 };
 
-const userLabel = (u: HelpdeskUser): string => {
-    const name = [u.name, u.mname, u.lname].filter(Boolean).join(' ').trim();
-    return name ? `${name} (${u.username})` : u.username;
-};
+
 
 const sortKey = ref('created');
 const sortDir = ref<'asc' | 'desc'>('desc');
@@ -106,7 +120,7 @@ const load = async (): Promise<void> => {
         const params = new URLSearchParams({ scope: 'all', page: String(page.value), per_page: String(pageSize.value) });
         if (search.value.trim() !== '') params.set('search', search.value.trim());
         if (stateFilter.value !== '') params.set('state_id', stateFilter.value);
-        if (assignedFilter.value.trim() !== '') params.set('assigned_uid', assignedFilter.value.trim());
+        if (assignedFilter.value && assignedFilter.value.trim() !== '') params.set('assigned_uid', assignedFilter.value.trim());
         params.set('sort', sortKey.value);
         params.set('dir', sortDir.value);
 
@@ -169,28 +183,11 @@ onMounted(() => {
                     </div>
                     <div class="space-y-2">
                         <Label for="state">State</Label>
-                        <select
-                            id="state"
-                            v-model="stateFilter"
-                            class="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
-                        >
-                            <option value="">All</option>
-                            <option value="1">Open</option>
-                            <option value="2">Closed</option>
-                        </select>
+                        <SearchableSelect id="state" v-model="stateFilter" :options="stateOptions" placeholder="All" />
                     </div>
                     <div class="space-y-2">
                         <Label for="assigned">Assigned to</Label>
-                        <select
-                            id="assigned"
-                            v-model="assignedFilter"
-                            class="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
-                        >
-                            <option value="">All</option>
-                            <option v-for="u in helpdeskUsers" :key="u.id" :value="String(u.id)">
-                                {{ userLabel(u) }}
-                            </option>
-                        </select>
+                        <SearchableSelect id="assigned" v-model="assignedFilter" :options="assignedOptions" placeholder="All" />
                     </div>
                     <div class="flex items-end">
                         <Button type="submit">Apply</Button>

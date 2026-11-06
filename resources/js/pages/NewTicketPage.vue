@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { api } from '@/services/api';
+import SearchableSelect from '@/components/common/SearchableSelect.vue';
 
 interface Category {
     id: number;
@@ -27,6 +28,10 @@ const error = ref<string | null>(null);
 const idempotencyKey = ref<string | null>(null);
 
 const categories = ref<Category[]>([]);
+
+const categoryOptions = computed(() =>
+    categories.value.map((c) => ({ value: c.id, label: c.category })),
+);
 
 const loadCategories = async (): Promise<void> => {
     try {
@@ -105,15 +110,7 @@ const submit = async (): Promise<void> => {
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div class="space-y-2">
                             <Label for="category">Category</Label>
-                            <select
-                                id="category"
-                                v-model.number="categoryId"
-                                class="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
-                            >
-                                <option v-for="c in categories" :key="c.id" :value="c.id">
-                                    {{ c.category }}
-                                </option>
-                            </select>
+                            <SearchableSelect id="category" v-model="categoryId" :options="categoryOptions" placeholder="Select category" />
                         </div>
                         <div class="space-y-2">
                             <Label for="place">Place</Label>

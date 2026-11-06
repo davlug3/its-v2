@@ -10,6 +10,7 @@ import PageHeader from '@/components/common/PageHeader.vue';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
+import SearchableSelect from '@/components/common/SearchableSelect.vue';
 import { Textarea } from '@/components/ui/textarea';
 import { api, getToken } from '@/services/api';
 import { useAuthStore } from '@/stores/auth';
@@ -135,6 +136,10 @@ const userLabel = (u: HelpdeskUser): string => {
     const name = [u.name, u.mname, u.lname].filter(Boolean).join(' ').trim();
     return name ? `${name} (${u.username})` : u.username;
 };
+
+const helpdeskUserOptions = computed(() =>
+    helpdeskUsers.value.map((u) => ({ value: u.id, label: userLabel(u) })),
+);
 
 const stateLabel = (s: number): string => (s === 1 ? 'Open' : s === 2 ? 'Closed' : `State ${s}`);
 
@@ -375,16 +380,12 @@ onMounted(() => {
                     <div v-if="canAssign" class="flex items-end gap-2 border-t border-border pt-3">
                         <div class="space-y-1">
                             <Label for="assign-uid">Assign to</Label>
-                            <select
+                            <SearchableSelect
                                 id="assign-uid"
-                                v-model.number="assignUid"
-                                class="h-9 min-w-[16rem] rounded-md border border-input bg-background px-2 text-sm"
-                            >
-                                <option :value="0">— Unassigned —</option>
-                                <option v-for="u in helpdeskUsers" :key="u.id" :value="u.id">
-                                    {{ userLabel(u) }}
-                                </option>
-                            </select>
+                                v-model="assignUid"
+                                :options="[{ value: 0, label: '— Unassigned —' }].concat(helpdeskUserOptions)"
+                                placeholder="Select assignee"
+                            />
                         </div>
                         <Button :disabled="assigning" @click="doAssign">
                             {{ assigning ? 'Assigning…' : 'Assign' }}

@@ -10,6 +10,8 @@ import { Label } from '@/components/ui/label';
 import DataTable from '@/components/common/DataTable.vue';
 import PageHeader from '@/components/common/PageHeader.vue';
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue';
+import SearchableSelect from '@/components/common/SearchableSelect.vue';
+import type { SelectOption } from '@/components/common/SearchableSelect.vue';
 import { api } from '@/services/api';
 import { useAuthStore } from '@/stores/auth';
 
@@ -39,8 +41,27 @@ const rows = ref<AdminUser[]>([]);
 const loading = ref(true);
 const error = ref<string | null>(null);
 const search = ref('');
-const aclFilter = ref('all');
-const statusFilter = ref('all');
+const aclFilter = ref<string | null>('all');
+const statusFilter = ref<string | null>('all');
+
+const aclOptions: SelectOption[] = [
+    { value: 'all', label: 'All access' },
+    { value: '1', label: 'End user' },
+    { value: '3', label: 'Helpdesk' },
+    { value: '9', label: 'Admin' },
+];
+
+const statusOptions: SelectOption[] = [
+    { value: 'all', label: 'All status' },
+    { value: 'A', label: 'Active' },
+    { value: 'I', label: 'Inactive' },
+];
+
+const accessOptions: SelectOption[] = [
+    { value: 1, label: 'End user' },
+    { value: 3, label: 'Helpdesk' },
+    { value: 9, label: 'Admin' },
+];
 const page = ref(1);
 const lastPage = ref(1);
 const total = ref(0);
@@ -81,8 +102,8 @@ const load = async (): Promise<void> => {
     try {
         const params = new URLSearchParams({ page: String(page.value), per_page: String(pageSize.value), sort: sortKey.value, dir: sortDir.value });
         if (search.value.trim() !== '') params.set('search', search.value.trim());
-        if (aclFilter.value !== 'all') params.set('acl', aclFilter.value);
-        if (statusFilter.value !== 'all') params.set('status', statusFilter.value);
+        if (aclFilter.value && aclFilter.value !== 'all') params.set('acl', aclFilter.value);
+        if (statusFilter.value && statusFilter.value !== 'all') params.set('status', statusFilter.value);
 
         const res = await api<Page>(`/admin/users?${params.toString()}`);
         rows.value = res.data;
@@ -193,17 +214,8 @@ onMounted(load);
             <CardContent class="space-y-4">
                 <form class="flex flex-wrap gap-2" @submit.prevent="applyFilters">
                     <Input v-model="search" placeholder="Search username or name" />
-                    <select v-model="aclFilter" class="h-9 rounded-md border border-input bg-background px-2 text-sm">
-                        <option value="all">All access</option>
-                        <option value="1">End user</option>
-                        <option value="3">Helpdesk</option>
-                        <option value="9">Admin</option>
-                    </select>
-                    <select v-model="statusFilter" class="h-9 rounded-md border border-input bg-background px-2 text-sm">
-                        <option value="all">All status</option>
-                        <option value="A">Active</option>
-                        <option value="I">Inactive</option>
-                    </select>
+                    <SearchableSelect v-model="aclFilter" :options="aclOptions" placeholder="All access" />
+                    <SearchableSelect v-model="statusFilter" :options="statusOptions" placeholder="All status" />
                     <Button type="submit">Apply</Button>
                 </form>
 
@@ -233,15 +245,11 @@ onMounted(load);
                     </template>
                     <template #cell-acl_id="{ row }">
                         <div class="flex items-center gap-2">
-                            <select
-                                :value="(row as unknown as AdminUser).acl_id ?? 1"
-                                class="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
-                                @change="updateAccess(row as unknown as AdminUser, Number(($event.target as HTMLSelectElement).value))"
-                            >
-                                <option :value="1">End user</option>
-                                <option :value="3">Helpdesk</option>
-                                <option :value="9">Admin</option>
-                            </select>
+                            <SearchableSelect
+                                :model-value="(row as unknown as AdminUser).acl_id ?? 1"
+                                :options="accessOptions"
+                                @update:model-value="(v: string | number | null) => updateAccess(row as unknown as AdminUser, Number(v))"
+                            />
                             <Badge variant="outline" class="whitespace-nowrap">
                                 {{ aclLabel((row as unknown as AdminUser).acl_id) }}
                             </Badge>
