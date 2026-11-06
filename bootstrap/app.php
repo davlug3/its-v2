@@ -3,6 +3,7 @@
 use App\Http\Middleware\EnsureAcl;
 use App\Http\Middleware\Idempotency;
 use App\Http\Middleware\VerifyCsrfToken;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -44,7 +45,9 @@ return Application::configure(basePath: dirname(__DIR__))
                 return null;
             }
 
-            if ($e instanceof ValidationException || $e instanceof HttpExceptionInterface) {
+            if ($e instanceof ValidationException
+                || $e instanceof HttpExceptionInterface
+                || $e instanceof AuthenticationException) {
                 return null;
             }
 
