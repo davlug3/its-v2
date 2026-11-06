@@ -4,7 +4,9 @@ import { RouterLink } from 'vue-router';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle } from '@/components/ui/card';
+import PageHeader from '@/components/common/PageHeader.vue';
+import StatCard from '@/components/common/StatCard.vue';
 import { Skeleton } from '@/components/ui/skeleton';
 import { api } from '@/services/api';
 import { useAuthStore } from '@/stores/auth';
@@ -51,36 +53,17 @@ onMounted(async () => {
 
 <template>
     <div class="space-y-4">
-        <div class="flex items-center justify-between">
-            <h1 class="text-subheading font-semibold text-foreground">Dashboard</h1>
-            <Button @click="$router.push('/tickets/new')">New ticket</Button>
-        </div>
-
-        <p class="text-sm text-muted-foreground">
-            Signed in as {{ auth.user?.username }} ({{ auth.user?.fullname || '—' }}).
-        </p>
+        <PageHeader title="Dashboard" :description="`Signed in as ${auth.user?.username ?? ''} (${auth.user?.fullname || '—'}).`">
+            <template #actions>
+                <Button @click="$router.push('/tickets/new')">New ticket</Button>
+            </template>
+        </PageHeader>
 
         <p v-if="error" class="text-sm text-destructive">{{ error }}</p>
 
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Card>
-                <CardHeader class="pb-2">
-                    <CardDescription>Open</CardDescription>
-                    <CardTitle class="text-2xl">
-                        <Skeleton v-if="loading" class="h-7 w-10" />
-                        <span v-else>{{ counts.open }}</span>
-                    </CardTitle>
-                </CardHeader>
-            </Card>
-            <Card>
-                <CardHeader class="pb-2">
-                    <CardDescription>Closed</CardDescription>
-                    <CardTitle class="text-2xl">
-                        <Skeleton v-if="loading" class="h-7 w-10" />
-                        <span v-else>{{ counts.closed }}</span>
-                    </CardTitle>
-                </CardHeader>
-            </Card>
+            <StatCard label="Open" :value="counts.open" :loading="loading" />
+            <StatCard label="Closed" :value="counts.closed" :loading="loading" />
         </div>
 
         <Card>

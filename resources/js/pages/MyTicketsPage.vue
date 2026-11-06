@@ -5,6 +5,8 @@ import { useRouter } from 'vue-router';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import EmptyState from '@/components/common/EmptyState.vue';
+import PageHeader from '@/components/common/PageHeader.vue';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
     Table,
@@ -105,10 +107,11 @@ const openTicket = (id: number): void => {
 
 <template>
     <div class="space-y-4">
-        <div class="flex items-center justify-between">
-            <h1 class="text-subheading font-semibold text-foreground">My tickets</h1>
-            <Button @click="router.push('/tickets/new')">New ticket</Button>
-        </div>
+        <PageHeader title="My tickets">
+            <template #actions>
+                <Button @click="router.push('/tickets/new')">New ticket</Button>
+            </template>
+        </PageHeader>
 
         <Card>
             <CardHeader>
@@ -121,9 +124,11 @@ const openTicket = (id: number): void => {
                     <Skeleton class="h-8 w-full" />
                 </div>
                 <p v-else-if="error" class="text-sm text-destructive">{{ error }}</p>
-                <p v-else-if="tickets.length === 0" class="text-sm text-muted-foreground">
-                    No tickets yet.
-                </p>
+                <EmptyState v-else-if="tickets.length === 0" message="No tickets yet.">
+                    <template #action>
+                        <Button variant="outline" @click="router.push('/tickets/new')">Create one</Button>
+                    </template>
+                </EmptyState>
                 <Table v-else>
                     <TableHeader>
                         <TableRow>
