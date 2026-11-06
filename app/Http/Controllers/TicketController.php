@@ -571,6 +571,77 @@ class TicketController extends Controller
             || $ticket->eu_uid === $userId;
     }
 
+    public function monitoring(Request $request): JsonResponse
+    {
+        if ($this->aclOf($request) < 2) {
+            return response()->json(['message' => 'Forbidden.'], 403);
+        }
+
+        $tickets = Ticket::query()
+            ->where('state_id', 1)
+            ->whereNotIn('category_id', [23, 24])
+            ->orderByDesc('created_date')
+            ->limit(200)
+            ->get();
+
+        $userIds = $tickets->pluck('created_uid')
+            ->merge($tickets->pluck('assigned_uid'))
+            ->unique()
+            ->filter()
+            ->values()
+            ->all();
+
+        $locationIds = $tickets->pluck('location_id')->unique()->filter()->values()->all();
+        $categoryIds = $tickets->pluck('category_id')->unique()->filter()->values()->all();
+
+        $names = [];
+        if ($userIds !== []) {
+            $rows = DB::connection('payroll')
+                ->table('payroll')
+                ->whereIn('id', $userIds)
+                ->get(['id', 'name', 'mname', 'lname']);
+            foreach ($rows as $row) {
+                $names[(int) $row->id] = trim($row->name.' '.$row->mname.' '.$row->lname);
+            }
+        }
+
+        $locations = [];
+        if ($locationIds !== []) {
+            $rows = DB::connection('payroll')
+                ->table('department')
+                ->whereIn('id', $locationIds)
+                ->get(['id', 'department']);
+            foreach ($rows as $row) {
+                $locations[(int) $row->id] = $row->department;
+            }
+        }
+
+        $categories = [];
+        if ($categoryIds !== []) {
+            $rows = DB::connection('mysql')
+                ->table('categories')
+                ->whereIn('id', $categoryIds)
+                ->get(['id', 'category']);
+            foreach ($rows as $row) {
+                $categories[(int) $row->id] = $row->category;
+            }
+        }
+
+        $result = $tickets->map(function (Ticket $ticket) use ($names, $locations, $categories): array {
+            return [
+                'id' => $ticket->id,
+                'created_date' => $ticket->created_date,
+                'subject' => $ticket->subject,
+                'location' => $locations[(int) $ticket->location_id] ?? $ticket->location_id,
+                'mail' => $names[(int) $ticket->created_uid] ?? $ticket->created_uid,
+                'category' => $categories[(int) $ticket->category_id] ?? $ticket->category_id,
+                'assigned' => $ticket->assigned_uid ? ($names[(int) $ticket->assigned_uid] ?? $ticket->assigned_uid) : '',
+            ];
+        });
+
+        return response()->json($result);
+    }
+
     private function aclOf(Request $request): int
     {
         $user = $request->user();

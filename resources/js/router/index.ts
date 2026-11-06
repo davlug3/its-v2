@@ -60,6 +60,12 @@ const router = createRouter({
                     meta: { acl: 3 },
                 },
                 {
+                    path: 'monitoring',
+                    name: 'monitoring',
+                    component: () => import('@/pages/MonitoringPage.vue'),
+                    meta: { acl: 2 },
+                },
+                {
                     path: 'admin/users',
                     name: 'admin-users',
                     component: () => import('@/pages/admin/AdminUsersPage.vue'),

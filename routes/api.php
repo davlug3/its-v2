@@ -22,6 +22,8 @@ Route::middleware(['auth:api', 'csrf', 'idempotency'])->group(function () {
     Route::get('/tickets/by-subordinates', [TicketController::class, 'bySubordinates']);
     Route::get('/tickets/pending-review-count', [TicketController::class, 'pendingReviewCount']);
 
+    Route::get('/monitoring/tickets', [TicketController::class, 'monitoring']);
+
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markRead']);
