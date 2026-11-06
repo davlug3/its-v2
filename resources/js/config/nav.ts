@@ -33,6 +33,7 @@ export const navGroups: NavGroup[] = [
             { label: 'All tickets', to: '/all-tickets', icon: ClipboardList, acl: 2 },
             { label: 'My tickets', to: '/my-tickets', icon: Inbox },
             { label: 'New ticket', to: '/tickets/new', icon: FileText },
+            { label: 'By subordinates', to: '/tickets/by-subordinates', icon: Users, acl: 3 },
         ],
     },
     {

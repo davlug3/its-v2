@@ -36,8 +36,7 @@ const error = ref<string | null>(null);
 
 const stateLabel = (id: number): string => {
     if (id === 1) return 'Open';
-    if (id === 2) return 'In progress';
-    if (id === 3) return 'Closed';
+    if (id === 2) return 'Closed';
     return `State ${id}`;
 };
 

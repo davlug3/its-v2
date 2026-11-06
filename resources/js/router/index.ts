@@ -33,6 +33,12 @@ const router = createRouter({
                     meta: { acl: 2 },
                 },
                 {
+                    path: 'tickets/by-subordinates',
+                    name: 'by-subordinates',
+                    component: () => import('@/pages/BySubordinatesPage.vue'),
+                    meta: { acl: 3 },
+                },
+                {
                     path: 'tickets/new',
                     name: 'new-ticket',
                     component: () => import('@/pages/NewTicketPage.vue'),

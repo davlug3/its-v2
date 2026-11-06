@@ -24,15 +24,14 @@ const error = ref<string | null>(null);
 
 const counts = computed(() => ({
     open: tickets.value.filter((t) => t.state_id === 1).length,
-    inProgress: tickets.value.filter((t) => t.state_id === 2).length,
-    closed: tickets.value.filter((t) => t.state_id === 3).length,
+    closed: tickets.value.filter((t) => t.state_id === 2).length,
 }));
 
 const recent = computed(() =>
     [...tickets.value].sort((a, b) => b.created_date - a.created_date).slice(0, 5),
 );
 
-const stateLabel = (id: number): string => (id === 1 ? 'Open' : id === 2 ? 'In progress' : id === 3 ? 'Closed' : `State ${id}`);
+const stateLabel = (id: number): string => (id === 1 ? 'Open' : id === 2 ? 'Closed' : `State ${id}`);
 
 const formatDate = (ts: number): string => (ts ? new Date(ts * 1000).toLocaleDateString() : '—');
 
@@ -62,17 +61,11 @@ onMounted(async () => {
 
         <p v-if="error" class="text-sm text-destructive">{{ error }}</p>
 
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Card>
                 <CardHeader class="pb-2">
                     <CardDescription>Open</CardDescription>
                     <CardTitle class="text-2xl">{{ loading ? '—' : counts.open }}</CardTitle>
-                </CardHeader>
-            </Card>
-            <Card>
-                <CardHeader class="pb-2">
-                    <CardDescription>In progress</CardDescription>
-                    <CardTitle class="text-2xl">{{ loading ? '—' : counts.inProgress }}</CardTitle>
                 </CardHeader>
             </Card>
             <Card>
@@ -100,7 +93,7 @@ onMounted(async () => {
                         </RouterLink>
                         <div class="ml-3 flex shrink-0 items-center gap-3">
                             <span class="text-xs text-muted-foreground">{{ formatDate(t.created_date) }}</span>
-                            <Badge :variant="t.state_id === 3 ? 'secondary' : 'outline'">
+                            <Badge :variant="t.state_id === 2 ? 'secondary' : 'outline'">
                                 {{ stateLabel(t.state_id) }}
                             </Badge>
                         </div>

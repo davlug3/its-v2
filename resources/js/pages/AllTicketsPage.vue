@@ -41,7 +41,7 @@ const search = ref('');
 const stateFilter = ref('');
 const assignedFilter = ref('');
 
-const stateLabel = (id: number): string => (id === 1 ? 'Open' : id === 2 ? 'In progress' : id === 3 ? 'Closed' : `State ${id}`);
+const stateLabel = (id: number): string => (id === 1 ? 'Open' : id === 2 ? 'Closed' : `State ${id}`);
 
 const stateVariant = (id: number): 'default' | 'secondary' | 'outline' => (id === 3 ? 'secondary' : id === 2 ? 'default' : 'outline');
 
@@ -106,8 +106,7 @@ onMounted(load);
                         >
                             <option value="">All</option>
                             <option value="1">Open</option>
-                            <option value="2">In progress</option>
-                            <option value="3">Closed</option>
+                            <option value="2">Closed</option>
                         </select>
                     </div>
                     <div class="space-y-2">

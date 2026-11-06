@@ -65,7 +65,7 @@ const commentText = ref('');
 const commenting = ref(false);
 const commentError = ref<string | null>(null);
 
-const stateLabel = (s: number): string => (s === 1 ? 'Open' : s === 2 ? 'In progress' : s === 3 ? 'Closed' : `State ${s}`);
+const stateLabel = (s: number): string => (s === 1 ? 'Open' : s === 2 ? 'Closed' : `State ${s}`);
 
 const loadLogs = async (): Promise<void> => {
     try {
@@ -175,7 +175,7 @@ onMounted(load);
                 <CardHeader>
                     <CardTitle class="flex items-center justify-between">
                         <span>{{ ticket.subject }}</span>
-                        <Badge :variant="ticket.state_id === 3 ? 'secondary' : 'default'">
+                        <Badge :variant="ticket.state_id === 2 ? 'secondary' : 'default'">
                             {{ stateLabel(ticket.state_id) }}
                         </Badge>
                     </CardTitle>

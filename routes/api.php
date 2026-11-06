@@ -17,12 +17,20 @@ Route::middleware(['auth:api', 'csrf'])->group(function () {
     Route::post('/tickets', [TicketController::class, 'store']);
     Route::post('/tickets/end-user', [TicketController::class, 'endUserStore']);
     Route::get('/tickets', [TicketController::class, 'index']);
+    Route::get('/tickets/by-subordinates', [TicketController::class, 'bySubordinates']);
+    Route::get('/tickets/pending-review-count', [TicketController::class, 'pendingReviewCount']);
     Route::get('/tickets/{id}', [TicketController::class, 'show']);
     Route::put('/tickets/{id}', [TicketController::class, 'update']);
     Route::patch('/tickets/{id}/assign', [TicketController::class, 'assign']);
     Route::post('/tickets/{id}/close', [TicketController::class, 'close']);
     Route::get('/tickets/{id}/log', [TicketController::class, 'logs']);
     Route::post('/tickets/{id}/comment', [TicketController::class, 'comment']);
+
+    Route::post('/tickets/{id}/approve', [TicketController::class, 'approve']);
+    Route::post('/tickets/{id}/disapprove', [TicketController::class, 'disapprove']);
+    Route::post('/tickets/{id}/undo-approve', [TicketController::class, 'undoApprove']);
+    Route::post('/tickets/batch-approve', [TicketController::class, 'batchApprove']);
+    Route::post('/tickets/batch-disapprove', [TicketController::class, 'batchDisapprove']);
 
     Route::prefix('admin')->group(function () {
         Route::middleware('acl:3')->group(function () {
