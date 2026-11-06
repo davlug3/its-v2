@@ -143,42 +143,6 @@ class LoginController extends Controller
         return response()->json(['message' => 'Logged out.']);
     }
 
-    public function changePassword(Request $request): JsonResponse
-    {
-        $request->validate([
-            'current_password' => ['required', 'string'],
-            'new_password' => ['required', 'string', 'min:12'],
-        ]);
-
-        $user = auth('api')->user();
-        $profile = UserProfile::where('user_id', $user->id)->first();
-
-        // Verify current password.
-        $currentValid = false;
-        if ($profile !== null && ! empty($profile->password_v2)) {
-            $currentValid = Hash::check($request->input('current_password'), $profile->password_v2);
-        } else {
-            $currentValid = hash_equals((string) $user->password, md5($request->input('current_password')));
-        }
-
-        if (! $currentValid) {
-            return response()->json(['message' => 'Current password is incorrect.'], 422);
-        }
-
-        // Reject reuse.
-        if ($profile !== null && ! empty($profile->password_v2)) {
-            if (Hash::check($request->input('new_password'), $profile->password_v2)) {
-                return response()->json(['message' => 'New password must differ from the current password.'], 422);
-            }
-        }
-
-        $profile = UserProfile::firstOrNew(['user_id' => $user->id]);
-        $profile->password_v2 = Hash::make($request->input('new_password'));
-        $profile->save();
-
-        return response()->json(['message' => 'Password changed.']);
-    }
-
     public function me(): JsonResponse
     {
         $user = auth('api')->user();
