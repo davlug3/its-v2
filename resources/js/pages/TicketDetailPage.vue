@@ -5,6 +5,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import PageHeader from '@/components/common/PageHeader.vue';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -298,10 +299,11 @@ onMounted(() => {
 
 <template>
     <div class="space-y-4">
-        <div class="flex items-center justify-between">
-            <h1 class="text-subheading font-semibold text-foreground">Ticket #{{ id }}</h1>
-            <Button variant="outline" @click="router.push('/my-tickets')">Back</Button>
-        </div>
+        <PageHeader :title="`Ticket #${id}`">
+            <template #actions>
+                <Button variant="outline" @click="router.push('/my-tickets')">Back</Button>
+            </template>
+        </PageHeader>
 
         <div v-if="loading" class="space-y-2">
             <Skeleton class="h-8 w-full" />
