@@ -11,6 +11,15 @@ import DataTable from '@/components/common/DataTable.vue';
 import PageHeader from '@/components/common/PageHeader.vue';
 import { api } from '@/services/api';
 
+interface HelpdeskUser {
+    id: number;
+    username: string;
+    name: string;
+    mname: string;
+    lname: string;
+    acl_id: number | null;
+}
+
 interface Ticket {
     id: number;
     subject: string;
@@ -27,12 +36,52 @@ const tickets = ref<Ticket[]>([]);
 const total = ref(0);
 const page = ref(1);
 const lastPage = ref(1);
+const pageSize = ref(20);
 const loading = ref(true);
 const error = ref<string | null>(null);
 
 const search = ref('');
 const stateFilter = ref('');
 const assignedFilter = ref('');
+
+const helpdeskUsers = ref<HelpdeskUser[]>([]);
+
+const loadHelpdeskUsers = async (): Promise<void> => {
+    try {
+        const all: HelpdeskUser[] = [];
+        for (const acl of [3, 9]) {
+            let page = 1;
+            let lastPage = 1;
+            do {
+                const res = await api<{ data: HelpdeskUser[]; last_page: number }>(
+                    `/admin/users?acl=${acl}&per_page=100&page=${page}`,
+                );
+                all.push(...(res.data ?? []));
+                lastPage = res.last_page ?? 1;
+                page += 1;
+            } while (page <= lastPage);
+        }
+        const seen = new Set<number>();
+        const unique = all.filter((u) => {
+            if (seen.has(u.id)) return false;
+            seen.add(u.id);
+            return true;
+        });
+        unique.sort((a, b) => {
+            const an = [a.name, a.mname, a.lname].filter(Boolean).join(' ').toLowerCase();
+            const bn = [b.name, b.mname, b.lname].filter(Boolean).join(' ').toLowerCase();
+            return an.localeCompare(bn);
+        });
+        helpdeskUsers.value = unique;
+    } catch {
+        helpdeskUsers.value = [];
+    }
+};
+
+const userLabel = (u: HelpdeskUser): string => {
+    const name = [u.name, u.mname, u.lname].filter(Boolean).join(' ').trim();
+    return name ? `${name} (${u.username})` : u.username;
+};
 
 const sortKey = ref('created');
 const sortDir = ref<'asc' | 'desc'>('desc');
@@ -54,7 +103,7 @@ const load = async (): Promise<void> => {
     loading.value = true;
     error.value = null;
     try {
-        const params = new URLSearchParams({ scope: 'all', page: String(page.value), per_page: '20' });
+        const params = new URLSearchParams({ scope: 'all', page: String(page.value), per_page: String(pageSize.value) });
         if (search.value.trim() !== '') params.set('search', search.value.trim());
         if (stateFilter.value !== '') params.set('state_id', stateFilter.value);
         if (assignedFilter.value.trim() !== '') params.set('assigned_uid', assignedFilter.value.trim());
@@ -92,7 +141,16 @@ const onPageChange = (p: number): void => {
     void load();
 };
 
-onMounted(load);
+const onPageSizeChange = (size: number): void => {
+    pageSize.value = size;
+    page.value = 1;
+    void load();
+};
+
+onMounted(() => {
+    void load();
+    void loadHelpdeskUsers();
+});
 </script>
 
 <template>
@@ -122,8 +180,17 @@ onMounted(load);
                         </select>
                     </div>
                     <div class="space-y-2">
-                        <Label for="assigned">Assigned user ID</Label>
-                        <Input id="assigned" v-model="assignedFilter" />
+                        <Label for="assigned">Assigned to</Label>
+                        <select
+                            id="assigned"
+                            v-model="assignedFilter"
+                            class="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+                        >
+                            <option value="">All</option>
+                            <option v-for="u in helpdeskUsers" :key="u.id" :value="String(u.id)">
+                                {{ userLabel(u) }}
+                            </option>
+                        </select>
                     </div>
                     <div class="flex items-end">
                         <Button type="submit">Apply</Button>
@@ -146,13 +213,14 @@ onMounted(load);
                     :loading="loading"
                     empty-message="No tickets."
                     pagination="server"
-                    :page-size="20"
+                    :page-size="pageSize"
                     :total="total"
                     :page="page"
                     :sort-key="sortKey"
                     :sort-dir="sortDir"
                     @sort="onSort"
                     @page-change="onPageChange"
+                    @page-size-change="onPageSizeChange"
                     @row-click="(row) => router.push(`/tickets/${row.id}`)"
                 >
                     <template #cell-state_id="{ value }">

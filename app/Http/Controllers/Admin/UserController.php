@@ -78,7 +78,9 @@ class UserController extends Controller
 
         $sortColumn = $sortMap[$sort] ?? 'p.lname';
 
-        $users = $query->orderBy($sortColumn, $dir)->paginate(40);
+        $perPage = min(100, max(1, (int) $request->query('per_page', 40)));
+
+        $users = $query->orderBy($sortColumn, $dir)->paginate($perPage);
 
         $profiles = UserProfile::withTrashed()
             ->whereIn('user_id', $users->pluck('id')->all())

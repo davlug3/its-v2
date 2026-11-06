@@ -23,6 +23,7 @@ const props = withDefaults(
         emptyMessage?: string;
         pagination?: 'client' | 'server' | 'none';
         pageSize?: number;
+        pageSizeOptions?: number[];
         total?: number;
         sortKey?: string;
         sortDir?: 'asc' | 'desc';
@@ -33,6 +34,7 @@ const props = withDefaults(
         emptyMessage: 'No data.',
         pagination: 'none',
         pageSize: 20,
+        pageSizeOptions: () => [10, 20, 50, 100],
         total: 0,
         sortKey: '',
         sortDir: 'asc',
@@ -44,8 +46,10 @@ const emit = defineEmits<{
     (e: 'update:sortKey', value: string): void;
     (e: 'update:sortDir', value: 'asc' | 'desc'): void;
     (e: 'update:page', value: number): void;
+    (e: 'update:pageSize', value: number): void;
     (e: 'sort', key: string, dir: 'asc' | 'desc'): void;
     (e: 'page-change', page: number): void;
+    (e: 'page-size-change', size: number): void;
     (e: 'row-click', row: Record<string, unknown>): void;
 }>();
 
@@ -147,22 +151,59 @@ const sortedRows = computed(() => {
     return arr;
 });
 
-const currentPage = computed(() => (props.page !== undefined ? props.page : 1));
+// Global page-size preference persisted across tables.
+const GLOBAL_PAGE_SIZE_KEY = 'datatable:global-page-size';
+
+const internalPageSize = ref<number>(props.pageSize || 20);
+
+const loadPageSize = (): void => {
+    try {
+        const raw = localStorage.getItem(GLOBAL_PAGE_SIZE_KEY);
+        if (raw) {
+            const parsed = parseInt(raw, 10);
+            if (!isNaN(parsed) && parsed > 0) internalPageSize.value = parsed;
+        }
+    } catch {
+        // ignore
+    }
+};
+
+const activePageSize = computed(() => internalPageSize.value);
+
+const setPageSize = (size: number): void => {
+    internalPageSize.value = size;
+    try {
+        localStorage.setItem(GLOBAL_PAGE_SIZE_KEY, String(size));
+    } catch {
+        // ignore
+    }
+    emit('update:pageSize', size);
+    emit('page-size-change', size);
+    // reset to first page
+    goPage(1);
+};
+
+onMounted(() => {
+    loadWidths();
+    loadPageSize();
+});
 
 const clientTotalPages = computed(() =>
-    props.pagination === 'client' ? Math.max(1, Math.ceil(sortedRows.value.length / props.pageSize)) : 1,
+    props.pagination === 'client' ? Math.max(1, Math.ceil(sortedRows.value.length / activePageSize.value)) : 1,
 );
 
 const displayedRows = computed(() => {
     if (props.pagination === 'client') {
-        const start = (currentPage.value - 1) * props.pageSize;
-        return sortedRows.value.slice(start, start + props.pageSize);
+        const start = (currentPage.value - 1) * activePageSize.value;
+        return sortedRows.value.slice(start, start + activePageSize.value);
     }
     return sortedRows.value;
 });
 
+const currentPage = computed(() => (props.page !== undefined ? props.page : 1));
+
 const totalPages = computed(() =>
-    props.pagination === 'server' ? Math.max(1, Math.ceil(props.total / props.pageSize)) : clientTotalPages.value,
+    props.pagination === 'server' ? Math.max(1, Math.ceil(props.total / activePageSize.value)) : clientTotalPages.value,
 );
 
 const totalRows = computed(() =>
@@ -241,9 +282,19 @@ watch(() => props.tableId, loadWidths);
             </Table>
         </div>
 
-        <div v-if="pagination !== 'none' && totalPages > 1" class="flex items-center justify-between text-sm text-muted-foreground">
+        <div v-if="pagination !== 'none'" class="flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">
             <span>{{ totalRows }} rows</span>
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2">
+                <label class="flex items-center gap-1">
+                    <span>Per page</span>
+                    <select
+                        class="h-8 rounded-md border border-input bg-background px-2 text-sm"
+                        :value="activePageSize"
+                        @change="setPageSize(Number(($event.target as HTMLSelectElement).value))"
+                    >
+                        <option v-for="opt in pageSizeOptions" :key="opt" :value="opt">{{ opt }}</option>
+                    </select>
+                </label>
                 <button
                     type="button"
                     class="rounded-md border border-border px-2 py-1 hover:bg-haze disabled:opacity-50"

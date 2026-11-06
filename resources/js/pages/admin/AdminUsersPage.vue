@@ -44,6 +44,7 @@ const statusFilter = ref('all');
 const page = ref(1);
 const lastPage = ref(1);
 const total = ref(0);
+const pageSize = ref(40);
 
 const sortKey = ref('name');
 const sortDir = ref<'asc' | 'desc'>('asc');
@@ -78,7 +79,7 @@ const load = async (): Promise<void> => {
     loading.value = true;
     error.value = null;
     try {
-        const params = new URLSearchParams({ page: String(page.value), sort: sortKey.value, dir: sortDir.value });
+        const params = new URLSearchParams({ page: String(page.value), per_page: String(pageSize.value), sort: sortKey.value, dir: sortDir.value });
         if (search.value.trim() !== '') params.set('search', search.value.trim());
         if (aclFilter.value !== 'all') params.set('acl', aclFilter.value);
         if (statusFilter.value !== 'all') params.set('status', statusFilter.value);
@@ -109,6 +110,12 @@ const onSort = (key: string, dir: 'asc' | 'desc'): void => {
 
 const onPageChange = (p: number): void => {
     page.value = p;
+    void load();
+};
+
+const onPageSizeChange = (size: number): void => {
+    pageSize.value = size;
+    page.value = 1;
     void load();
 };
 
@@ -209,13 +216,14 @@ onMounted(load);
                     :loading="loading"
                     empty-message="No users found."
                     pagination="server"
-                    :page-size="40"
+                    :page-size="pageSize"
                     :total="total"
                     :page="page"
                     :sort-key="sortKey"
                     :sort-dir="sortDir"
                     @sort="onSort"
                     @page-change="onPageChange"
+                    @page-size-change="onPageSizeChange"
                 >
                     <template #cell-username="{ row }">
                         <div class="font-medium">{{ (row as unknown as AdminUser).username }}</div>
