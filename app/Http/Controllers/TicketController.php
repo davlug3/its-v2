@@ -40,7 +40,13 @@ class TicketController extends Controller
                 'search' => $request->query('search'),
             ];
 
-            $result = $this->tickets->listAll($page, $perPage, $filters);
+            $result = $this->tickets->listAll(
+                $page,
+                $perPage,
+                $filters,
+                (string) $request->query('sort', ''),
+                (string) $request->query('dir', 'desc'),
+            );
 
             return response()->json($result);
         }
@@ -48,7 +54,14 @@ class TicketController extends Controller
         $stateId = $request->query('state_id');
         $stateId = $stateId === null ? null : (int) $stateId;
 
-        $result = $this->tickets->listForUser((int) $user->id, $page, $perPage, $stateId);
+        $result = $this->tickets->listForUser(
+            (int) $user->id,
+            $page,
+            $perPage,
+            $stateId,
+            (string) $request->query('sort', ''),
+            (string) $request->query('dir', 'desc'),
+        );
 
         return response()->json($result);
     }

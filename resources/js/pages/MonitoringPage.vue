@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,6 +28,35 @@ const rows = ref<Row[]>([]);
 const loading = ref(true);
 const error = ref<string | null>(null);
 const lastUpdated = ref<string>('');
+
+const sortKey = ref('created_date');
+const sortDir = ref<'asc' | 'desc'>('desc');
+
+const sortedRows = computed(() => {
+    const arr = [...rows.value];
+    arr.sort((a, b) => {
+        const av = (a as Record<string, unknown>)[sortKey.value];
+        const bv = (b as Record<string, unknown>)[sortKey.value];
+        if (av === bv) return 0;
+        const cmp = av! < bv! ? -1 : 1;
+        return sortDir.value === 'asc' ? cmp : -cmp;
+    });
+    return arr;
+});
+
+const toggleSort = (key: string): void => {
+    if (sortKey.value === key) {
+        sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
+    } else {
+        sortKey.value = key;
+        sortDir.value = 'desc';
+    }
+};
+
+const sortIndicator = (key: string): string => {
+    if (sortKey.value !== key) return '';
+    return sortDir.value === 'asc' ? ' ▲' : ' ▼';
+};
 
 let timer: ReturnType<typeof setInterval> | null = null;
 
@@ -87,18 +116,18 @@ onUnmounted(() => {
                 <Table v-else>
                     <TableHeader>
                         <TableRow>
-                            <TableHead class="w-20">Ticket #</TableHead>
-                            <TableHead class="w-40">Date/Time</TableHead>
-                            <TableHead>Subject</TableHead>
-                            <TableHead class="w-32">Location</TableHead>
-                            <TableHead class="w-32">Mail</TableHead>
-                            <TableHead class="w-32">Category</TableHead>
-                            <TableHead class="w-32">Assigned</TableHead>
+                            <TableHead class="w-20 cursor-pointer select-none" @click="toggleSort('id')">Ticket #{{ sortIndicator('id') }}</TableHead>
+                            <TableHead class="w-40 cursor-pointer select-none" @click="toggleSort('created_date')">Date/Time{{ sortIndicator('created_date') }}</TableHead>
+                            <TableHead class="cursor-pointer select-none" @click="toggleSort('subject')">Subject{{ sortIndicator('subject') }}</TableHead>
+                            <TableHead class="w-32 cursor-pointer select-none" @click="toggleSort('location')">Location{{ sortIndicator('location') }}</TableHead>
+                            <TableHead class="w-32 cursor-pointer select-none" @click="toggleSort('mail')">Mail{{ sortIndicator('mail') }}</TableHead>
+                            <TableHead class="w-32 cursor-pointer select-none" @click="toggleSort('category')">Category{{ sortIndicator('category') }}</TableHead>
+                            <TableHead class="w-32 cursor-pointer select-none" @click="toggleSort('assigned')">Assigned{{ sortIndicator('assigned') }}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         <TableRow
-                            v-for="r in rows"
+                            v-for="r in sortedRows"
                             :key="r.id"
                             class="cursor-pointer"
                             @click="router.push(`/tickets/${r.id}`)"

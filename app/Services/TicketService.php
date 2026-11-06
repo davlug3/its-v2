@@ -190,7 +190,7 @@ class TicketService
      *
      * @return array{tickets: array<int, array<string, mixed>>, total: int, page: int, per_page: int}
      */
-    public function listForUser(int $userId, int $page = 1, int $perPage = 20, ?int $stateId = null): array
+    public function listForUser(int $userId, int $page = 1, int $perPage = 20, ?int $stateId = null, ?string $sort = null, string $dir = 'desc'): array
     {
         $query = Ticket::query()->where(function ($q) use ($userId): void {
             $q->where('created_uid', $userId)
@@ -204,8 +204,21 @@ class TicketService
 
         $total = (int) $query->count();
 
+        $sortMap = [
+            'id' => 'id',
+            'subject' => 'subject',
+            'state' => 'state_id',
+            'category' => 'category_id',
+            'created' => 'created_date',
+            'assigned' => 'assigned_uid',
+            'creator' => 'created_uid',
+        ];
+
+        $sortColumn = $sortMap[$sort ?? ''] ?? 'created_date';
+        $direction = $dir === 'asc' ? 'asc' : 'desc';
+
         $tickets = $query
-            ->orderByDesc('created_date')
+            ->orderBy($sortColumn, $direction)
             ->skip(($page - 1) * $perPage)
             ->take($perPage)
             ->get();
@@ -224,7 +237,7 @@ class TicketService
      * @param  array<string, mixed>  $filters
      * @return array{tickets: array<int, array<string, mixed>>, total: int, page: int, per_page: int}
      */
-    public function listAll(int $page = 1, int $perPage = 20, array $filters = []): array
+    public function listAll(int $page = 1, int $perPage = 20, array $filters = [], ?string $sort = null, string $dir = 'desc'): array
     {
         $query = Ticket::query();
 
@@ -251,8 +264,21 @@ class TicketService
 
         $total = (int) $query->count();
 
+        $sortMap = [
+            'id' => 'id',
+            'subject' => 'subject',
+            'state' => 'state_id',
+            'category' => 'category_id',
+            'created' => 'created_date',
+            'assigned' => 'assigned_uid',
+            'creator' => 'created_uid',
+        ];
+
+        $sortColumn = $sortMap[$sort ?? ''] ?? 'created_date';
+        $direction = $dir === 'asc' ? 'asc' : 'desc';
+
         $tickets = $query
-            ->orderByDesc('created_date')
+            ->orderBy($sortColumn, $direction)
             ->skip(($page - 1) * $perPage)
             ->take($perPage)
             ->get();

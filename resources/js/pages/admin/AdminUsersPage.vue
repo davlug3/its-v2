@@ -51,9 +51,30 @@ const rows = ref<AdminUser[]>([]);
 const loading = ref(true);
 const error = ref<string | null>(null);
 const search = ref('');
+const aclFilter = ref('all');
+const statusFilter = ref('all');
 const page = ref(1);
 const lastPage = ref(1);
 const total = ref(0);
+
+const sortKey = ref('name');
+const sortDir = ref<'asc' | 'desc'>('asc');
+
+const toggleSort = (key: string): void => {
+    if (sortKey.value === key) {
+        sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
+    } else {
+        sortKey.value = key;
+        sortDir.value = 'asc';
+    }
+    page.value = 1;
+    void load();
+};
+
+const sortIndicator = (key: string): string => {
+    if (sortKey.value !== key) return '';
+    return sortDir.value === 'asc' ? ' ▲' : ' ▼';
+};
 
 const resetOpen = ref(false);
 const resetTarget = ref<AdminUser | null>(null);
@@ -77,8 +98,10 @@ const load = async (): Promise<void> => {
     loading.value = true;
     error.value = null;
     try {
-        const params = new URLSearchParams({ page: String(page.value) });
+        const params = new URLSearchParams({ page: String(page.value), sort: sortKey.value, dir: sortDir.value });
         if (search.value.trim() !== '') params.set('search', search.value.trim());
+        if (aclFilter.value !== 'all') params.set('acl', aclFilter.value);
+        if (statusFilter.value !== 'all') params.set('status', statusFilter.value);
         const res = await api<Paginated<AdminUser>>(`/admin/users?${params.toString()}`);
         rows.value = res.data;
         page.value = res.current_page;
@@ -160,9 +183,20 @@ onMounted(load);
                 <CardTitle>Directory</CardTitle>
             </CardHeader>
             <CardContent class="space-y-4">
-                <form class="flex gap-2" @submit.prevent="go(1)">
+                <form class="flex flex-wrap gap-2" @submit.prevent="go(1)">
                     <Input v-model="search" placeholder="Search username or name" />
-                    <Button type="submit">Search</Button>
+                    <select v-model="aclFilter" class="h-9 rounded-md border border-input bg-background px-2 text-sm">
+                        <option value="all">All access</option>
+                        <option value="1">End user</option>
+                        <option value="3">Helpdesk</option>
+                        <option value="9">Admin</option>
+                    </select>
+                    <select v-model="statusFilter" class="h-9 rounded-md border border-input bg-background px-2 text-sm">
+                        <option value="all">All status</option>
+                        <option value="A">Active</option>
+                        <option value="I">Inactive</option>
+                    </select>
+                    <Button type="submit">Apply</Button>
                 </form>
 
                 <p v-if="error" class="text-sm text-destructive">{{ error }}</p>
@@ -174,10 +208,10 @@ onMounted(load);
                 <Table v-else>
                     <TableHeader>
                         <TableRow>
-                            <TableHead class="w-16">ID</TableHead>
-                            <TableHead>User</TableHead>
-                            <TableHead class="w-20">Dept</TableHead>
-                            <TableHead class="w-36">Access</TableHead>
+                            <TableHead class="w-16 cursor-pointer select-none" @click="toggleSort('id')">ID{{ sortIndicator('id') }}</TableHead>
+                            <TableHead class="cursor-pointer select-none" @click="toggleSort('username')">User{{ sortIndicator('username') }}</TableHead>
+                            <TableHead class="w-20 cursor-pointer select-none" @click="toggleSort('department')">Dept{{ sortIndicator('department') }}</TableHead>
+                            <TableHead class="w-36 cursor-pointer select-none" @click="toggleSort('acl')">Access{{ sortIndicator('acl') }}</TableHead>
                             <TableHead class="w-64">Actions</TableHead>
                         </TableRow>
                     </TableHeader>

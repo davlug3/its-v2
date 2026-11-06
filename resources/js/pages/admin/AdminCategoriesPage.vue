@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,6 +24,35 @@ interface Category {
 const categories = ref<Category[]>([]);
 const loading = ref(true);
 const error = ref<string | null>(null);
+
+const sortKey = ref('category');
+const sortDir = ref<'asc' | 'desc'>('asc');
+
+const sortedCategories = computed(() => {
+    const arr = [...categories.value];
+    arr.sort((a, b) => {
+        const av = (a as Record<string, unknown>)[sortKey.value];
+        const bv = (b as Record<string, unknown>)[sortKey.value];
+        if (av === bv) return 0;
+        const cmp = av! < bv! ? -1 : 1;
+        return sortDir.value === 'asc' ? cmp : -cmp;
+    });
+    return arr;
+});
+
+const toggleSort = (key: string): void => {
+    if (sortKey.value === key) {
+        sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
+    } else {
+        sortKey.value = key;
+        sortDir.value = 'asc';
+    }
+};
+
+const sortIndicator = (key: string): string => {
+    if (sortKey.value !== key) return '';
+    return sortDir.value === 'asc' ? ' ▲' : ' ▼';
+};
 
 const newName = ref('');
 const creating = ref(false);
@@ -134,13 +163,13 @@ onMounted(load);
                 <Table v-else>
                     <TableHeader>
                         <TableRow>
-                            <TableHead class="w-16">ID</TableHead>
-                            <TableHead>Name</TableHead>
+                            <TableHead class="w-16 cursor-pointer select-none" @click="toggleSort('id')">ID{{ sortIndicator('id') }}</TableHead>
+                            <TableHead class="cursor-pointer select-none" @click="toggleSort('category')">Name{{ sortIndicator('category') }}</TableHead>
                             <TableHead class="w-48">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        <TableRow v-for="c in categories" :key="c.id">
+                        <TableRow v-for="c in sortedCategories" :key="c.id">
                             <TableCell class="font-mono text-sm">{{ c.id }}</TableCell>
                             <TableCell>
                                 <Input

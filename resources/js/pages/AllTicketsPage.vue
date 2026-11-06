@@ -41,6 +41,25 @@ const search = ref('');
 const stateFilter = ref('');
 const assignedFilter = ref('');
 
+const sortKey = ref('created');
+const sortDir = ref<'asc' | 'desc'>('desc');
+
+const toggleSort = (key: string): void => {
+    if (sortKey.value === key) {
+        sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
+    } else {
+        sortKey.value = key;
+        sortDir.value = 'desc';
+    }
+    page.value = 1;
+    void load();
+};
+
+const sortIndicator = (key: string): string => {
+    if (sortKey.value !== key) return '';
+    return sortDir.value === 'asc' ? ' ▲' : ' ▼';
+};
+
 const stateLabel = (id: number): string => (id === 1 ? 'Open' : id === 2 ? 'Closed' : `State ${id}`);
 
 const stateVariant = (id: number): 'default' | 'secondary' | 'outline' => (id === 3 ? 'secondary' : id === 2 ? 'default' : 'outline');
@@ -55,6 +74,8 @@ const load = async (): Promise<void> => {
         if (search.value.trim() !== '') params.set('search', search.value.trim());
         if (stateFilter.value !== '') params.set('state_id', stateFilter.value);
         if (assignedFilter.value.trim() !== '') params.set('assigned_uid', assignedFilter.value.trim());
+        params.set('sort', sortKey.value);
+        params.set('dir', sortDir.value);
 
         const res = await api<{ tickets: Ticket[]; total: number; last_page: number; current_page: number }>(
             `/tickets?${params.toString()}`,
@@ -132,12 +153,12 @@ onMounted(load);
                 <Table v-else>
                     <TableHeader>
                         <TableRow>
-                            <TableHead class="w-20">ID</TableHead>
-                            <TableHead>Subject</TableHead>
-                            <TableHead class="w-32">State</TableHead>
-                            <TableHead class="w-24">Created by</TableHead>
-                            <TableHead class="w-24">Assigned</TableHead>
-                            <TableHead class="w-28">Created</TableHead>
+                            <TableHead class="w-20 cursor-pointer select-none" @click="toggleSort('id')">ID{{ sortIndicator('id') }}</TableHead>
+                            <TableHead class="cursor-pointer select-none" @click="toggleSort('subject')">Subject{{ sortIndicator('subject') }}</TableHead>
+                            <TableHead class="w-32 cursor-pointer select-none" @click="toggleSort('state')">State{{ sortIndicator('state') }}</TableHead>
+                            <TableHead class="w-24 cursor-pointer select-none" @click="toggleSort('creator')">Created by{{ sortIndicator('creator') }}</TableHead>
+                            <TableHead class="w-24 cursor-pointer select-none" @click="toggleSort('assigned')">Assigned{{ sortIndicator('assigned') }}</TableHead>
+                            <TableHead class="w-28 cursor-pointer select-none" @click="toggleSort('created')">Created{{ sortIndicator('created') }}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>

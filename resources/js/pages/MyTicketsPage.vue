@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { Badge } from '@/components/ui/badge';
@@ -33,6 +33,35 @@ const tickets = ref<Ticket[]>([]);
 const total = ref(0);
 const loading = ref(true);
 const error = ref<string | null>(null);
+
+const sortKey = ref('created_date');
+const sortDir = ref<'asc' | 'desc'>('desc');
+
+const sortedTickets = computed(() => {
+    const arr = [...tickets.value];
+    arr.sort((a, b) => {
+        const av = (a as Record<string, unknown>)[sortKey.value];
+        const bv = (b as Record<string, unknown>)[sortKey.value];
+        if (av === bv) return 0;
+        const cmp = av! < bv! ? -1 : 1;
+        return sortDir.value === 'asc' ? cmp : -cmp;
+    });
+    return arr;
+});
+
+const toggleSort = (key: string): void => {
+    if (sortKey.value === key) {
+        sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
+    } else {
+        sortKey.value = key;
+        sortDir.value = 'desc';
+    }
+};
+
+const sortIndicator = (key: string): string => {
+    if (sortKey.value !== key) return '';
+    return sortDir.value === 'asc' ? ' ▲' : ' ▼';
+};
 
 const stateLabel = (id: number): string => {
     if (id === 1) return 'Open';
@@ -98,15 +127,15 @@ const openTicket = (id: number): void => {
                 <Table v-else>
                     <TableHeader>
                         <TableRow>
-                            <TableHead class="w-20">ID</TableHead>
-                            <TableHead>Subject</TableHead>
-                            <TableHead class="w-32">State</TableHead>
-                            <TableHead class="w-44">Created</TableHead>
+                            <TableHead class="w-20 cursor-pointer select-none" @click="toggleSort('id')">ID{{ sortIndicator('id') }}</TableHead>
+                            <TableHead class="cursor-pointer select-none" @click="toggleSort('subject')">Subject{{ sortIndicator('subject') }}</TableHead>
+                            <TableHead class="w-32 cursor-pointer select-none" @click="toggleSort('state_id')">State{{ sortIndicator('state_id') }}</TableHead>
+                            <TableHead class="w-44 cursor-pointer select-none" @click="toggleSort('created_date')">Created{{ sortIndicator('created_date') }}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         <TableRow
-                            v-for="t in tickets"
+                            v-for="t in sortedTickets"
                             :key="t.id"
                             class="cursor-pointer"
                             @click="openTicket(t.id)"

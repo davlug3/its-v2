@@ -16,6 +16,10 @@ class UserController extends Controller
     {
         $search = trim((string) $request->query('search', ''));
         $acl = $request->query('acl');
+        $status = $request->query('status');
+
+        $sort = (string) $request->query('sort', 'name');
+        $dir = strtolower((string) $request->query('dir', 'asc')) === 'desc' ? 'desc' : 'asc';
 
         // Identity and payroll live in the PIS database; helpdesk attributes live
         // in the its database. The two cannot be joined in one query, so the
@@ -60,7 +64,21 @@ class UserController extends Controller
             $query->whereIn('u.id', $ids);
         }
 
-        $users = $query->orderBy('p.lname')->paginate(40);
+        if ($status !== null && $status !== '' && $status !== 'all') {
+            $query->where('p.status', (string) $status);
+        }
+
+        $sortMap = [
+            'id' => 'u.id',
+            'username' => 'u.username',
+            'name' => 'p.lname',
+            'department' => 'p.department',
+            'status' => 'p.status',
+        ];
+
+        $sortColumn = $sortMap[$sort] ?? 'p.lname';
+
+        $users = $query->orderBy($sortColumn, $dir)->paginate(40);
 
         $profiles = UserProfile::withTrashed()
             ->whereIn('user_id', $users->pluck('id')->all())
