@@ -73,18 +73,35 @@ class PisSyncService
 
     private function resolveAcl(int $userId, int $departmentId): int
     {
-        // Protected administrators keep acl 9.
+        // ACL is authoritative in the legacy its.users table (read-only).
+        $legacy = DB::connection('mysql')
+            ->table('users')
+            ->where('id', $userId)
+            ->value('acl_id');
+
+        if ($legacy !== null) {
+            $aclId = (int) $legacy;
+
+            // Legacy uses 0 for unset accounts; treat as End User.
+            if ($aclId === 0) {
+                $aclId = 1;
+            }
+
+            if (in_array($aclId, [1, 3, 9], true)) {
+                return $aclId;
+            }
+        }
+
+        // Fallback when its.users has no row for this user.
         $protectedAdmins = [334, 2194, 2415, 3040, 4735, 4862, 4991, 4992];
         if (in_array($userId, $protectedAdmins, true)) {
             return 9;
         }
 
-        // IHOMS department -> Helpdesk (acl 3).
         if ($departmentId === 15) {
             return 3;
         }
 
-        // Everyone else -> End User (acl 1).
         return 1;
     }
 }

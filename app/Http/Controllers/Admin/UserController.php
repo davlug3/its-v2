@@ -46,9 +46,14 @@ class UserController extends Controller
         }
 
         if ($acl !== null && $acl !== '') {
-            $ids = UserProfile::withTrashed()
-                ->where('acl_id', (int) $acl)
-                ->pluck('user_id')
+            $filterAcl = (int) $acl;
+            // its.users is the authoritative source; map legacy 0 to 1.
+            $legacyAcl = $filterAcl === 1 ? [0, 1] : [$filterAcl];
+
+            $ids = DB::connection('mysql')
+                ->table('users')
+                ->whereIn('acl_id', $legacyAcl)
+                ->pluck('id')
                 ->all();
 
             if ($ids === []) {
@@ -82,14 +87,29 @@ class UserController extends Controller
 
         $users = $query->orderBy($sortColumn, $dir)->paginate($perPage);
 
+        $ids = $users->pluck('id')->all();
+
         $profiles = UserProfile::withTrashed()
-            ->whereIn('user_id', $users->pluck('id')->all())
+            ->whereIn('user_id', $ids)
             ->get()
             ->keyBy('user_id');
 
-        $rows = array_map(function (object $user) use ($profiles): array {
+        $legacyAcls = DB::connection('mysql')
+            ->table('users')
+            ->whereIn('id', $ids)
+            ->pluck('acl_id', 'id');
+
+        $rows = array_map(function (object $user) use ($profiles, $legacyAcls): array {
             $id = (int) $user->id;
             $profile = $profiles->get($id);
+
+            // Prefer the legacy its.users acl_id (authoritative), falling back
+            // to the cached user_profile value.
+            $legacyAcl = $legacyAcls->get($id);
+            $aclId = $legacyAcl !== null ? (int) $legacyAcl : ($profile->acl_id ?? null);
+            if ($aclId === 0) {
+                $aclId = 1;
+            }
 
             return [
                 'id' => $id,
@@ -99,7 +119,7 @@ class UserController extends Controller
                 'lname' => $user->lname,
                 'department' => $user->department,
                 'status' => $user->status,
-                'acl_id' => $profile->acl_id ?? null,
+                'acl_id' => $aclId,
                 'group_id' => $profile->group_id ?? null,
                 'fpc' => $profile->fpc ?? null,
                 'login_attempts' => $profile->login_attempts ?? null,

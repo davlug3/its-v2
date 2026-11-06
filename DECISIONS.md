@@ -753,3 +753,10 @@ These items need a decision from Dave. They do not block Phase 1.
 * Decision: The voluntary self-service password change feature (`/auth/change-password`, the User options password form) is removed. Passwords are set only via admin reset (ACL 9).
 * Reason: User direction.
 * Effect: Supersedes PROMPT.md §7.6 and C7 for self-service. `Admin\UserController::resetPassword` remains the only password-setting path. `min_self` (D95) still applies to admin resets.
+
+## U12 — ACL is sourced from `its.users.acl_id`
+
+* Date: 2026-11-06
+* Decision: `user_profile.acl_id` is a cached copy synced from the authoritative `its.users.acl_id` on login. The admin user list and its ACL filter read directly from `its.users` so helpdesk/admin rosters populate before a user has ever logged in. Legacy value 0 is treated as End User (1).
+* Reason: User direction ("acl_id should come from its.users").
+* Effect: Supersedes the department-based ACL rule in C6 for accounts that exist in `its.users`. The department rule remains as a fallback for users with no `its.users` row.
