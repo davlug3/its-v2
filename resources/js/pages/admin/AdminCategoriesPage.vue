@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
     Table,
     TableBody,
@@ -155,7 +156,10 @@ onMounted(load);
             </CardHeader>
             <CardContent class="space-y-4">
                 <p v-if="error" class="text-sm text-destructive">{{ error }}</p>
-                <p v-if="loading" class="text-sm text-muted-foreground">Loading…</p>
+                <div v-if="loading" class="space-y-2">
+                    <Skeleton class="h-8 w-full" />
+                    <Skeleton class="h-8 w-full" />
+                </div>
                 <p v-else-if="categories.length === 0" class="text-sm text-muted-foreground">
                     No categories.
                 </p>

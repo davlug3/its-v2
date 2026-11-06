@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { api, getToken } from '@/services/api';
 import { useAuthStore } from '@/stores/auth';
@@ -302,7 +303,11 @@ onMounted(() => {
             <Button variant="outline" @click="router.push('/my-tickets')">Back</Button>
         </div>
 
-        <p v-if="loading" class="text-sm text-muted-foreground">Loading…</p>
+        <div v-if="loading" class="space-y-2">
+            <Skeleton class="h-8 w-full" />
+            <Skeleton class="h-8 w-5/6" />
+            <Skeleton class="h-8 w-4/6" />
+        </div>
         <p v-else-if="error" class="text-sm text-destructive">{{ error }}</p>
 
         <template v-else-if="ticket">

@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
     Table,
     TableBody,
@@ -200,7 +201,11 @@ onMounted(load);
                 </form>
 
                 <p v-if="error" class="text-sm text-destructive">{{ error }}</p>
-                <p v-if="loading" class="text-sm text-muted-foreground">Loading…</p>
+                <div v-if="loading" class="space-y-2">
+                    <Skeleton class="h-8 w-full" />
+                    <Skeleton class="h-8 w-full" />
+                    <Skeleton class="h-8 w-full" />
+                </div>
                 <p v-else-if="rows.length === 0" class="text-sm text-muted-foreground">
                     No users found.
                 </p>
