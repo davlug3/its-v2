@@ -732,3 +732,10 @@ These items need a decision from Dave. They do not block Phase 1.
 * Reason: User direction. The `ForcePasswordChange` middleware, the `?p=change_password` redirect, and the `fpc = 2` requirement for admin-created accounts are all dropped.
 * Effect: D06 fix is superseded (no forced-change guard). Section 7.4 login redirect table no longer branches on `fpc`. AT-04 is retired. `PROMPT.md` sections 7.4, 7.5, 7.6, and D23 should be read as "retired" rather than "fixed".
 * Voluntary self-service password change (`/auth/change-password`) remains available.
+
+## U9 — Retire the legacy `?p=` compatibility router
+
+* Date: 2026-11-06
+* Decision: The legacy `?p=page_name` compatibility adapter, `LegacyController`, and the nginx `/index.php?p=X -> /?p=X` rewrite are removed. All navigation uses Vue Router.
+* Reason: User direction; proper frontend routing replaces the legacy module registry.
+* Effect: D65 (path allowlist) is retired, not fixed. The `mods` table and `application_settings` remain as historical data, but nothing routes through them. Any external caller of `?p=...` receives a 404.
