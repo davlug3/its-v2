@@ -353,10 +353,12 @@ onMounted(() => {
                     </div>
 
                     <dl class="grid grid-cols-2 gap-2 text-xs text-muted-foreground sm:grid-cols-4">
-                        <div><dt class="font-medium">Category</dt><dd>{{ ticket.category_name ?? ticket.category_id }}</dd></div>
-                        <div><dt class="font-medium">Location</dt><dd>{{ ticket.location_name ?? ticket.location_id }}</dd></div>
-                        <div><dt class="font-medium">Created by</dt><dd>{{ ticket.created_name ?? ticket.created_uid }}</dd></div>
-                        <div><dt class="font-medium">Assigned to</dt><dd>{{ ticket.assigned_name ?? (ticket.assigned_uid || '—') }}</dd></div>
+                        <div><dt class="font-medium">Category</dt><dd>{{ ticket.category_name ?? (ticket.category_id ? 'Unknown category' : '—') }}</dd></div>
+                        <div><dt class="font-medium">Location</dt><dd>{{ ticket.location_name ?? (ticket.location_id ? 'Unknown location' : '—') }}</dd></div>
+                        <div><dt class="font-medium">Created by</dt><dd>{{ ticket.created_name ?? (ticket.created_uid ? 'Deleted user' : '—') }}</dd></div>
+                        <div><dt class="font-medium">Assigned to</dt><dd>{{ ticket.assigned_name ?? (ticket.assigned_uid ? 'Deleted user' : 'Unassigned') }}</dd></div>
+                        <div v-if="ticket.eu_uid && ticket.eu_uid !== ticket.created_uid"><dt class="font-medium">End user</dt><dd>{{ ticket.eu_name ?? 'Deleted user' }}</dd></div>
+                        <div v-if="ticket.resolved_uid"><dt class="font-medium">Resolved by</dt><dd>{{ ticket.resolved_name ?? 'Deleted user' }}</dd></div>
                     </dl>
 
                     <div v-if="canAssign" class="flex items-end gap-2 border-t border-border pt-3">

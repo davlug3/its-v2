@@ -292,16 +292,16 @@ onMounted(() => {
                         <Badge :variant="value === 2 ? 'secondary' : 'outline'">{{ stateLabel(value as number) }}</Badge>
                     </template>
                     <template #cell-created_name="{ row }">
-                        <span class="text-sm">{{ (row as unknown as Ticket).created_name ?? (row as unknown as Ticket).eu_name ?? (row as unknown as Ticket).created_uid }}</span>
+                        <span class="text-sm">{{ (row as unknown as Ticket).created_name ?? (row as unknown as Ticket).eu_name ?? ((row as unknown as Ticket).created_uid ? 'Deleted user' : '—') }}</span>
                     </template>
                     <template #cell-location_name="{ row }">
-                        <span class="text-sm">{{ (row as unknown as Ticket).location_name ?? (row as unknown as Ticket).location_id ?? '—' }}</span>
+                        <span class="text-sm">{{ (row as unknown as Ticket).location_name ?? ((row as unknown as Ticket).location_id ? 'Unknown location' : '—') }}</span>
                     </template>
                     <template #cell-category_name="{ row }">
-                        <span class="text-sm">{{ (row as unknown as Ticket).category_name ?? (row as unknown as Ticket).category_id ?? '—' }}</span>
+                        <span class="text-sm">{{ (row as unknown as Ticket).category_name ?? ((row as unknown as Ticket).category_id ? 'Unknown category' : '—') }}</span>
                     </template>
                     <template #cell-assigned_name="{ row }">
-                        <span class="text-sm">{{ (row as unknown as Ticket).assigned_name ?? ((row as unknown as Ticket).assigned_uid || '—') }}</span>
+                        <span class="text-sm">{{ (row as unknown as Ticket).assigned_name ?? ((row as unknown as Ticket).assigned_uid ? 'Deleted user' : '—') }}</span>
                     </template>
                     <template #cell-created_date="{ value }">
                         <span class="text-sm text-muted-foreground">{{ formatDate(value as number) }}</span>

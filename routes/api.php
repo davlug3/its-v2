@@ -58,7 +58,6 @@ Route::middleware(['auth:api', 'csrf', 'idempotency'])->group(function () {
         Route::middleware('acl:3')->group(function () {
             Route::get('/users', [UserController::class, 'index']);
             Route::get('/users/options', [UserController::class, 'options']);
-            Route::patch('/users/{id}/access', [UserController::class, 'updateAccess']);
             Route::patch('/users/{id}/supervisor', [UserController::class, 'updateSupervisor']);
             Route::post('/users/{id}/reset-password', [UserController::class, 'resetPassword']);
             Route::get('/users/{id}/supervisor-tree', [UserController::class, 'supervisorTree']);
@@ -72,6 +71,7 @@ Route::middleware(['auth:api', 'csrf', 'idempotency'])->group(function () {
 
         Route::middleware('acl:9')->group(function () {
             Route::get('/permissions', [PermissionController::class, 'index']);
+            Route::patch('/users/{id}/access', [UserController::class, 'updateAccess']);
         });
     });
 });

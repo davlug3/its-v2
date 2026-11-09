@@ -13,6 +13,7 @@ interface Ticket {
     subject: string;
     state_id: number;
     created_date: number;
+    created_uid?: number;
     created_name?: string | null;
     resolved_name?: string | null;
 }
@@ -75,7 +76,7 @@ onMounted(load);
             <CardContent>
                 <DataTable table-id="involving-me" :columns="columns" :rows="tickets as unknown as Record<string, unknown>[]" :loading="loading" empty-message="No tickets." pagination="server" :page-size="pageSize" :total="total" :page="page" :sort-key="sortKey" :sort-dir="sortDir" @sort="onSort" @page-change="onPageChange" @page-size-change="onPageSizeChange" @row-click="(row) => router.push(`/tickets/${(row as unknown as Ticket).id}`)">
                     <template #cell-state_id="{ value }"><Badge :variant="value === 2 ? 'secondary' : 'outline'">{{ stateLabel(value as number) }}</Badge></template>
-                    <template #cell-created_name="{ row }"><span class="text-sm">{{ (row as unknown as Ticket).created_name ?? '—' }}</span></template>
+                    <template #cell-created_name="{ row }"><span class="text-sm">{{ (row as unknown as Ticket).created_name ?? ((row as unknown as Ticket).created_uid ? 'Deleted user' : '—') }}</span></template>
                     <template #cell-created_date="{ value }"><span class="text-sm text-muted-foreground">{{ formatDate(value as number) }}</span></template>
                 </DataTable>
             </CardContent>

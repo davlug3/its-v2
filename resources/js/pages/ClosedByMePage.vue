@@ -13,7 +13,9 @@ interface Ticket {
     state_id: number;
     created_date: number;
     resolved_date?: number;
+    created_uid?: number;
     created_name?: string | null;
+    category_id?: number;
     category_name?: string | null;
 }
 
@@ -110,10 +112,10 @@ onMounted(load);
                     @row-click="(row) => router.push(`/tickets/${(row as unknown as Ticket).id}`)"
                 >
                     <template #cell-created_name="{ row }">
-                        <span class="text-sm">{{ (row as unknown as Ticket).created_name ?? '—' }}</span>
+                        <span class="text-sm">{{ (row as unknown as Ticket).created_name ?? ((row as unknown as Ticket).created_uid ? 'Deleted user' : '—') }}</span>
                     </template>
                     <template #cell-category_name="{ row }">
-                        <span class="text-sm">{{ (row as unknown as Ticket).category_name ?? '—' }}</span>
+                        <span class="text-sm">{{ (row as unknown as Ticket).category_name ?? ((row as unknown as Ticket).category_id ? 'Unknown category' : '—') }}</span>
                     </template>
                     <template #cell-resolved_date="{ value }">
                         <span class="text-sm text-muted-foreground">{{ formatDate(value as number) }}</span>

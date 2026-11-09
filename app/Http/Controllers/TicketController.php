@@ -772,14 +772,19 @@ class TicketController extends Controller
         }
 
         $result = $tickets->map(function (Ticket $ticket) use ($names, $locations, $categories): array {
+            $locId = (int) $ticket->location_id;
+            $creatorId = (int) $ticket->created_uid;
+            $catId = (int) $ticket->category_id;
+            $assignedId = (int) $ticket->assigned_uid;
+
             return [
                 'id' => $ticket->id,
                 'created_date' => $ticket->created_date,
                 'subject' => $ticket->subject,
-                'location' => $locations[(int) $ticket->location_id] ?? $ticket->location_id,
-                'mail' => $names[(int) $ticket->created_uid] ?? $ticket->created_uid,
-                'category' => $categories[(int) $ticket->category_id] ?? $ticket->category_id,
-                'assigned' => $ticket->assigned_uid ? ($names[(int) $ticket->assigned_uid] ?? $ticket->assigned_uid) : '',
+                'location' => $locations[$locId] ?? ($locId > 0 ? 'Unknown location' : '—'),
+                'mail' => $names[$creatorId] ?? ($creatorId > 0 ? 'Deleted user' : '—'),
+                'category' => $categories[$catId] ?? ($catId > 0 ? 'Unknown category' : '—'),
+                'assigned' => $assignedId > 0 ? ($names[$assignedId] ?? 'Deleted user') : '—',
             ];
         });
 

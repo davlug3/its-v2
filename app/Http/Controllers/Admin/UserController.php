@@ -193,9 +193,20 @@ class UserController extends Controller
 
     public function updateAccess(Request $request, int $id): JsonResponse
     {
+        // D10/D11: only ACL 9 may change access levels (prevents privilege escalation).
+        $actorProfile = UserProfile::where('user_id', $request->user()->id)->first();
+        if ($actorProfile === null || (int) $actorProfile->acl_id !== 9) {
+            return response()->json(['message' => 'Forbidden.'], 403);
+        }
+
+        $protectedAdmins = [334, 2194, 2415, 3040, 4735, 4862, 4991, 4992];
         $validated = $request->validate([
             'acl_id' => ['required', 'integer', 'in:1,3,9'],
         ]);
+
+        if (in_array($id, $protectedAdmins, true) && (int) $validated['acl_id'] !== 9) {
+            return response()->json(['message' => 'Protected administrator access cannot be reduced.'], 403);
+        }
 
         $profile = UserProfile::firstOrNew(['user_id' => $id]);
         $beforeAcl = $profile->exists ? $profile->acl_id : null;
@@ -264,7 +275,7 @@ class UserController extends Controller
         return response()->json(['message' => 'Password reset.']);
     }
 
-    public function softDelete(int $id): JsonResponse
+    public function softDelete(Request $request, int $id): JsonResponse
     {
         $protectedAdmins = [334, 2194, 2415, 3040, 4735, 4862, 4991, 4992];
 
@@ -279,6 +290,14 @@ class UserController extends Controller
         }
 
         $profile->delete();
+
+        AdminAudit::create([
+            'actor_user_id' => $request->user()->id,
+            'action' => 'disable_user',
+            'entity' => 'user',
+            'entity_id' => $id,
+            'ip' => $request->ip(),
+        ]);
 
         return response()->json(['message' => 'User disabled.']);
     }

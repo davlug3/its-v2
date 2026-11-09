@@ -292,7 +292,7 @@ onMounted(load);
                         <span class="hover:underline">{{ (row as unknown as Ticket).subject }}</span>
                     </template>
                     <template #cell-created_uid="{ row }">
-                        <span class="text-sm">{{ (row as unknown as Ticket).created_name ?? (row as unknown as Ticket).created_uid }}</span>
+                        <span class="text-sm">{{ (row as unknown as Ticket).created_name ?? ((row as unknown as Ticket).created_uid ? 'Deleted user' : '—') }}</span>
                     </template>
                     <template #cell-created_date="{ value }">
                         <span class="text-sm text-muted-foreground">{{ formatDate(value as number) }}</span>
