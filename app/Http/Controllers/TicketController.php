@@ -54,6 +54,29 @@ class TicketController extends Controller
             return response()->json($result);
         }
 
+        if ($scope === 'assigned_to_me') {
+            $result = $this->tickets->listAssignedToUser(
+                (int) $user->id,
+                $page,
+                $perPage,
+                (string) $request->query('sort', ''),
+                (string) $request->query('dir', 'desc'),
+            );
+
+            return response()->json($result);
+        }
+
+        if ($scope === 'unassigned' && $this->aclOf($request) >= 2) {
+            $result = $this->tickets->listUnassigned(
+                $page,
+                $perPage,
+                (string) $request->query('sort', ''),
+                (string) $request->query('dir', 'desc'),
+            );
+
+            return response()->json($result);
+        }
+
         if ($scope === 'all' && $this->aclOf($request) >= 2) {
             $filters = [
                 'state_id' => $request->query('state_id'),
@@ -123,7 +146,7 @@ class TicketController extends Controller
         $result = $this->tickets->create(
             $request->all(),
             (int) $user->id,
-            true,
+            $this->aclOf($request) >= 2,
         );
 
         if (! $result['ok']) {

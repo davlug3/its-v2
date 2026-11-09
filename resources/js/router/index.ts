@@ -33,6 +33,24 @@ const router = createRouter({
                     meta: { acl: 2 },
                 },
                 {
+                    path: 'tickets/assigned-to-me',
+                    name: 'assigned-to-me',
+                    component: () => import('@/pages/AssignedToMePage.vue'),
+                    meta: { acl: 2 },
+                },
+                {
+                    path: 'tickets/unassigned',
+                    name: 'unassigned-tickets',
+                    component: () => import('@/pages/UnassignedTicketsPage.vue'),
+                    meta: { acl: 2 },
+                },
+                {
+                    path: 'tickets/assigned-to-group',
+                    name: 'assigned-to-group-retired',
+                    component: () => import('@/pages/RetiredAssignedToGroupPage.vue'),
+                    meta: { acl: 2 },
+                },
+                {
                     path: 'tickets/closed-by-me',
                     name: 'closed-by-me',
                     component: () => import('@/pages/ClosedByMePage.vue'),

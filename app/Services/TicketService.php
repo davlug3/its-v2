@@ -438,6 +438,84 @@ class TicketService
     }
 
     /**
+     * Open tickets assigned to the given user.
+     *
+     * @return array{tickets: array<int, array<string, mixed>>, total: int, page: int, per_page: int}
+     */
+    public function listAssignedToUser(int $userId, int $page = 1, int $perPage = 20, ?string $sort = null, string $dir = 'desc'): array
+    {
+        $query = Ticket::query()
+            ->where('state_id', 1)
+            ->where('assigned_uid', $userId);
+
+        $total = (int) $query->count();
+
+        $sortMap = [
+            'id' => 'id',
+            'subject' => 'subject',
+            'created' => 'created_date',
+            'category' => 'category_id',
+        ];
+        $sortColumn = $sortMap[$sort ?? ''] ?? 'id';
+        $direction = $dir === 'asc' ? 'asc' : 'desc';
+        if ($sort === null || $sort === '') {
+            $direction = 'desc';
+        }
+
+        $tickets = $query
+            ->orderBy($sortColumn, $direction)
+            ->skip(($page - 1) * $perPage)
+            ->take($perPage)
+            ->get();
+
+        return [
+            'tickets' => $this->resolver->enrichTickets($tickets->toArray()),
+            'total' => $total,
+            'page' => $page,
+            'per_page' => $perPage,
+        ];
+    }
+
+    /**
+     * Open unassigned tickets (staff view).
+     *
+     * @return array{tickets: array<int, array<string, mixed>>, total: int, page: int, per_page: int}
+     */
+    public function listUnassigned(int $page = 1, int $perPage = 20, ?string $sort = null, string $dir = 'desc'): array
+    {
+        $query = Ticket::query()
+            ->where('state_id', 1)
+            ->where('assigned_uid', 0);
+
+        $total = (int) $query->count();
+
+        $sortMap = [
+            'id' => 'id',
+            'subject' => 'subject',
+            'created' => 'created_date',
+            'category' => 'category_id',
+        ];
+        $sortColumn = $sortMap[$sort ?? ''] ?? 'id';
+        $direction = $dir === 'asc' ? 'asc' : 'desc';
+        if ($sort === null || $sort === '') {
+            $direction = 'desc';
+        }
+
+        $tickets = $query
+            ->orderBy($sortColumn, $direction)
+            ->skip(($page - 1) * $perPage)
+            ->take($perPage)
+            ->get();
+
+        return [
+            'tickets' => $this->resolver->enrichTickets($tickets->toArray()),
+            'total' => $total,
+            'page' => $page,
+            'per_page' => $perPage,
+        ];
+    }
+
+    /**
      * Dashboard card metrics (D46–D49). Uses aggregate SQL only.
      *
      * @return array<string, int|float|null|array<int, array<string, mixed>>>

@@ -2,6 +2,7 @@ import type { Component } from 'vue';
 import {
     BarChart3,
     CheckCircle2,
+    CircleDashed,
     ClipboardList,
     Info,
     Monitor,
@@ -10,6 +11,7 @@ import {
     LayoutDashboard,
     Settings,
     Shield,
+    UserCheck,
     UserCog,
     Users,
 } from '@lucide/vue';
@@ -35,6 +37,8 @@ export const navGroups: NavGroup[] = [
         label: 'Tickets',
         items: [
             { label: 'All tickets', to: '/all-tickets', icon: ClipboardList, acl: 2 },
+            { label: 'Assigned to you', to: '/tickets/assigned-to-me', icon: UserCheck, acl: 2 },
+            { label: 'Unassigned', to: '/tickets/unassigned', icon: CircleDashed, acl: 2 },
             { label: 'My tickets', to: '/my-tickets', icon: Inbox },
             { label: 'Closed by you', to: '/tickets/closed-by-me', icon: CheckCircle2, acl: 2 },
             { label: 'New ticket', to: '/tickets/new', icon: FileText },
