@@ -12,7 +12,7 @@ import PageHeader from '@/components/common/PageHeader.vue';
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue';
 import SearchableSelect from '@/components/common/SearchableSelect.vue';
 import type { SelectOption } from '@/components/common/SearchableSelect.vue';
-import { api } from '@/services/api';
+import { api, newIdempotencyKey } from '@/services/api';
 import { useAuthStore } from '@/stores/auth';
 
 interface AdminUser {
@@ -144,10 +144,14 @@ const updateAccess = async (user: AdminUser, acl: number): Promise<void> => {
     const previous = user.acl_id;
     user.acl_id = acl;
     try {
-        await api(`/admin/users/${user.id}/access`, {
-            method: 'PATCH',
-            body: JSON.stringify({ acl_id: acl }),
-        });
+        await api(
+            `/admin/users/${user.id}/access`,
+            {
+                method: 'PATCH',
+                body: JSON.stringify({ acl_id: acl }),
+            },
+            newIdempotencyKey(),
+        );
     } catch (e) {
         user.acl_id = previous;
         error.value = (e as { message?: string }).message ?? 'Failed to update access.';
@@ -167,13 +171,17 @@ const submitReset = async (): Promise<void> => {
     resetSaving.value = true;
     resetError.value = null;
     try {
-        await api(`/admin/users/${resetTarget.value.id}/reset-password`, {
-            method: 'POST',
-            body: JSON.stringify({
-                password: resetPassword.value,
-                confirm: resetConfirm.value,
-            }),
-        });
+        await api(
+            `/admin/users/${resetTarget.value.id}/reset-password`,
+            {
+                method: 'POST',
+                body: JSON.stringify({
+                    password: resetPassword.value,
+                    confirm: resetConfirm.value,
+                }),
+            },
+            newIdempotencyKey(),
+        );
         resetOpen.value = false;
     } catch (e) {
         resetError.value = (e as { message?: string }).message ?? 'Failed to reset password.';
@@ -190,7 +198,7 @@ const requestDisable = (user: AdminUser): void => {
 const confirmDisable = async (): Promise<void> => {
     if (disableTarget.value === null) return;
     try {
-        await api(`/admin/users/${disableTarget.value.id}`, { method: 'DELETE' });
+        await api(`/admin/users/${disableTarget.value.id}`, { method: 'DELETE' }, newIdempotencyKey());
         disableOpen.value = false;
         disableTarget.value = null;
         await load();

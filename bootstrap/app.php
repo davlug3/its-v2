@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\EnsureAcl;
 use App\Http\Middleware\Idempotency;
+use App\Http\Middleware\SecureHeaders;
 use App\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
@@ -20,6 +21,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->append(SecureHeaders::class);
+
         $middleware->redirectGuestsTo(function (Request $request) {
             if ($request->is('api/*') || $request->expectsJson()) {
                 return null;

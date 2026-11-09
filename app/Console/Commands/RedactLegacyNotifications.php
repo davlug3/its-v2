@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Notification;
+use App\Support\NotificationSanitizer;
 use Illuminate\Console\Command;
 
 class RedactLegacyNotifications extends Command
@@ -51,9 +52,6 @@ class RedactLegacyNotifications extends Command
 
     private function sanitize(string $text): string
     {
-        $text = preg_replace('/(password|pword|passwd|pwd)\s*[:=]\s*[^\s&<"\']+/i', '$1=[redacted]', $text) ?? $text;
-        $text = str_replace(['http://http://', 'https://https://'], ['http://', 'https://'], $text);
-
-        return $text;
+        return NotificationSanitizer::sanitize($text);
     }
 }

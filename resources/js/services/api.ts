@@ -25,6 +25,10 @@ export function getToken(): string | null {
     return token;
 }
 
+export function newIdempotencyKey(): string {
+    return crypto.randomUUID();
+}
+
 export interface ApiError {
     message: string;
     errors?: Record<string, string[]>;

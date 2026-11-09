@@ -13,7 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import SearchableSelect from '@/components/common/SearchableSelect.vue';
 import type { SelectOption } from '@/components/common/SearchableSelect.vue';
 import { Textarea } from '@/components/ui/textarea';
-import { api, getToken } from '@/services/api';
+import { api, getToken, newIdempotencyKey } from '@/services/api';
 import { useAuthStore } from '@/stores/auth';
 
 interface Ticket {
@@ -151,10 +151,14 @@ const save = async (): Promise<void> => {
     saving.value = true;
     error.value = null;
     try {
-        await api(`/tickets/${id}`, {
-            method: 'PUT',
-            body: JSON.stringify({ subject: subject.value.trim(), issue: issue.value.trim() }),
-        });
+        await api(
+            `/tickets/${id}`,
+            {
+                method: 'PUT',
+                body: JSON.stringify({ subject: subject.value.trim(), issue: issue.value.trim() }),
+            },
+            newIdempotencyKey(),
+        );
         editing.value = false;
         await load();
     } catch (e) {
@@ -168,7 +172,7 @@ const close = async (): Promise<void> => {
     closing.value = true;
     error.value = null;
     try {
-        await api(`/tickets/${id}/close`, { method: 'POST' });
+        await api(`/tickets/${id}/close`, { method: 'POST' }, newIdempotencyKey());
         await load();
     } catch (e) {
         error.value = (e as { message?: string }).message ?? 'Failed to close.';
@@ -181,10 +185,14 @@ const doAssign = async (): Promise<void> => {
     assigning.value = true;
     assignError.value = null;
     try {
-        await api(`/tickets/${id}/assign`, {
-            method: 'PATCH',
-            body: JSON.stringify({ assigned_uid: assignUid.value }),
-        });
+        await api(
+            `/tickets/${id}/assign`,
+            {
+                method: 'PATCH',
+                body: JSON.stringify({ assigned_uid: assignUid.value }),
+            },
+            newIdempotencyKey(),
+        );
         await load();
     } catch (e) {
         assignError.value = (e as { message?: string }).message ?? 'Failed to assign.';
@@ -202,7 +210,7 @@ const onFileChange = async (event: Event): Promise<void> => {
     try {
         const form = new FormData();
         form.append('file', file);
-        await api(`/tickets/${id}/attachments`, { method: 'POST', body: form });
+        await api(`/tickets/${id}/attachments`, { method: 'POST', body: form }, newIdempotencyKey());
         await loadAttachments();
         await loadLogs();
         if (fileInput.value) fileInput.value.value = '';
@@ -242,7 +250,7 @@ const requestDeleteAttachment = (attachmentId: number): void => {
 const confirmDeleteAttachment = async (): Promise<void> => {
     if (deleteAttachmentTarget.value === null) return;
     try {
-        await api(`/tickets/${id}/attachments/${deleteAttachmentTarget.value}`, { method: 'DELETE' });
+        await api(`/tickets/${id}/attachments/${deleteAttachmentTarget.value}`, { method: 'DELETE' }, newIdempotencyKey());
         deleteAttachmentOpen.value = false;
         deleteAttachmentTarget.value = null;
         await loadAttachments();
@@ -264,10 +272,14 @@ const submitComment = async (): Promise<void> => {
     commenting.value = true;
     commentError.value = null;
     try {
-        await api(`/tickets/${id}/comment`, {
-            method: 'POST',
-            body: JSON.stringify({ text: commentText.value.trim() }),
-        });
+        await api(
+            `/tickets/${id}/comment`,
+            {
+                method: 'POST',
+                body: JSON.stringify({ text: commentText.value.trim() }),
+            },
+            newIdempotencyKey(),
+        );
         commentText.value = '';
         await loadLogs();
     } catch (e) {

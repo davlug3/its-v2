@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { api } from '@/services/api';
+import { api, newIdempotencyKey } from '@/services/api';
 
 interface Ticket {
     id: number;
@@ -110,7 +110,7 @@ const clearSelection = (): void => {
 
 const approveOne = async (id: number): Promise<void> => {
     try {
-        await api(`/tickets/${id}/approve`, { method: 'POST', body: JSON.stringify({}) });
+        await api(`/tickets/${id}/approve`, { method: 'POST', body: JSON.stringify({}) }, newIdempotencyKey());
         await load();
     } catch (e) {
         error.value = (e as { message?: string }).message ?? 'Failed.';
@@ -119,7 +119,7 @@ const approveOne = async (id: number): Promise<void> => {
 
 const undoOne = async (id: number): Promise<void> => {
     try {
-        await api(`/tickets/${id}/undo-approve`, { method: 'POST' });
+        await api(`/tickets/${id}/undo-approve`, { method: 'POST' }, newIdempotencyKey());
         await load();
     } catch (e) {
         error.value = (e as { message?: string }).message ?? 'Failed.';
@@ -143,10 +143,14 @@ const submitDisapprove = async (): Promise<void> => {
     remarksError.value = null;
     try {
         if (remarksMode.value === 'single' && remarksTarget.value !== null) {
-            await api(`/tickets/${remarksTarget.value}/disapprove`, {
-                method: 'POST',
-                body: JSON.stringify({ remarks: remarksText.value.trim() }),
-            });
+            await api(
+                `/tickets/${remarksTarget.value}/disapprove`,
+                {
+                    method: 'POST',
+                    body: JSON.stringify({ remarks: remarksText.value.trim() }),
+                },
+                newIdempotencyKey(),
+            );
         } else {
             const res = await api<{ success: number; message: string }>(
                 '/tickets/batch-disapprove',
@@ -157,6 +161,7 @@ const submitDisapprove = async (): Promise<void> => {
                         remarks: remarksText.value.trim(),
                     }),
                 },
+                newIdempotencyKey(),
             );
             if (res.success === 0) {
                 remarksError.value = res.message;
@@ -183,10 +188,14 @@ const requestBatchApprove = (): void => {
 const confirmBatchApprove = async (): Promise<void> => {
     batchApproveOpen.value = false;
     try {
-        const res = await api<{ success: number; message: string }>('/tickets/batch-approve', {
-            method: 'POST',
-            body: JSON.stringify({ ids: Array.from(selected.value), remarks: '' }),
-        });
+        const res = await api<{ success: number; message: string }>(
+            '/tickets/batch-approve',
+            {
+                method: 'POST',
+                body: JSON.stringify({ ids: Array.from(selected.value), remarks: '' }),
+            },
+            newIdempotencyKey(),
+        );
         if (res.success > 0) clearSelection();
         await load();
     } catch (e) {

@@ -518,16 +518,17 @@ class TicketController extends Controller
 
         $file = $validated['file'];
 
-        // Basic magic-byte guard for common types.
+        // Content-based MIME guard (finfo). Reject when detected type is not allowed.
         $allowedMimes = [
             'application/pdf', 'image/jpeg', 'image/png', 'image/gif',
             'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
             'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'text/plain', 'application/zip', 'application/x-zip-compressed',
+            'text/plain', 'text/csv', 'application/csv',
+            'application/zip', 'application/x-zip-compressed',
         ];
-        $detected = (string) $file->getMimeType();
+        $detected = (string) ($file->getMimeType() ?? '');
         if ($detected !== '' && ! in_array($detected, $allowedMimes, true)) {
-            return response()->json(['message' => 'File type not allowed.'], 422);
+            return response()->json(['message' => 'File content type not allowed.'], 422);
         }
 
         $directory = 'attachments/'.$id;
@@ -539,7 +540,7 @@ class TicketController extends Controller
         $attachment->file_name = 0;
         $attachment->ticket_id = $id;
         $attachment->storage_path = $path;
-        $attachment->mime_type = $file->getClientMimeType();
+        $attachment->mime_type = $detected !== '' ? $detected : (string) $file->getClientMimeType();
         $attachment->size_bytes = $file->getSize();
         $attachment->sha256 = hash_file('sha256', $file->getRealPath());
         $attachment->uploaded_by = (int) $request->user()->id;

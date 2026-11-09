@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue';
 import DataTable from '@/components/common/DataTable.vue';
-import { api } from '@/services/api';
+import { api, newIdempotencyKey } from '@/services/api';
 
 interface Category {
     id: number;
@@ -53,10 +53,11 @@ const create = async (): Promise<void> => {
     creating.value = true;
     error.value = null;
     try {
-        await api('/admin/categories', {
-            method: 'POST',
-            body: JSON.stringify({ name: newName.value.trim() }),
-        });
+        await api(
+            '/admin/categories',
+            { method: 'POST', body: JSON.stringify({ name: newName.value.trim() }) },
+            newIdempotencyKey(),
+        );
         newName.value = '';
         await load();
     } catch (e) {
@@ -76,10 +77,11 @@ const saveEdit = async (): Promise<void> => {
     savingId.value = editingId.value;
     error.value = null;
     try {
-        await api(`/admin/categories/${editingId.value}`, {
-            method: 'PUT',
-            body: JSON.stringify({ name: editingName.value.trim() }),
-        });
+        await api(
+            `/admin/categories/${editingId.value}`,
+            { method: 'PUT', body: JSON.stringify({ name: editingName.value.trim() }) },
+            newIdempotencyKey(),
+        );
         editingId.value = null;
         await load();
     } catch (e) {
@@ -98,7 +100,7 @@ const confirmDelete = async (): Promise<void> => {
     if (deleteTarget.value === null) return;
     error.value = null;
     try {
-        await api(`/admin/categories/${deleteTarget.value.id}`, { method: 'DELETE' });
+        await api(`/admin/categories/${deleteTarget.value.id}`, { method: 'DELETE' }, newIdempotencyKey());
         deleteOpen.value = false;
         deleteTarget.value = null;
         await load();

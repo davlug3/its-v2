@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Notification;
+use App\Support\NotificationSanitizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -32,11 +33,7 @@ class NotificationController extends Controller
 
     private function sanitizeText(string $text): string
     {
-        // Defense-in-depth: redact credential-like patterns in legacy rows.
-        $text = preg_replace('/(password|pword|passwd|pwd)\s*[:=]\s*[^\s&<"\']+/i', '$1=[redacted]', $text) ?? $text;
-        $text = str_replace(['http://http://', 'https://https://'], ['http://', 'https://'], $text);
-
-        return $text;
+        return NotificationSanitizer::sanitize($text);
     }
 
     public function unreadCount(Request $request): JsonResponse

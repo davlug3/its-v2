@@ -10,7 +10,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 
 import { useAuthStore } from '@/stores/auth';
 import { navGroups, type NavItem } from '@/config/nav';
-import { api } from '@/services/api';
+import { api, newIdempotencyKey } from '@/services/api';
 
 interface Notification {
     id: number;
@@ -68,7 +68,7 @@ const toggleNotifications = async (): Promise<void> => {
 const markRead = async (n: Notification): Promise<void> => {
     if (n.state === 1) {
         try {
-            await api(`/notifications/${n.id}/read`, { method: 'POST' });
+            await api(`/notifications/${n.id}/read`, { method: 'POST' }, newIdempotencyKey());
             n.state = 2;
             unreadCount.value = Math.max(0, unreadCount.value - 1);
         } catch {
@@ -79,7 +79,7 @@ const markRead = async (n: Notification): Promise<void> => {
 
 const markAllRead = async (): Promise<void> => {
     try {
-        await api('/notifications/read-all', { method: 'POST' });
+        await api('/notifications/read-all', { method: 'POST' }, newIdempotencyKey());
         notifications.value = notifications.value.map((n) => ({ ...n, state: 2 }));
         unreadCount.value = 0;
     } catch {
