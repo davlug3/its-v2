@@ -260,9 +260,41 @@ class TicketService
             $query->where('created_uid', (int) $filters['created_uid']);
         }
 
-        if (! empty($filters['search'])) {
-            $term = '%'.trim((string) $filters['search']).'%';
-            $query->where('subject', 'like', $term);
+        $isSet = static fn (array $f, string $k): bool => isset($f[$k]) && $f[$k] !== '' && strcasecmp((string) $f[$k], 'null') !== 0 && (string) $f[$k] !== '0';
+
+        if ($isSet($filters, 'eu_uid')) {
+            $query->where('eu_uid', (int) $filters['eu_uid']);
+        }
+
+        if ($isSet($filters, 'resolved_uid')) {
+            $query->where('resolved_uid', (int) $filters['resolved_uid']);
+        }
+
+        if ($isSet($filters, 'location_id')) {
+            $query->where('location_id', (int) $filters['location_id']);
+        }
+
+        $searchMode = false;
+
+        if (isset($filters['ticket_id']) && $filters['ticket_id'] !== '' && strcasecmp((string) $filters['ticket_id'], 'null') !== 0) {
+            $query->where('id', (int) $filters['ticket_id']);
+            $searchMode = true;
+        }
+
+        $subject = trim((string) ($filters['subject'] ?? $filters['search'] ?? ''));
+        if ($subject !== '' && strcasecmp($subject, 'null') !== 0) {
+            $query->where('subject', 'like', '%'.$subject.'%');
+            $searchMode = true;
+        }
+
+        $issue = trim((string) ($filters['issue'] ?? ''));
+        if ($issue !== '' && strcasecmp($issue, 'null') !== 0) {
+            $query->where('issue', 'like', '%'.$issue.'%');
+            $searchMode = true;
+        }
+
+        if ($isSet($filters, 'eu_uid') || $isSet($filters, 'resolved_uid')) {
+            $searchMode = true;
         }
 
         $total = (int) $query->count();
@@ -279,6 +311,12 @@ class TicketService
 
         $sortColumn = $sortMap[$sort ?? ''] ?? 'created_date';
         $direction = $dir === 'asc' ? 'asc' : 'desc';
+
+        if ($searchMode) {
+            $perPage = min($perPage, 500);
+            $page = 1;
+            $total = min($total, 500);
+        }
 
         $tickets = $query
             ->orderBy($sortColumn, $direction)

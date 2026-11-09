@@ -47,6 +47,12 @@ class TicketController extends Controller
                 'assigned_uid' => $request->query('assigned_uid'),
                 'created_uid' => $request->query('created_uid'),
                 'search' => $request->query('search'),
+                'subject' => $request->query('subject'),
+                'issue' => $request->query('issue'),
+                'ticket_id' => $request->query('ticket_id', $request->query('id')),
+                'eu_uid' => $request->query('eu_uid'),
+                'location_id' => $request->query('location_id'),
+                'resolved_uid' => $request->query('resolved_uid', $request->query('closed_by')),
             ];
 
             $result = $this->tickets->listAll(
@@ -615,6 +621,27 @@ class TicketController extends Controller
             || $ticket->created_uid === $userId
             || $ticket->assigned_uid === $userId
             || $ticket->eu_uid === $userId;
+    }
+
+    public function locationOptions(Request $request): JsonResponse
+    {
+        $q = trim((string) $request->query('q', ''));
+        $limit = min(50, max(1, (int) $request->query('limit', 30)));
+
+        $query = DB::connection('payroll')
+            ->table('department')
+            ->select(['id', 'department']);
+
+        if ($q !== '') {
+            $query->where('department', 'like', '%'.$q.'%');
+        }
+
+        $rows = $query->orderBy('department')->limit($limit)->get();
+
+        return response()->json($rows->map(fn ($r) => [
+            'id' => (int) $r->id,
+            'label' => (string) $r->department,
+        ])->values());
     }
 
     public function monitoring(Request $request): JsonResponse
