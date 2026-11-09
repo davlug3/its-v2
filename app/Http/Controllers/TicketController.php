@@ -24,6 +24,13 @@ class TicketController extends Controller
         private ReferenceResolver $resolver,
     ) {}
 
+    public function summary(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        return response()->json($this->tickets->summaryForUser((int) $user->id));
+    }
+
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();

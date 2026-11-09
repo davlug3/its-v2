@@ -358,6 +358,40 @@ class TicketService
      *
      * @return array<int, array<string, mixed>>
      */
+    /**
+     * Aggregate summary for tickets involving the given user.
+     *
+     * @return array{open: int, closed: int, total: int, recent: array<int, array<string, mixed>>}
+     */
+    public function summaryForUser(int $userId): array
+    {
+        $base = Ticket::query()->where(function ($q) use ($userId): void {
+            $q->where('created_uid', $userId)
+                ->orWhere('assigned_uid', $userId)
+                ->orWhere('eu_uid', $userId);
+        });
+
+        $total = (int) (clone $base)->count();
+        $open = (int) (clone $base)->where('state_id', 1)->count();
+        $closed = (int) (clone $base)->where('state_id', 2)->count();
+
+        $recent = (clone $base)
+            ->orderByDesc('created_date')
+            ->limit(5)
+            ->get()
+            ->toArray();
+
+        return [
+            'open' => $open,
+            'closed' => $closed,
+            'total' => $total,
+            'recent' => $recent,
+        ];
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
     public function logs(int $ticketId): array
     {
         $logs = TicketLog::where('ticket_id', $ticketId)

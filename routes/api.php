@@ -18,6 +18,7 @@ Route::middleware(['auth:api', 'csrf', 'idempotency'])->group(function () {
     Route::post('/tickets', [TicketController::class, 'store']);
     Route::post('/tickets/end-user', [TicketController::class, 'endUserStore']);
     Route::get('/tickets', [TicketController::class, 'index']);
+    Route::get('/tickets/summary', [TicketController::class, 'summary']);
     Route::get('/tickets/by-subordinates', [TicketController::class, 'bySubordinates']);
 
     Route::get('/categories', [CategoryController::class, 'list']);

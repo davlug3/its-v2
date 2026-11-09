@@ -18,21 +18,21 @@ interface Ticket {
     created_date: number;
 }
 
+interface DashboardSummary {
+    open: number;
+    closed: number;
+    total: number;
+    recent: Ticket[];
+}
+
 const auth = useAuthStore();
 
-const tickets = ref<Ticket[]>([]);
-const total = ref(0);
+const summary = ref<DashboardSummary>({ open: 0, closed: 0, total: 0, recent: [] });
 const loading = ref(true);
 const error = ref<string | null>(null);
 
-const counts = computed(() => ({
-    open: tickets.value.filter((t) => t.state_id === 1).length,
-    closed: tickets.value.filter((t) => t.state_id === 2).length,
-}));
-
-const recent = computed(() =>
-    [...tickets.value].sort((a, b) => b.created_date - a.created_date).slice(0, 5),
-);
+const counts = computed(() => ({ open: summary.value.open, closed: summary.value.closed }));
+const recent = computed(() => summary.value.recent ?? []);
 
 const stateLabel = (id: number): string => (id === 1 ? 'Open' : id === 2 ? 'Closed' : `State ${id}`);
 
@@ -40,9 +40,7 @@ const formatDate = (ts: number): string => (ts ? new Date(ts * 1000).toLocaleDat
 
 onMounted(async () => {
     try {
-        const res = await api<{ tickets: Ticket[]; total: number }>('/tickets?page=1&per_page=100');
-        tickets.value = res.tickets;
-        total.value = res.total;
+        summary.value = await api<DashboardSummary>('/tickets/summary');
     } catch (e) {
         error.value = (e as { message?: string }).message ?? 'Failed to load dashboard.';
     } finally {
@@ -93,7 +91,7 @@ onMounted(async () => {
                         </div>
                     </li>
                 </ul>
-                <p class="mt-3 text-xs text-muted-foreground">{{ total }} tickets involve you.</p>
+                <p class="mt-3 text-xs text-muted-foreground">{{ summary.total }} tickets involve you.</p>
             </CardContent>
         </Card>
     </div>
