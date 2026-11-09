@@ -11,18 +11,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import SearchableSelect from '@/components/common/SearchableSelect.vue';
+import type { SelectOption } from '@/components/common/SearchableSelect.vue';
 import { Textarea } from '@/components/ui/textarea';
 import { api, getToken } from '@/services/api';
 import { useAuthStore } from '@/stores/auth';
-
-interface HelpdeskUser {
-    id: number;
-    username: string;
-    name: string;
-    mname: string;
-    lname: string;
-    acl_id: number | null;
-}
 
 interface Ticket {
     id: number;
@@ -114,49 +106,11 @@ const fileInput = ref<HTMLInputElement | null>(null);
 const deleteAttachmentOpen = ref(false);
 const deleteAttachmentTarget = ref<number | null>(null);
 
-const helpdeskUsers = ref<HelpdeskUser[]>([]);
-
-const loadHelpdeskUsers = async (): Promise<void> => {
-    try {
-        const all: HelpdeskUser[] = [];
-        for (const acl of [3, 9]) {
-            let page = 1;
-            let lastPage = 1;
-            do {
-                const res = await api<{ data: HelpdeskUser[]; last_page: number }>(
-                    `/admin/users?acl=${acl}&per_page=100&page=${page}`,
-                );
-                all.push(...(res.data ?? []));
-                lastPage = res.last_page ?? 1;
-                page += 1;
-            } while (page <= lastPage);
-        }
-        // de-duplicate by id, sort by name
-        const seen = new Set<number>();
-        const unique = all.filter((u) => {
-            if (seen.has(u.id)) return false;
-            seen.add(u.id);
-            return true;
-        });
-        unique.sort((a, b) => {
-            const an = [a.name, a.mname, a.lname].filter(Boolean).join(' ').toLowerCase();
-            const bn = [b.name, b.mname, b.lname].filter(Boolean).join(' ').toLowerCase();
-            return an.localeCompare(bn);
-        });
-        helpdeskUsers.value = unique;
-    } catch {
-        helpdeskUsers.value = [];
-    }
+const fetchAssignees = async (q: string): Promise<SelectOption[]> => {
+    const params = new URLSearchParams({ assignable: '1', q, limit: '30' });
+    const res = await api<Array<{ id: number; label: string }>>(`/admin/users/options?${params.toString()}`);
+    return (res ?? []).map((u) => ({ value: u.id, label: u.label }));
 };
-
-const userLabel = (u: HelpdeskUser): string => {
-    const name = [u.name, u.mname, u.lname].filter(Boolean).join(' ').trim();
-    return name ? `${name} (${u.username})` : u.username;
-};
-
-const helpdeskUserOptions = computed(() =>
-    helpdeskUsers.value.map((u) => ({ value: u.id, label: userLabel(u) })),
-);
 
 const stateLabel = (s: number): string => (s === 1 ? 'Open' : s === 2 ? 'Closed' : `State ${s}`);
 
@@ -327,7 +281,6 @@ const formatLogDate = (ts: number): string => (ts ? new Date(ts * 1000).toLocale
 
 onMounted(() => {
     void load();
-    void loadHelpdeskUsers();
 });
 </script>
 
@@ -378,7 +331,7 @@ onMounted(() => {
                         <div class="flex gap-2">
                             <Button v-if="canEdit" variant="outline" @click="editing = true">Edit</Button>
                             <Button
-                                v-if="ticket.state_id !== 3"
+                                v-if="ticket.state_id === 1"
                                 :disabled="closing"
                                 @click="close"
                             >
@@ -400,8 +353,9 @@ onMounted(() => {
                             <SearchableSelect
                                 id="assign-uid"
                                 v-model="assignUid"
-                                :options="[{ value: 0, label: '— Unassigned —' }].concat(helpdeskUserOptions)"
-                                placeholder="Select assignee"
+                                :options="[{ value: 0, label: '— Unassigned —' }]"
+                                :fetch-options="fetchAssignees"
+                                :placeholder="ticket.assigned_name ?? 'Select assignee'"
                             />
                         </div>
                         <Button :disabled="assigning" @click="doAssign">
@@ -458,7 +412,7 @@ onMounted(() => {
                     <ul v-if="logs.length" class="space-y-3">
                         <li v-for="entry in logs" :key="entry.id" class="rounded-md border border-border p-3">
                             <div class="flex items-center justify-between text-xs text-muted-foreground">
-                                <span>{{ entry.user_name ?? `User ${entry.user_id}` }} · {{ entry.action ?? 'note' }}</span>
+                                <span>{{ entry.user_name ?? (entry.user_id > 0 ? 'Deleted user' : 'System') }} · {{ entry.action ?? 'note' }}</span>
                                 <span>{{ formatLogDate(entry.date) }}</span>
                             </div>
                             <p class="mt-1 whitespace-pre-wrap text-sm">{{ entry.data }}</p>
