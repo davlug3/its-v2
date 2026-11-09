@@ -77,6 +77,42 @@ Versions start at `0.1.0` when the scaffold is ready.
   - Admin audit writes on all admin mutations.
   - Supervisor tree with cycle detection.
 
+- **Dashboard and list parity slices (2026-11-09).**
+  - Added `GET /api/v1/tickets/summary` dashboard aggregates (SQL counts) for dashboard cards.
+  - Added “Closed by you” view (`scope=closed_by_me`, `GET /tickets` filter, route `/tickets/closed-by-me`, nav entry for ACL 2+).
+  - Added all-tickets search filters (ticket ID, requester, location, category, subject, issue, closed-by), 500-row search cap, lazy location picker, and “Search Results”/reset/print actions.
+  - Added legacy `#ticket=<id>` deep-link redirect to `/tickets/<id>`.
+
+- **Hardening slices (2026-11-09).**
+  - Added `Idempotency-Key` to remaining mutating SPA actions and a shared `newIdempotencyKey()` helper.
+  - Added `NotificationSanitizer` and applied it to notification reads and the `notifications:redact-legacy` command.
+  - Added `SecureHeaders` middleware for baseline security headers (CSP, frame/referrer/nosniff, permissions policy; HSTS on secure requests).
+  - Added `tests/Unit/NotificationSanitizerTest.php`.
+
+### Fixed
+
+- **Dashboard metrics (D46–D48, partial D49 context).**
+  - Replaced the simplified dashboard counts with legacy-style aggregate cards.
+  - Fixed the group-closed-today metric with a single aggregate query (D46).
+  - Added distinct “Closed by you / Today” and “Closed by you / This year (YTD)” cards (D47, D48).
+  - Kept the SPA dashboard free of a dead Tech Status link (D49).
+
+- **Closed Tickets By You (D52).**
+  - Added a scoped list for tickets resolved by the current user with `state_id = 2`.
+
+- **Attachment validation hardening.**
+  - Tightened upload content-type checks using detected MIME and stored the detected MIME when available.
+
+### Security
+
+- **Baseline response headers.**
+  - Added `SecureHeaders` middleware with CSP, `X-Frame-Options`, `Referrer-Policy`, `X-Content-Type-Options`, and `Permissions-Policy`.
+  - Added HSTS only for secure requests.
+
+- **Notification secret redaction.**
+  - Redacted credential-like patterns in notification list responses (defense in depth).
+  - Added `notifications:redact-legacy` command (dry-run by default) for legacy cleanup.
+
 ### Changed
 
 - **UI library changed to shadcn-vue (2026-11-04).**

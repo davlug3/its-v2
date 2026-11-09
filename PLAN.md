@@ -429,12 +429,12 @@ Exit check: AT-33 to AT-37 pass.
 ### Phase 7 — Lists, search, detail
 
 - [ ] All 13 list views with legacy filters and order (PROMPT §20).
-- [ ] Fix `all_closed_tickets_by_you` (D52).
+- [x] Fix `all_closed_tickets_by_you` (D52) — `scope=closed_by_me` and `/tickets/closed-by-me`.
 - [ ] `LEFT JOIN` everywhere (D56).
-- [ ] Explicit Requester and Location labels (D61).
-- [ ] Search: seven fields, 500 cap, parameterized (D17).
-- [ ] Real print and reset (D59).
-- [ ] Search grid title `Search Results` (D60).
+- [~] Explicit Requester and Location labels (D61) — added in all-tickets search results; audit other list/detail views.
+- [~] Search: parameterized filters and 500 cap in search mode (D17) — core fields added; verify full legacy field/semantics parity.
+- [~] Real print and reset (D59) — reset clears filters and reloads; print uses browser print.
+- [x] Search grid title `Search Results` (D60) when filters are active.
 - [ ] Detail: timeline oldest first. "Deleted user" via `LEFT JOIN` (D63).
 - [ ] `#ticket=<id>` deep links.
 - [ ] Retire `assigned_to_group` with a clear page.
@@ -445,10 +445,10 @@ Exit check: AT-27 to AT-32 pass.
 
 ### Phase 8 — Dashboard and monitoring
 
-- [ ] Dashboard cards with aggregate SQL (D50).
-- [ ] Fix the group sum bug (D46) by removing the group card (teams retired).
-- [ ] Fix the duplicate/mislabeled cards (D47, D48).
-- [ ] Remove the dead Tech Status link (D49).
+- [x] Dashboard cards with aggregate SQL (D50).
+- [x] Fix the group sum bug (D46) with a single aggregate query (legacy group metrics retained with correct calculation).
+- [x] Fix the duplicate/mislabeled cards (D47, D48) — distinct Today and This year (YTD) cards.
+- [x] No dead Tech Status link in the SPA dashboard (D49).
 - [ ] Monitoring refreshes the data source, not the grid (D51).
 - [ ] Pause polling when the tab is hidden.
 
@@ -670,13 +670,13 @@ Status values: `Not started`, `In progress`, `Decided` (decision recorded, code 
 | D43 | Medium | Approval | 5 | Not started | Log only changed rows. |
 | D44 | Low | Approval | 5 | Not started | Configure both cutoffs. |
 | D45 | Medium | Approval | 5 | Open decision | Badge scope and cutoff. Ask Dave. |
-| D46 | Medium | Dashboard | 8 | Not started | Remove the group card (teams retired). |
-| D47 | Medium | Dashboard | 8 | Not started | Year-to-date or rename. |
-| D48 | Low | Dashboard | 8 | Not started | Make cards distinct or remove one. |
-| D49 | Low | Dashboard | 8 | Not started | Remove the dead Tech Status link. |
-| D50 | Low | Dashboard | 8 | Not started | Aggregate SQL. Brief cache. |
+| D46 | Medium | Dashboard | 8 | Fixed (2026-11-09) | Group-closed-today uses a single aggregate query; legacy group metrics retained with correct calculation. |
+| D47 | Medium | Dashboard | 8 | Fixed (2026-11-09) | Distinct “Today” and “This year (YTD)” cards. |
+| D48 | Low | Dashboard | 8 | Fixed (2026-11-09) | Duplicate card removed; metrics are distinct. |
+| D49 | Low | Dashboard | 8 | Fixed (SPA) | No dead Tech Status link in the SPA dashboard/nav. |
+| D50 | Low | Dashboard | 8 | Fixed (2026-11-09) | Aggregate SQL in `TicketService::dashboardForUser`. Cache not added. |
 | D51 | Medium | Monitoring | 8 | Not started | Refresh data, keep grid state. Pause when hidden. |
-| D52 | Medium | Lists | 7 | Not started | Pass the session user id. Filter closed and resolved. |
+| D52 | Medium | Lists | 7 | Fixed (2026-11-09) | `scope=closed_by_me` filters `state_id=2` and `resolved_uid=current`. |
 | D53 | High | Data | 2 | Decided | Keep `assigned_gid`. Add `units_count`. |
 | D54 | Medium | Counter | 9 | Not started | Fix both reports. Inclusive days. |
 | D55 | Medium | End user | 7 | Not started | Valid location or "Unspecified". |
