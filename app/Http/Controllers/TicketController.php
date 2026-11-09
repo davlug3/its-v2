@@ -40,6 +40,18 @@ class TicketController extends Controller
 
         $scope = (string) $request->query('scope', 'mine');
 
+        if ($scope === 'closed_by_me') {
+            $result = $this->tickets->listClosedByUser(
+                (int) $user->id,
+                $page,
+                $perPage,
+                (string) $request->query('sort', ''),
+                (string) $request->query('dir', 'desc'),
+            );
+
+            return response()->json($result);
+        }
+
         if ($scope === 'all' && $this->aclOf($request) >= 2) {
             $filters = [
                 'state_id' => $request->query('state_id'),

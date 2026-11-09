@@ -401,6 +401,45 @@ class TicketService
      *
      * @return array{open: int, closed: int, total: int, recent: array<int, array<string, mixed>>}
      */
+    /**
+     * Tickets closed/resolved by the given user (D52).
+     *
+     * @return array{tickets: array<int, array<string, mixed>>, total: int, page: int, per_page: int}
+     */
+    public function listClosedByUser(int $userId, int $page = 1, int $perPage = 20, ?string $sort = null, string $dir = 'desc'): array
+    {
+        $query = Ticket::query()
+            ->where('state_id', 2)
+            ->where('resolved_uid', $userId);
+
+        $total = (int) $query->count();
+
+        $sortMap = [
+            'id' => 'id',
+            'subject' => 'subject',
+            'resolved' => 'resolved_date',
+            'created' => 'created_date',
+        ];
+        $sortColumn = $sortMap[$sort ?? ''] ?? 'resolved_date';
+        $direction = $dir === 'asc' ? 'asc' : 'desc';
+
+        $tickets = $query
+            ->orderBy($sortColumn, $direction)
+            ->skip(($page - 1) * $perPage)
+            ->take($perPage)
+            ->get();
+
+        return [
+            'tickets' => $this->resolver->enrichTickets($tickets->toArray()),
+            'total' => $total,
+            'page' => $page,
+            'per_page' => $perPage,
+        ];
+    }
+
+    /**
+     * @return array{open: int, closed: int, total: int, recent: array<int, array<string, mixed>>}
+     */
     public function summaryForUser(int $userId): array
     {
         $base = Ticket::query()->where(function ($q) use ($userId): void {

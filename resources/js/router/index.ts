@@ -33,6 +33,12 @@ const router = createRouter({
                     meta: { acl: 2 },
                 },
                 {
+                    path: 'tickets/closed-by-me',
+                    name: 'closed-by-me',
+                    component: () => import('@/pages/ClosedByMePage.vue'),
+                    meta: { acl: 2 },
+                },
+                {
                     path: 'tickets/by-subordinates',
                     name: 'by-subordinates',
                     component: () => import('@/pages/BySubordinatesPage.vue'),

@@ -1,6 +1,7 @@
 import type { Component } from 'vue';
 import {
     BarChart3,
+    CheckCircle2,
     ClipboardList,
     Info,
     Monitor,
@@ -35,6 +36,7 @@ export const navGroups: NavGroup[] = [
         items: [
             { label: 'All tickets', to: '/all-tickets', icon: ClipboardList, acl: 2 },
             { label: 'My tickets', to: '/my-tickets', icon: Inbox },
+            { label: 'Closed by you', to: '/tickets/closed-by-me', icon: CheckCircle2, acl: 2 },
             { label: 'New ticket', to: '/tickets/new', icon: FileText },
             { label: 'By subordinates', to: '/tickets/by-subordinates', icon: Users, acl: 3 },
             { label: 'Monitoring', to: '/monitoring', icon: Monitor, acl: 2 },
