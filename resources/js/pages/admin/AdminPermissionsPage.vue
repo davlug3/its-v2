@@ -1,17 +1,9 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { onMounted, ref } from 'vue';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PageHeader from '@/components/common/PageHeader.vue';
-import { Skeleton } from '@/components/ui/skeleton';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
+import DataTable from '@/components/common/DataTable.vue';
 import { api } from '@/services/api';
 
 interface Acl {
@@ -23,34 +15,10 @@ const acls = ref<Acl[]>([]);
 const loading = ref(true);
 const error = ref<string | null>(null);
 
-const sortKey = ref('id');
-const sortDir = ref<'asc' | 'desc'>('asc');
-
-const sortedAcls = computed(() => {
-    const arr = [...acls.value];
-    arr.sort((a, b) => {
-        const av = (a as Record<string, unknown>)[sortKey.value];
-        const bv = (b as Record<string, unknown>)[sortKey.value];
-        if (av === bv) return 0;
-        const cmp = av! < bv! ? -1 : 1;
-        return sortDir.value === 'asc' ? cmp : -cmp;
-    });
-    return arr;
-});
-
-const toggleSort = (key: string): void => {
-    if (sortKey.value === key) {
-        sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
-    } else {
-        sortKey.value = key;
-        sortDir.value = 'asc';
-    }
-};
-
-const sortIndicator = (key: string): string => {
-    if (sortKey.value !== key) return '';
-    return sortDir.value === 'asc' ? ' ▲' : ' ▼';
-};
+const columns = [
+    { key: 'id', label: 'ID', sortable: true, width: 80, resizable: true },
+    { key: 'name', label: 'Name', sortable: true, resizable: true },
+];
 
 const load = async (): Promise<void> => {
     loading.value = true;
@@ -77,25 +45,20 @@ onMounted(load);
             </CardHeader>
             <CardContent class="space-y-4">
                 <p v-if="error" class="text-sm text-destructive">{{ error }}</p>
-                <div v-if="loading" class="space-y-2">
-                    <Skeleton class="h-8 w-full" />
-                    <Skeleton class="h-8 w-full" />
-                </div>
 
-                <Table v-else>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead class="w-20 cursor-pointer select-none" @click="toggleSort('id')">ID{{ sortIndicator('id') }}</TableHead>
-                            <TableHead class="cursor-pointer select-none" @click="toggleSort('name')">Name{{ sortIndicator('name') }}</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        <TableRow v-for="acl in sortedAcls" :key="acl.id">
-                            <TableCell class="font-mono text-sm">{{ acl.id }}</TableCell>
-                            <TableCell>{{ acl.name }}</TableCell>
-                        </TableRow>
-                    </TableBody>
-                </Table>
+                <DataTable
+                    table-id="admin-permissions"
+                    :columns="columns"
+                    :rows="acls as unknown as Record<string, unknown>[]"
+                    :loading="loading"
+                    empty-message="No access levels."
+                    pagination="client"
+                    :page-size="20"
+                >
+                    <template #cell-id="{ value }">
+                        <span class="font-mono text-sm">{{ value }}</span>
+                    </template>
+                </DataTable>
 
                 <p class="text-xs text-muted-foreground">
                     User access is changed on the Users page.

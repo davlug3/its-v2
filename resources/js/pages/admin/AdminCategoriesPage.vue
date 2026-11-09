@@ -1,21 +1,13 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { onMounted, ref } from 'vue';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PageHeader from '@/components/common/PageHeader.vue';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Skeleton } from '@/components/ui/skeleton';
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
+import DataTable from '@/components/common/DataTable.vue';
 import { api } from '@/services/api';
 
 interface Category {
@@ -28,34 +20,11 @@ const categories = ref<Category[]>([]);
 const loading = ref(true);
 const error = ref<string | null>(null);
 
-const sortKey = ref('category');
-const sortDir = ref<'asc' | 'desc'>('asc');
-
-const sortedCategories = computed(() => {
-    const arr = [...categories.value];
-    arr.sort((a, b) => {
-        const av = (a as Record<string, unknown>)[sortKey.value];
-        const bv = (b as Record<string, unknown>)[sortKey.value];
-        if (av === bv) return 0;
-        const cmp = av! < bv! ? -1 : 1;
-        return sortDir.value === 'asc' ? cmp : -cmp;
-    });
-    return arr;
-});
-
-const toggleSort = (key: string): void => {
-    if (sortKey.value === key) {
-        sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
-    } else {
-        sortKey.value = key;
-        sortDir.value = 'asc';
-    }
-};
-
-const sortIndicator = (key: string): string => {
-    if (sortKey.value !== key) return '';
-    return sortDir.value === 'asc' ? ' ▲' : ' ▼';
-};
+const columns = [
+    { key: 'id', label: 'ID', sortable: true, width: 80, resizable: true },
+    { key: 'category', label: 'Name', sortable: true, resizable: true },
+    { key: 'actions', label: 'Actions', sortable: false, width: 180, resizable: true },
+];
 
 const newName = ref('');
 const creating = ref(false);
@@ -169,54 +138,44 @@ onMounted(load);
             </CardHeader>
             <CardContent class="space-y-4">
                 <p v-if="error" class="text-sm text-destructive">{{ error }}</p>
-                <div v-if="loading" class="space-y-2">
-                    <Skeleton class="h-8 w-full" />
-                    <Skeleton class="h-8 w-full" />
-                </div>
-                <p v-else-if="categories.length === 0" class="text-sm text-muted-foreground">
-                    No categories.
-                </p>
 
-                <Table v-else>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead class="w-16 cursor-pointer select-none" @click="toggleSort('id')">ID{{ sortIndicator('id') }}</TableHead>
-                            <TableHead class="cursor-pointer select-none" @click="toggleSort('category')">Name{{ sortIndicator('category') }}</TableHead>
-                            <TableHead class="w-48">Actions</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        <TableRow v-for="c in sortedCategories" :key="c.id">
-                            <TableCell class="font-mono text-sm">{{ c.id }}</TableCell>
-                            <TableCell>
-                                <Input
-                                    v-if="editingId === c.id"
-                                    v-model="editingName"
-                                    maxlength="100"
-                                />
-                                <span v-else>{{ c.category }}</span>
-                            </TableCell>
-                            <TableCell class="space-x-2">
-                                <template v-if="editingId === c.id">
-                                    <Button size="sm" :disabled="savingId === c.id" @click="saveEdit">
-                                        {{ savingId === c.id ? 'Saving…' : 'Save' }}
-                                    </Button>
-                                    <Button size="sm" variant="outline" @click="editingId = null">
-                                        Cancel
-                                    </Button>
-                                </template>
-                                <template v-else>
-                                    <Button size="sm" variant="outline" @click="startEdit(c)">
-                                        Edit
-                                    </Button>
-                                    <Button size="sm" variant="destructive" @click="requestDelete(c)">
-                                        Delete
-                                    </Button>
-                                </template>
-                            </TableCell>
-                        </TableRow>
-                    </TableBody>
-                </Table>
+                <DataTable
+                    table-id="admin-categories"
+                    :columns="columns"
+                    :rows="categories as unknown as Record<string, unknown>[]"
+                    :loading="loading"
+                    empty-message="No categories."
+                    pagination="client"
+                    :page-size="20"
+                >
+                    <template #cell-id="{ value }">
+                        <span class="font-mono text-sm">{{ value }}</span>
+                    </template>
+                    <template #cell-category="{ row }">
+                        <div @click.stop>
+                            <Input
+                                v-if="editingId === (row as unknown as Category).id"
+                                v-model="editingName"
+                                maxlength="100"
+                            />
+                            <span v-else>{{ (row as unknown as Category).category }}</span>
+                        </div>
+                    </template>
+                    <template #cell-actions="{ row }">
+                        <div class="flex gap-2" @click.stop>
+                            <template v-if="editingId === (row as unknown as Category).id">
+                                <Button size="sm" :disabled="savingId === (row as unknown as Category).id" @click="saveEdit">
+                                    {{ savingId === (row as unknown as Category).id ? 'Saving…' : 'Save' }}
+                                </Button>
+                                <Button size="sm" variant="outline" @click="editingId = null">Cancel</Button>
+                            </template>
+                            <template v-else>
+                                <Button size="sm" variant="outline" @click="startEdit(row as unknown as Category)">Edit</Button>
+                                <Button size="sm" variant="destructive" @click="requestDelete(row as unknown as Category)">Delete</Button>
+                            </template>
+                        </div>
+                    </template>
+                </DataTable>
             </CardContent>
         </Card>
 

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue';
 import PageHeader from '@/components/common/PageHeader.vue';
+import DataTable from '@/components/common/DataTable.vue';
 import {
     Dialog,
     DialogContent,
@@ -16,14 +17,6 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
 import { api } from '@/services/api';
 
 interface Ticket {
@@ -49,37 +42,8 @@ const router = useRouter();
 
 const tickets = ref<Ticket[]>([]);
 const total = ref(0);
-
-const sortKey = ref('created_date');
-const sortDir = ref<'asc' | 'desc'>('desc');
-
-const sortedTickets = computed(() => {
-    const arr = [...tickets.value];
-    arr.sort((a, b) => {
-        const av = (a as Record<string, unknown>)[sortKey.value];
-        const bv = (b as Record<string, unknown>)[sortKey.value];
-        if (av === bv) return 0;
-        const cmp = av! < bv! ? -1 : 1;
-        return sortDir.value === 'asc' ? cmp : -cmp;
-    });
-    return arr;
-});
-
-const toggleSort = (key: string): void => {
-    if (sortKey.value === key) {
-        sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
-    } else {
-        sortKey.value = key;
-        sortDir.value = 'desc';
-    }
-};
-
-const sortIndicator = (key: string): string => {
-    if (sortKey.value !== key) return '';
-    return sortDir.value === 'asc' ? ' ▲' : ' ▼';
-};
 const page = ref(1);
-const lastPage = ref(1);
+const pageSize = ref(40);
 const loading = ref(true);
 const error = ref<string | null>(null);
 
@@ -96,6 +60,17 @@ const remarksText = ref('');
 const remarksSaving = ref(false);
 const remarksError = ref<string | null>(null);
 
+const columns = [
+    { key: 'select', label: '', sortable: false, width: 48, resizable: false },
+    { key: 'id', label: 'ID', sortable: false, width: 80, resizable: true },
+    { key: 'subject', label: 'Subject', sortable: false, resizable: true },
+    { key: 'created_uid', label: 'Created by', sortable: false, width: 180, resizable: true },
+    { key: 'created_date', label: 'Created', sortable: false, width: 130, resizable: true },
+    { key: 'actions', label: 'Actions', sortable: false, width: 260, resizable: true },
+];
+
+const formatDate = (ts: number): string => (ts ? new Date(ts * 1000).toLocaleDateString() : '—');
+
 const load = async (): Promise<void> => {
     loading.value = true;
     error.value = null;
@@ -105,13 +80,12 @@ const load = async (): Promise<void> => {
             indirect: String(indirect.value),
             hide_old: String(hideOld.value),
             page: String(page.value),
-            per_page: '40',
+            per_page: String(pageSize.value),
         });
         const res = await api<Page>(`/tickets/by-subordinates?${params.toString()}`);
         tickets.value = res.tickets ?? [];
         total.value = res.total ?? 0;
         page.value = res.page ?? page.value;
-        lastPage.value = Math.max(1, Math.ceil(total.value / (res.per_page || 40)));
     } catch (e) {
         error.value = (e as { message?: string }).message ?? 'Failed to load.';
     } finally {
@@ -220,12 +194,16 @@ const confirmBatchApprove = async (): Promise<void> => {
     }
 };
 
-const go = async (target: number): Promise<void> => {
-    page.value = Math.min(Math.max(1, target), lastPage.value);
-    await load();
+const onPageChange = (p: number): void => {
+    page.value = p;
+    void load();
 };
 
-const formatDate = (ts: number): string => (ts ? new Date(ts * 1000).toLocaleDateString() : '—');
+const onPageSizeChange = (size: number): void => {
+    pageSize.value = size;
+    page.value = 1;
+    void load();
+};
 
 onMounted(load);
 </script>
@@ -240,11 +218,11 @@ onMounted(load);
             </CardHeader>
             <CardContent class="flex flex-wrap items-end gap-4">
                 <label class="flex items-center gap-2 text-sm">
-                    <input type="checkbox" v-model="indirect" @change="load" />
+                    <input type="checkbox" v-model="indirect" @change="() => { page = 1; void load(); }" />
                     Include indirect subordinates
                 </label>
                 <label class="flex items-center gap-2 text-sm">
-                    <input type="checkbox" v-model="hideOld" @change="load" />
+                    <input type="checkbox" v-model="hideOld" @change="() => { page = 1; void load(); }" />
                     Hide old tickets
                 </label>
                 <span class="text-sm text-muted-foreground">{{ total }} pending</span>
@@ -253,9 +231,9 @@ onMounted(load);
 
         <Card>
             <CardHeader>
-                <div class="flex items-center justify-between">
+                <div class="flex flex-wrap items-center justify-between gap-2">
                     <CardTitle>Results</CardTitle>
-                    <div class="flex gap-2">
+                    <div class="flex flex-wrap gap-2">
                         <Button size="sm" variant="outline" @click="selectAll">Check all</Button>
                         <Button size="sm" variant="outline" @click="clearSelection">Clear</Button>
                         <Button size="sm" :disabled="selectedCount === 0" @click="requestBatchApprove">
@@ -274,67 +252,57 @@ onMounted(load);
             </CardHeader>
             <CardContent class="space-y-4">
                 <p v-if="error" class="text-sm text-destructive">{{ error }}</p>
-                <p v-if="loading" class="text-sm text-muted-foreground">Loading…</p>
-                <p v-else-if="tickets.length === 0" class="text-sm text-muted-foreground">
-                    No pending tickets.
-                </p>
 
-                <Table v-else>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead class="w-10"></TableHead>
-                            <TableHead class="w-20 cursor-pointer select-none" @click="toggleSort('id')">ID{{ sortIndicator('id') }}</TableHead>
-                            <TableHead class="cursor-pointer select-none" @click="toggleSort('subject')">Subject{{ sortIndicator('subject') }}</TableHead>
-                            <TableHead class="w-24 cursor-pointer select-none" @click="toggleSort('created_uid')">Created by{{ sortIndicator('created_uid') }}</TableHead>
-                            <TableHead class="w-28 cursor-pointer select-none" @click="toggleSort('created_date')">Created{{ sortIndicator('created_date') }}</TableHead>
-                            <TableHead class="w-48">Actions</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        <TableRow v-for="t in sortedTickets" :key="t.id">
-                            <TableCell>
-                                <input
-                                    type="checkbox"
-                                    :checked="selected.has(t.id)"
-                                    @change="toggleSelect(t.id)"
-                                />
-                            </TableCell>
-                            <TableCell class="font-mono text-sm">{{ t.id }}</TableCell>
-                            <TableCell>
-                                <a class="hover:underline" @click.prevent="router.push(`/tickets/${t.id}`)">
-                                    {{ t.subject }}
-                                </a>
-                            </TableCell>
-                            <TableCell class="text-sm">{{ t.created_name ?? t.created_uid }}</TableCell>
-                            <TableCell class="text-sm text-muted-foreground">{{ formatDate(t.created_date) }}</TableCell>
-                            <TableCell class="space-x-2">
-                                <Button size="sm" @click="approveOne(t.id)">Approve</Button>
-                                <Button size="sm" variant="outline" @click="openDisapprove(t.id)">Disapprove</Button>
-                                <Button
-                                    v-if="t.approved_by_supervisor === 1"
-                                    size="sm"
-                                    variant="outline"
-                                    @click="undoOne(t.id)"
-                                >
-                                    Undo
-                                </Button>
-                            </TableCell>
-                        </TableRow>
-                    </TableBody>
-                </Table>
-
-                <div class="flex items-center justify-between text-sm text-muted-foreground">
-                    <span>{{ total }} tickets</span>
-                    <div class="flex gap-2">
-                        <Button variant="outline" size="sm" :disabled="page <= 1" @click="go(page - 1)">
-                            Previous
-                        </Button>
-                        <span class="py-1">Page {{ page }} of {{ lastPage }}</span>
-                        <Button variant="outline" size="sm" :disabled="page >= lastPage" @click="go(page + 1)">
-                            Next
-                        </Button>
-                    </div>
-                </div>
+                <DataTable
+                    table-id="by-subordinates"
+                    :columns="columns"
+                    :rows="tickets as unknown as Record<string, unknown>[]"
+                    :loading="loading"
+                    empty-message="No pending tickets."
+                    pagination="server"
+                    :page-size="pageSize"
+                    :total="total"
+                    :page="page"
+                    @page-change="onPageChange"
+                    @page-size-change="onPageSizeChange"
+                    @row-click="(row) => router.push(`/tickets/${(row as unknown as Ticket).id}`)"
+                >
+                    <template #cell-select="{ row }">
+                        <div @click.stop>
+                            <input
+                                type="checkbox"
+                                :checked="selected.has((row as unknown as Ticket).id)"
+                                @change="toggleSelect((row as unknown as Ticket).id)"
+                            />
+                        </div>
+                    </template>
+                    <template #cell-id="{ value }">
+                        <span class="font-mono text-sm">{{ value }}</span>
+                    </template>
+                    <template #cell-subject="{ row }">
+                        <span class="hover:underline">{{ (row as unknown as Ticket).subject }}</span>
+                    </template>
+                    <template #cell-created_uid="{ row }">
+                        <span class="text-sm">{{ (row as unknown as Ticket).created_name ?? (row as unknown as Ticket).created_uid }}</span>
+                    </template>
+                    <template #cell-created_date="{ value }">
+                        <span class="text-sm text-muted-foreground">{{ formatDate(value as number) }}</span>
+                    </template>
+                    <template #cell-actions="{ row }">
+                        <div class="flex flex-wrap gap-1" @click.stop>
+                            <Button size="sm" @click="approveOne((row as unknown as Ticket).id)">Approve</Button>
+                            <Button size="sm" variant="outline" @click="openDisapprove((row as unknown as Ticket).id)">Disapprove</Button>
+                            <Button
+                                v-if="(row as unknown as Ticket).approved_by_supervisor === 1"
+                                size="sm"
+                                variant="outline"
+                                @click="undoOne((row as unknown as Ticket).id)"
+                            >
+                                Undo
+                            </Button>
+                        </div>
+                    </template>
+                </DataTable>
             </CardContent>
         </Card>
 

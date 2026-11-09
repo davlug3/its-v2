@@ -1,18 +1,10 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PageHeader from '@/components/common/PageHeader.vue';
-import { Skeleton } from '@/components/ui/skeleton';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
+import DataTable from '@/components/common/DataTable.vue';
 import { api } from '@/services/api';
 
 interface Row {
@@ -29,36 +21,17 @@ const router = useRouter();
 const rows = ref<Row[]>([]);
 const loading = ref(true);
 const error = ref<string | null>(null);
-const lastUpdated = ref<string>('');
+const lastUpdated = ref('');
 
-const sortKey = ref('created_date');
-const sortDir = ref<'asc' | 'desc'>('desc');
-
-const sortedRows = computed(() => {
-    const arr = [...rows.value];
-    arr.sort((a, b) => {
-        const av = (a as Record<string, unknown>)[sortKey.value];
-        const bv = (b as Record<string, unknown>)[sortKey.value];
-        if (av === bv) return 0;
-        const cmp = av! < bv! ? -1 : 1;
-        return sortDir.value === 'asc' ? cmp : -cmp;
-    });
-    return arr;
-});
-
-const toggleSort = (key: string): void => {
-    if (sortKey.value === key) {
-        sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
-    } else {
-        sortKey.value = key;
-        sortDir.value = 'desc';
-    }
-};
-
-const sortIndicator = (key: string): string => {
-    if (sortKey.value !== key) return '';
-    return sortDir.value === 'asc' ? ' ▲' : ' ▼';
-};
+const columns = [
+    { key: 'id', label: 'Ticket #', sortable: true, width: 90, resizable: true },
+    { key: 'created_date', label: 'Date/Time', sortable: true, width: 170, resizable: true },
+    { key: 'subject', label: 'Subject', sortable: true, resizable: true },
+    { key: 'location', label: 'Location', sortable: true, width: 140, resizable: true },
+    { key: 'mail', label: 'Mail', sortable: true, width: 140, resizable: true },
+    { key: 'category', label: 'Category', sortable: true, width: 140, resizable: true },
+    { key: 'assigned', label: 'Assigned', sortable: true, width: 140, resizable: true },
+];
 
 let timer: ReturnType<typeof setInterval> | null = null;
 
@@ -114,41 +87,27 @@ onUnmounted(() => {
             </CardHeader>
             <CardContent class="space-y-4">
                 <p v-if="error" class="text-sm text-destructive">{{ error }}</p>
-                <div v-if="loading" class="space-y-2">
-                    <Skeleton class="h-8 w-full" />
-                    <Skeleton class="h-8 w-full" />
-                    <Skeleton class="h-8 w-full" />
-                </div>
 
-                <Table v-else>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead class="w-20 cursor-pointer select-none" @click="toggleSort('id')">Ticket #{{ sortIndicator('id') }}</TableHead>
-                            <TableHead class="w-40 cursor-pointer select-none" @click="toggleSort('created_date')">Date/Time{{ sortIndicator('created_date') }}</TableHead>
-                            <TableHead class="cursor-pointer select-none" @click="toggleSort('subject')">Subject{{ sortIndicator('subject') }}</TableHead>
-                            <TableHead class="w-32 cursor-pointer select-none" @click="toggleSort('location')">Location{{ sortIndicator('location') }}</TableHead>
-                            <TableHead class="w-32 cursor-pointer select-none" @click="toggleSort('mail')">Mail{{ sortIndicator('mail') }}</TableHead>
-                            <TableHead class="w-32 cursor-pointer select-none" @click="toggleSort('category')">Category{{ sortIndicator('category') }}</TableHead>
-                            <TableHead class="w-32 cursor-pointer select-none" @click="toggleSort('assigned')">Assigned{{ sortIndicator('assigned') }}</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        <TableRow
-                            v-for="r in sortedRows"
-                            :key="r.id"
-                            class="cursor-pointer"
-                            @click="router.push(`/tickets/${r.id}`)"
-                        >
-                            <TableCell class="font-mono text-sm">{{ r.id }}</TableCell>
-                            <TableCell class="text-sm text-muted-foreground">{{ formatDate(r.created_date) }}</TableCell>
-                            <TableCell>{{ r.subject }}</TableCell>
-                            <TableCell class="text-sm">{{ r.location }}</TableCell>
-                            <TableCell class="text-sm">{{ r.mail }}</TableCell>
-                            <TableCell class="text-sm">{{ r.category }}</TableCell>
-                            <TableCell class="text-sm">{{ r.assigned || '—' }}</TableCell>
-                        </TableRow>
-                    </TableBody>
-                </Table>
+                <DataTable
+                    table-id="monitoring-tickets"
+                    :columns="columns"
+                    :rows="rows as unknown as Record<string, unknown>[]"
+                    :loading="loading"
+                    empty-message="No open tickets."
+                    pagination="client"
+                    :page-size="20"
+                    @row-click="(row) => router.push(`/tickets/${row.id}`)"
+                >
+                    <template #cell-id="{ value }">
+                        <span class="font-mono text-sm">{{ value }}</span>
+                    </template>
+                    <template #cell-created_date="{ value }">
+                        <span class="text-sm text-muted-foreground">{{ formatDate(value as number) }}</span>
+                    </template>
+                    <template #cell-assigned="{ value }">
+                        <span class="text-sm">{{ (value as string | number) || '—' }}</span>
+                    </template>
+                </DataTable>
 
                 <p class="text-xs text-muted-foreground">{{ rows.length }} open tickets.</p>
             </CardContent>
