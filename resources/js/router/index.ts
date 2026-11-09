@@ -98,6 +98,13 @@ const router = createRouter({
 });
 
 router.beforeEach(async (to) => {
+    // Legacy deep link: #ticket=123
+    const hash = to.hash || (typeof window !== 'undefined' ? window.location.hash : '');
+    const ticketMatch = hash.match(/ticket=(\d+)/i);
+    if (ticketMatch && to.name !== 'ticket-detail') {
+        return { path: `/tickets/${ticketMatch[1]}`, replace: true };
+    }
+
     const auth = useAuthStore();
 
     if (to.meta.requiresAuth && !auth.isAuthenticated) {
