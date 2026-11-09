@@ -7,6 +7,7 @@ COPY package.json pnpm-lock.yaml .npmrc ./
 RUN npm install -g --allow-scripts=pnpm pnpm && PNPM_CONFIG_MINIMUM_RELEASE_AGE=0 pnpm install --frozen-lockfile
 COPY resources ./resources
 COPY public ./public
+COPY scripts ./scripts
 COPY vite.config.ts tsconfig.json tsconfig.app.json tsconfig.node.json components.json ./
 RUN pnpm build
 
