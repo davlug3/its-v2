@@ -685,7 +685,7 @@ Status values: `Not started`, `In progress`, `Decided` (decision recorded, code 
 | D59 | Low | Search | 7 | Partial (2026-11-09) | Reset reloads and print uses browser print; verify export/fidelity against legacy expectations. |
 | D60 | Low | UI | 7 | Partial (2026-11-09) | “Search Results” title added when filters active; module `enabled` filtering still needs audit. |
 | D61 | Low | UI | 7 | Partial (2026-11-09) | Explicit labels added in key list/monitoring views; audit remaining views. |
-| D62 | Low | Lists | 7 | Open decision | Rename or restrict to `created_uid`. Ask Dave. |
+| D62 | Low | Lists | 7 | Open decision (partial impl) | “Tickets involving you” uses legacy getter semantics (creator/assignee/resolver). Final naming/scope needs Dave’s decision. |
 | D63 | Medium | Logs | 7 | Partial (2026-11-09) | Detail logs show Deleted user/System; batch resolver handles missing refs; audit remaining views/queries. |
 | D64 | Medium | Audit | 6 | Not started | Append-only `admin_audit`. |
 | D65 | High | Routing | 4 | Not started | Allowlist resolved paths. |

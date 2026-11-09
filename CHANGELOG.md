@@ -104,7 +104,8 @@ Versions start at `0.1.0` when the scaffold is ready.
   - Updated `MonitoringPage.vue` to refresh data in place on a 5-second interval, avoid overlapping requests, and pause/resume polling on tab visibility and window focus.
 
 - **Ticket list scopes (Phase 7 progress).**
-  - Added `assigned_to_me` and `unassigned` API scopes with server-paginated DataTable pages and navigation entries.
+  - Added `assigned_to_me`, `unassigned`, `involving_me`, `end_user_tickets`, and `tickets_by_supervisor` API scopes with SPA pages/routes.
+  - Added “Tickets involving you” (legacy created-by-user getter semantics; D62 naming/scope decision remains open), “By supervisor”, and an end-user tickets view.
   - Added a retired `assigned_to_group` page with a clear explanation (teams retired).
 
 ### Changed
