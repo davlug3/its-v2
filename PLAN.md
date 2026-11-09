@@ -449,8 +449,7 @@ Exit check: AT-27 to AT-32 pass.
 - [x] Fix the group sum bug (D46) with a single aggregate query (legacy group metrics retained with correct calculation).
 - [x] Fix the duplicate/mislabeled cards (D47, D48) — distinct Today and This year (YTD) cards.
 - [x] No dead Tech Status link in the SPA dashboard (D49).
-- [ ] Monitoring refreshes the data source, not the grid (D51).
-- [ ] Pause polling when the tab is hidden.
+- [x] Monitoring refreshes the data source in place (D51), keeps the 5-second cadence (configurable), and pauses/resumes on tab visibility and focus.
 
 Exit check: dashboard under 2 seconds at production volume.
 
@@ -675,7 +674,7 @@ Status values: `Not started`, `In progress`, `Decided` (decision recorded, code 
 | D48 | Low | Dashboard | 8 | Fixed (2026-11-09) | Duplicate card removed; metrics are distinct. |
 | D49 | Low | Dashboard | 8 | Fixed (SPA) | No dead Tech Status link in the SPA dashboard/nav. |
 | D50 | Low | Dashboard | 8 | Fixed (2026-11-09) | Aggregate SQL in `TicketService::dashboardForUser`. Cache not added. |
-| D51 | Medium | Monitoring | 8 | Not started | Refresh data, keep grid state. Pause when hidden. |
+| D51 | Medium | Monitoring | 8 | Fixed (2026-11-09) | Refresh data in place (5s, configurable), pause when hidden, resume on visibility/focus. |
 | D52 | Medium | Lists | 7 | Fixed (2026-11-09) | `scope=closed_by_me` filters `state_id=2` and `resolved_uid=current`. |
 | D53 | High | Data | 2 | Decided | Keep `assigned_gid`. Add `units_count`. |
 | D54 | Medium | Counter | 9 | Not started | Fix both reports. Inclusive days. |

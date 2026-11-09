@@ -100,6 +100,9 @@ Versions start at `0.1.0` when the scaffold is ready.
 - **Closed Tickets By You (D52).**
   - Added a scoped list for tickets resolved by the current user with `state_id = 2`.
 
+- **Live monitoring (D51).**
+  - Updated `MonitoringPage.vue` to refresh data in place on a 5-second interval, avoid overlapping requests, and pause/resume polling on tab visibility and window focus.
+
 - **Attachment validation hardening.**
   - Tightened upload content-type checks using detected MIME and stored the detected MIME when available.
 

@@ -12,64 +12,91 @@ interface Row {
     created_date: number;
     subject: string;
     location: string | number;
-    mail: string | number;
+    mail: string | number; // requester (legacy field name)
     category: string | number;
     assigned: string | number;
 }
+
+const POLL_MS = 5000; // D51: 5-second cadence (configurable)
 
 const router = useRouter();
 const rows = ref<Row[]>([]);
 const loading = ref(true);
 const error = ref<string | null>(null);
 const lastUpdated = ref('');
+let inFlight = false;
 
 const columns = [
     { key: 'id', label: 'Ticket #', sortable: true, width: 90, resizable: true },
     { key: 'created_date', label: 'Date/Time', sortable: true, width: 170, resizable: true },
     { key: 'subject', label: 'Subject', sortable: true, resizable: true },
     { key: 'location', label: 'Location', sortable: true, width: 140, resizable: true },
-    { key: 'mail', label: 'Mail', sortable: true, width: 140, resizable: true },
+    { key: 'mail', label: 'Requester', sortable: true, width: 160, resizable: true },
     { key: 'category', label: 'Category', sortable: true, width: 140, resizable: true },
-    { key: 'assigned', label: 'Assigned', sortable: true, width: 140, resizable: true },
+    { key: 'assigned', label: 'Assigned Personnel', sortable: true, width: 160, resizable: true },
 ];
 
 let timer: ReturnType<typeof setInterval> | null = null;
 
 const formatDate = (ts: number): string => (ts ? new Date(ts * 1000).toLocaleString() : '—');
 
-const load = async (): Promise<void> => {
+const load = async (quiet = false): Promise<void> => {
+    if (inFlight) return;
+    inFlight = true;
+    if (!quiet) loading.value = rows.value.length === 0;
     try {
-        rows.value = await api<Row[]>('/monitoring/tickets');
+        const next = await api<Row[]>('/monitoring/tickets');
+        // D51: refresh data in place; keep the grid instance.
+        rows.value = next;
         lastUpdated.value = new Date().toLocaleTimeString();
         error.value = null;
     } catch (e) {
         error.value = (e as { message?: string }).message ?? 'Failed to load.';
     } finally {
         loading.value = false;
+        inFlight = false;
     }
+};
+
+const stopPolling = (): void => {
+    if (timer) {
+        clearInterval(timer);
+        timer = null;
+    }
+};
+
+const startPolling = (): void => {
+    if (document.visibilityState !== 'visible') return;
+    if (!timer) timer = setInterval(() => void load(true), POLL_MS);
 };
 
 const onVisibility = (): void => {
     if (document.visibilityState === 'visible') {
-        void load();
-        if (!timer) timer = setInterval(() => void load(), 5000);
+        void load(true);
+        startPolling();
     } else {
-        if (timer) {
-            clearInterval(timer);
-            timer = null;
-        }
+        stopPolling();
+    }
+};
+
+const onFocus = (): void => {
+    if (document.visibilityState === 'visible') {
+        void load(true);
+        startPolling();
     }
 };
 
 onMounted(() => {
-    void load();
-    timer = setInterval(() => void load(), 5000);
+    void load(false);
+    startPolling();
     document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('focus', onFocus);
 });
 
 onUnmounted(() => {
-    if (timer) clearInterval(timer);
+    stopPolling();
     document.removeEventListener('visibilitychange', onVisibility);
+    window.removeEventListener('focus', onFocus);
 });
 </script>
 
