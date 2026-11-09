@@ -17,9 +17,26 @@ class NotificationController extends Controller
             ->orderByDesc('dt')
             ->orderByDesc('id')
             ->limit(50)
-            ->get();
+            ->get()
+            ->map(function (Notification $n): array {
+                $arr = $n->toArray();
+                $arr['subject'] = $this->sanitizeText((string) ($arr['subject'] ?? ''));
+                $arr['data'] = $this->sanitizeText((string) ($arr['data'] ?? ''));
+
+                return $arr;
+            })
+            ->values();
 
         return response()->json($items);
+    }
+
+    private function sanitizeText(string $text): string
+    {
+        // Defense-in-depth: redact credential-like patterns in legacy rows.
+        $text = preg_replace('/(password|pword|passwd|pwd)\s*[:=]\s*[^\s&<"\']+/i', '$1=[redacted]', $text) ?? $text;
+        $text = str_replace(['http://http://', 'https://https://'], ['http://', 'https://'], $text);
+
+        return $text;
     }
 
     public function unreadCount(Request $request): JsonResponse
