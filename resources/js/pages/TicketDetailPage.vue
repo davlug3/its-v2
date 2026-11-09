@@ -30,22 +30,29 @@ interface Ticket {
     issue: string;
     state_id: number;
     category_id: number;
+    category_name?: string | null;
     location_id: number;
+    location_name?: string | null;
     place: string;
     contact: string;
     units_count: number;
     created_uid: number;
+    created_name?: string | null;
     created_date: number;
     assigned_uid: number;
+    assigned_name?: string | null;
     resolved_uid: number;
+    resolved_name?: string | null;
     resolved_date: number;
     eu_uid: number;
+    eu_name?: string | null;
 }
 
 interface TicketLog {
     id: number;
     ticket_id: number;
     user_id: number;
+    user_name?: string | null;
     data: string;
     date: number;
     time: number;
@@ -381,10 +388,10 @@ onMounted(() => {
                     </div>
 
                     <dl class="grid grid-cols-2 gap-2 text-xs text-muted-foreground sm:grid-cols-4">
-                        <div><dt class="font-medium">Category</dt><dd>{{ ticket.category_id }}</dd></div>
-                        <div><dt class="font-medium">Location</dt><dd>{{ ticket.location_id }}</dd></div>
-                        <div><dt class="font-medium">Created by</dt><dd>{{ ticket.created_uid }}</dd></div>
-                        <div><dt class="font-medium">Assigned to</dt><dd>{{ ticket.assigned_uid || '—' }}</dd></div>
+                        <div><dt class="font-medium">Category</dt><dd>{{ ticket.category_name ?? ticket.category_id }}</dd></div>
+                        <div><dt class="font-medium">Location</dt><dd>{{ ticket.location_name ?? ticket.location_id }}</dd></div>
+                        <div><dt class="font-medium">Created by</dt><dd>{{ ticket.created_name ?? ticket.created_uid }}</dd></div>
+                        <div><dt class="font-medium">Assigned to</dt><dd>{{ ticket.assigned_name ?? (ticket.assigned_uid || '—') }}</dd></div>
                     </dl>
 
                     <div v-if="canAssign" class="flex items-end gap-2 border-t border-border pt-3">
@@ -451,7 +458,7 @@ onMounted(() => {
                     <ul v-if="logs.length" class="space-y-3">
                         <li v-for="entry in logs" :key="entry.id" class="rounded-md border border-border p-3">
                             <div class="flex items-center justify-between text-xs text-muted-foreground">
-                                <span>User {{ entry.user_id }} · {{ entry.action ?? 'note' }}</span>
+                                <span>{{ entry.user_name ?? `User ${entry.user_id}` }} · {{ entry.action ?? 'note' }}</span>
                                 <span>{{ formatLogDate(entry.date) }}</span>
                             </div>
                             <p class="mt-1 whitespace-pre-wrap text-sm">{{ entry.data }}</p>

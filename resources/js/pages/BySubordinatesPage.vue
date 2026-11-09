@@ -31,8 +31,10 @@ interface Ticket {
     subject: string;
     state_id: number;
     created_uid: number;
+    created_name?: string | null;
     created_date: number;
     assigned_uid: number;
+    assigned_name?: string | null;
     approved_by_supervisor: number;
 }
 
@@ -303,7 +305,7 @@ onMounted(load);
                                     {{ t.subject }}
                                 </a>
                             </TableCell>
-                            <TableCell class="text-sm">{{ t.created_uid }}</TableCell>
+                            <TableCell class="text-sm">{{ t.created_name ?? t.created_uid }}</TableCell>
                             <TableCell class="text-sm text-muted-foreground">{{ formatDate(t.created_date) }}</TableCell>
                             <TableCell class="space-x-2">
                                 <Button size="sm" @click="approveOne(t.id)">Approve</Button>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { Badge } from '@/components/ui/badge';
@@ -13,23 +13,17 @@ import DataTable from '@/components/common/DataTable.vue';
 import PageHeader from '@/components/common/PageHeader.vue';
 import { api } from '@/services/api';
 
-interface HelpdeskUser {
-    id: number;
-    username: string;
-    name: string;
-    mname: string;
-    lname: string;
-    acl_id: number | null;
-}
-
 interface Ticket {
     id: number;
     subject: string;
     state_id: number;
     category_id: number;
+    category_name?: string | null;
     created_uid: number;
+    created_name?: string | null;
     created_date: number;
     assigned_uid: number;
+    assigned_name?: string | null;
 }
 
 const router = useRouter();
@@ -43,8 +37,8 @@ const loading = ref(true);
 const error = ref<string | null>(null);
 
 const search = ref('');
-const stateFilter = ref('');
-const assignedFilter = ref<string | null>('');
+const stateFilter = ref<string | number | null>('');
+const assignedFilter = ref<string | number | null>('');
 
 const stateOptions: SelectOption[] = [
     { value: '', label: 'All' },
@@ -52,47 +46,12 @@ const stateOptions: SelectOption[] = [
     { value: '2', label: 'Closed' },
 ];
 
-const assignedOptions = computed(() =>
-    [{ value: '', label: 'All' } as SelectOption].concat(
-        helpdeskUsers.value.map((u) => ({
-            value: String(u.id),
-            label: [u.name, u.mname, u.lname].filter(Boolean).join(' ').trim() || u.username,
-        })),
-    ),
-);
-
-const helpdeskUsers = ref<HelpdeskUser[]>([]);
-
-const loadHelpdeskUsers = async (): Promise<void> => {
-    try {
-        const all: HelpdeskUser[] = [];
-        for (const acl of [3, 9]) {
-            let page = 1;
-            let lastPage = 1;
-            do {
-                const res = await api<{ data: HelpdeskUser[]; last_page: number }>(
-                    `/admin/users?acl=${acl}&per_page=100&page=${page}`,
-                );
-                all.push(...(res.data ?? []));
-                lastPage = res.last_page ?? 1;
-                page += 1;
-            } while (page <= lastPage);
-        }
-        const seen = new Set<number>();
-        const unique = all.filter((u) => {
-            if (seen.has(u.id)) return false;
-            seen.add(u.id);
-            return true;
-        });
-        unique.sort((a, b) => {
-            const an = [a.name, a.mname, a.lname].filter(Boolean).join(' ').toLowerCase();
-            const bn = [b.name, b.mname, b.lname].filter(Boolean).join(' ').toLowerCase();
-            return an.localeCompare(bn);
-        });
-        helpdeskUsers.value = unique;
-    } catch {
-        helpdeskUsers.value = [];
-    }
+const fetchAssignees = async (q: string): Promise<SelectOption[]> => {
+    const params = new URLSearchParams({ assignable: '1', q, limit: '30' });
+    const res = await api<Array<{ id: number; label: string }>>(`/admin/users/options?${params.toString()}`);
+    return [{ value: '', label: 'All' } as SelectOption].concat(
+        (res ?? []).map((u) => ({ value: String(u.id), label: u.label })),
+    );
 };
 
 
@@ -119,8 +78,8 @@ const load = async (): Promise<void> => {
     try {
         const params = new URLSearchParams({ scope: 'all', page: String(page.value), per_page: String(pageSize.value) });
         if (search.value.trim() !== '') params.set('search', search.value.trim());
-        if (stateFilter.value !== '') params.set('state_id', stateFilter.value);
-        if (assignedFilter.value && assignedFilter.value.trim() !== '') params.set('assigned_uid', assignedFilter.value.trim());
+        if (stateFilter.value !== null && stateFilter.value !== '') params.set('state_id', String(stateFilter.value));
+        if (assignedFilter.value !== null && assignedFilter.value !== '') params.set('assigned_uid', String(assignedFilter.value));
         params.set('sort', sortKey.value);
         params.set('dir', sortDir.value);
 
@@ -163,7 +122,6 @@ const onPageSizeChange = (size: number): void => {
 
 onMounted(() => {
     void load();
-    void loadHelpdeskUsers();
 });
 </script>
 
@@ -187,7 +145,13 @@ onMounted(() => {
                     </div>
                     <div class="space-y-2">
                         <Label for="assigned">Assigned to</Label>
-                        <SearchableSelect id="assigned" v-model="assignedFilter" :options="assignedOptions" placeholder="All" />
+                        <SearchableSelect
+                            id="assigned"
+                            v-model="assignedFilter"
+                            :options="[{ value: '', label: 'All' }]"
+                            :fetch-options="fetchAssignees"
+                            placeholder="All"
+                        />
                     </div>
                     <div class="flex items-end">
                         <Button type="submit">Apply</Button>
@@ -222,6 +186,12 @@ onMounted(() => {
                 >
                     <template #cell-state_id="{ value }">
                         <Badge :variant="value === 2 ? 'secondary' : 'outline'">{{ stateLabel(value as number) }}</Badge>
+                    </template>
+                    <template #cell-created_uid="{ row }">
+                        <span class="text-sm">{{ (row as unknown as Ticket).created_name ?? (row as unknown as Ticket).created_uid }}</span>
+                    </template>
+                    <template #cell-assigned_uid="{ row }">
+                        <span class="text-sm">{{ (row as unknown as Ticket).assigned_name ?? ((row as unknown as Ticket).assigned_uid || '—') }}</span>
                     </template>
                     <template #cell-created_date="{ value }">
                         <span class="text-sm text-muted-foreground">{{ formatDate(value as number) }}</span>

@@ -6,12 +6,22 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PageHeader from '@/components/common/PageHeader.vue';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import SearchableSelect from '@/components/common/SearchableSelect.vue';
+import type { SelectOption } from '@/components/common/SearchableSelect.vue';
 import { api, getToken } from '@/services/api';
 
 const from = ref('');
 const to = ref('');
-const employeeId = ref('');
+const employeeId = ref<string | number | null>('');
 const format = ref<'csv' | 'json'>('csv');
+
+const fetchEmployees = async (q: string): Promise<SelectOption[]> => {
+    const params = new URLSearchParams({ q, limit: '30' });
+    const res = await api<Array<{ id: number; label: string }>>(`/admin/users/options?${params.toString()}`);
+    return [{ value: '', label: 'All employees' } as SelectOption].concat(
+        (res ?? []).map((u) => ({ value: u.id, label: u.label })),
+    );
+};
 const loading = ref(false);
 const error = ref<string | null>(null);
 const summary = ref<Record<string, unknown> | null>(null);
@@ -31,7 +41,7 @@ const generate = async (): Promise<void> => {
         const params = new URLSearchParams();
         if (from.value) params.set('from', from.value);
         if (to.value) params.set('to', to.value);
-        if (employeeId.value.trim() !== '') params.set('employees[]', employeeId.value.trim());
+        if (employeeId.value !== null && employeeId.value !== '') params.set('employees[]', String(employeeId.value));
 
         if (format.value === 'csv') {
             const token = getToken();
@@ -89,8 +99,14 @@ const generate = async (): Promise<void> => {
                         <Input id="to" v-model="to" type="date" />
                     </div>
                     <div class="space-y-2">
-                        <Label for="employee">Employee ID (optional)</Label>
-                        <Input id="employee" v-model="employeeId" />
+                        <Label for="employee">Employee (optional)</Label>
+                        <SearchableSelect
+                            id="employee"
+                            v-model="employeeId"
+                            :options="[{ value: '', label: 'All employees' }]"
+                            :fetch-options="fetchEmployees"
+                            placeholder="All employees"
+                        />
                     </div>
                 </div>
 
