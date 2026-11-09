@@ -77,6 +77,39 @@ class TicketController extends Controller
             return response()->json($result);
         }
 
+        if ($scope === 'involving_me') {
+            $result = $this->tickets->listInvolvingUser(
+                (int) $user->id,
+                $page,
+                $perPage,
+                (string) $request->query('sort', ''),
+                (string) $request->query('dir', 'desc'),
+            );
+
+            return response()->json($result);
+        }
+
+        if ($scope === 'end_user_tickets') {
+            $stateId = $request->query('state_id');
+            $stateId = ($stateId === null || $stateId === '') ? null : (int) $stateId;
+            $result = $this->tickets->listEndUserTickets(
+                (int) $user->id,
+                $stateId,
+                $page,
+                $perPage,
+            );
+
+            return response()->json($result);
+        }
+
+        if ($scope === 'tickets_by_supervisor' && $this->aclOf($request) >= 3) {
+            $profile = UserProfile::where('user_id', $user->id)->first();
+            $supervisorId = $profile !== null ? (int) ($profile->supervisor_id ?? 0) : 0;
+            $result = $this->tickets->listBySupervisor($supervisorId, $page, $perPage);
+
+            return response()->json($result);
+        }
+
         if ($scope === 'all' && $this->aclOf($request) >= 2) {
             $filters = [
                 'state_id' => $request->query('state_id'),

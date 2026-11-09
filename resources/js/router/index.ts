@@ -57,10 +57,27 @@ const router = createRouter({
                     meta: { acl: 2 },
                 },
                 {
+                    path: 'tickets/involving-me',
+                    name: 'involving-me',
+                    component: () => import('@/pages/InvolvingMePage.vue'),
+                    meta: { acl: 2 },
+                },
+                {
+                    path: 'tickets/by-supervisor',
+                    name: 'tickets-by-supervisor',
+                    component: () => import('@/pages/TicketsBySupervisorPage.vue'),
+                    meta: { acl: 3 },
+                },
+                {
                     path: 'tickets/by-subordinates',
                     name: 'by-subordinates',
                     component: () => import('@/pages/BySubordinatesPage.vue'),
                     meta: { acl: 3 },
+                },
+                {
+                    path: 'tickets/end-user',
+                    name: 'end-user-tickets',
+                    component: () => import('@/pages/EndUserTicketsPage.vue'),
                 },
                 {
                     path: 'tickets/new',

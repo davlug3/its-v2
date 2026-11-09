@@ -516,6 +516,89 @@ class TicketService
     }
 
     /**
+     * Tickets involving the user (legacy "created by user" getter semantics; D62 open).
+     * created_uid OR resolved_uid OR assigned_uid = user, all states.
+     *
+     * @return array{tickets: array<int, array<string, mixed>>, total: int, page: int, per_page: int}
+     */
+    public function listInvolvingUser(int $userId, int $page = 1, int $perPage = 20, ?string $sort = null, string $dir = 'desc'): array
+    {
+        $query = Ticket::query()->where(function ($q) use ($userId): void {
+            $q->where('created_uid', $userId)
+                ->orWhere('resolved_uid', $userId)
+                ->orWhere('assigned_uid', $userId);
+        });
+
+        $total = (int) $query->count();
+        $sortMap = ['id' => 'id', 'subject' => 'subject', 'created' => 'created_date', 'state' => 'state_id'];
+        $sortColumn = $sortMap[$sort ?? ''] ?? 'id';
+        $direction = $dir === 'asc' ? 'asc' : 'desc';
+        if ($sort === null || $sort === '') {
+            $direction = 'desc';
+        }
+
+        $tickets = $query->orderBy($sortColumn, $direction)->skip(($page - 1) * $perPage)->take($perPage)->get();
+
+        return [
+            'tickets' => $this->resolver->enrichTickets($tickets->toArray()),
+            'total' => $total,
+            'page' => $page,
+            'per_page' => $perPage,
+        ];
+    }
+
+    /**
+     * End-user ticket view: created by or resolved by current user.
+     *
+     * @return array{tickets: array<int, array<string, mixed>>, total: int, page: int, per_page: int}
+     */
+    public function listEndUserTickets(int $userId, ?int $stateId, int $page = 1, int $perPage = 20): array
+    {
+        $query = Ticket::query()->where(function ($q) use ($userId): void {
+            $q->where('created_uid', $userId)->orWhere('resolved_uid', $userId);
+        });
+        if ($stateId !== null) {
+            $query->where('state_id', $stateId);
+        }
+        $total = (int) $query->count();
+        $tickets = $query->orderByDesc('id')->skip(($page - 1) * $perPage)->take($perPage)->get();
+
+        return [
+            'tickets' => $this->resolver->enrichTickets($tickets->toArray()),
+            'total' => $total,
+            'page' => $page,
+            'per_page' => $perPage,
+        ];
+    }
+
+    /**
+     * Tickets by supervisor: self-assigned closed tickets created by the actor's supervisor.
+     *
+     * @return array{tickets: array<int, array<string, mixed>>, total: int, page: int, per_page: int}
+     */
+    public function listBySupervisor(int $supervisorId, int $page = 1, int $perPage = 20): array
+    {
+        if ($supervisorId <= 0) {
+            return ['tickets' => [], 'total' => 0, 'page' => $page, 'per_page' => $perPage];
+        }
+
+        $query = Ticket::query()
+            ->where('created_uid', $supervisorId)
+            ->whereColumn('created_uid', 'assigned_uid')
+            ->where('state_id', 2);
+
+        $total = (int) $query->count();
+        $tickets = $query->orderByDesc('id')->skip(($page - 1) * $perPage)->take($perPage)->get();
+
+        return [
+            'tickets' => $this->resolver->enrichTickets($tickets->toArray()),
+            'total' => $total,
+            'page' => $page,
+            'per_page' => $perPage,
+        ];
+    }
+
+    /**
      * Dashboard card metrics (D46–D49). Uses aggregate SQL only.
      *
      * @return array<string, int|float|null|array<int, array<string, mixed>>>
