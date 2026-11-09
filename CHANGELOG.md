@@ -103,6 +103,19 @@ Versions start at `0.1.0` when the scaffold is ready.
 - **Live monitoring (D51).**
   - Updated `MonitoringPage.vue` to refresh data in place on a 5-second interval, avoid overlapping requests, and pause/resume polling on tab visibility and window focus.
 
+- **Ticket list scopes (Phase 7 progress).**
+  - Added `assigned_to_me` and `unassigned` API scopes with server-paginated DataTable pages and navigation entries.
+  - Added a retired `assigned_to_group` page with a clear explanation (teams retired).
+
+### Changed
+
+- **Ticket creation source (D10/D11 hardening).**
+  - Staff `POST /tickets` now infers staff/end-user source from ACL instead of always treating the request as staff.
+
+### Added (tests)
+
+- Added `tests/Unit/SecureHeadersTest.php` and `tests/Feature/RouteSecurityTest.php` for baseline security headers and ACL/auth route middleware coverage.
+
 - **Attachment validation hardening.**
   - Tightened upload content-type checks using detected MIME and stored the detected MIME when available.
 

@@ -309,9 +309,9 @@ Exit check: AT-01 to AT-06 pass against a staging copy.
 - [ ] Build a `?p=<name>` compatibility adapter.
 - [ ] Path allowlist: reject traversal and unregistered files (D65).
 - [ ] Direct legacy file paths return 404 or route through middleware.
-- [x] Central authorization middleware: module ACL and object scope (D10, D11). Applied to admin routes and ticket read/edit/close; new modules must opt in as they are built.
+- [~] Central authorization middleware: module ACL and object scope (D10, D11). Applied to admin/reports routes and key ticket paths; route-security tests added. Full audit still needed.
 - [ ] CSRF on every state-changing request, including login and logout (D09).
-- [ ] Retired-team pages: `groups`, `add_group`, `edit_group`, `process_add_group`, `process_edit_group`, `process_delete_group`, `assigned_to_group` show "This feature is retired".
+- [~] Retired-team pages: SPA route `/tickets/assigned-to-group` shows a clear retired message; remaining legacy group/team admin pages still need retirement handling if exposed.
 - [ ] `change_password` routes to the real `?p=user_options` flow (C7).
 - [ ] Security headers: CSP, nosniff, Referrer-Policy, frame denial, HSTS in production.
 - [ ] Input validation with typed schemas. No `extract()`.
@@ -431,13 +431,13 @@ Exit check: AT-33 to AT-37 pass.
 - [ ] All 13 list views with legacy filters and order (PROMPT §20).
 - [x] Fix `all_closed_tickets_by_you` (D52) — `scope=closed_by_me` and `/tickets/closed-by-me`.
 - [ ] `LEFT JOIN` everywhere (D56).
-- [~] Explicit Requester and Location labels (D61) — added in all-tickets search results; audit other list/detail views.
+- [~] Explicit Requester and Location labels (D61) — added in all-tickets, assigned/unassigned, closed-by-me, and monitoring; audit remaining list/detail views.
 - [~] Search: parameterized filters and 500 cap in search mode (D17) — core fields added; verify full legacy field/semantics parity.
 - [~] Real print and reset (D59) — reset clears filters and reloads; print uses browser print.
 - [x] Search grid title `Search Results` (D60) when filters are active.
-- [ ] Detail: timeline oldest first. "Deleted user" via `LEFT JOIN` (D63).
-- [ ] `#ticket=<id>` deep links.
-- [ ] Retire `assigned_to_group` with a clear page.
+- [~] "Deleted user"/missing-reference handling (D63/D56) — batch reference resolution avoids INNER JOIN data loss in core ticket lists; detail logs show Deleted user/System; audit remaining views and exact fallback labels.
+- [x] `#ticket=<id>` deep links.
+- [x] Retire `assigned_to_group` with a clear page (`/tickets/assigned-to-group`). Added high-traffic `assigned_to_me` and `unassigned` scopes/pages.
 
 Exit check: AT-27 to AT-32 pass.
 
@@ -633,8 +633,8 @@ Status values: `Not started`, `In progress`, `Decided` (decision recorded, code 
 | D07 | High | Session | 3 | Not started | Regenerate, cookie flags, timeouts. |
 | D08 | High | Auth/PIS | 3 | Not started | One explicit sync. No recursion. See C6. |
 | D09 | High | CSRF | 4 | Not started | Token on every mutation, including login and logout. |
-| D10 | Critical | Authz | 4 | Partial | Module ACL and object scope on every getter. Admin routes and ticket read/edit/close enforced; remaining modules as built. |
-| D11 | Critical | Authz | 4 | Not started | Policy plus CSRF plus ownership. |
+| D10 | Critical | Authz | 4 | Partial (2026-11-09) | `EnsureAcl`/route ACL on admin and reports; route-security tests added; ticket create infers staff source from ACL. Full module/action audit still needed. |
+| D11 | Critical | Authz | 4 | Partial (2026-11-09) | Key ticket paths enforce object scope; by-subordinates/pending-review scoped to supervisor subordinates. Full policy/ownership/CSRF audit still needed. |
 | D12 | Critical | Authz | 9 | Not started | Counter and `reports.php` require ACL ≥ 3. |
 | D13 | Critical | Approval | 5 | Not started | Actor, state, self-created rule. |
 | D14 | Critical | Approval | 5 | Not started | Validate whole batch. Atomic. |
@@ -679,14 +679,14 @@ Status values: `Not started`, `In progress`, `Decided` (decision recorded, code 
 | D53 | High | Data | 2 | Decided | Keep `assigned_gid`. Add `units_count`. |
 | D54 | Medium | Counter | 9 | Not started | Fix both reports. Inclusive days. |
 | D55 | Medium | End user | 7 | Not started | Valid location or "Unspecified". |
-| D56 | High | Lists | 7 | Not started | `LEFT JOIN` everywhere. |
+| D56 | High | Lists | 7 | Partial (2026-11-09) | Batch reference resolution avoids INNER JOIN data loss in core ticket lists; audit remaining queries/views. |
 | D57 | High | Email | 10 | Not started | Quarantine unknown senders. |
 | D58 | High | Email | 10 | Not started | CLI only. Transaction. Delete after commit. |
-| D59 | Low | Search | 7 | Not started | Real print and reset. |
-| D60 | Low | UI | 7 | Not started | Filter enabled modules. Fix the title. |
-| D61 | Low | UI | 7 | Not started | Explicit requester and location labels. |
+| D59 | Low | Search | 7 | Partial (2026-11-09) | Reset reloads and print uses browser print; verify export/fidelity against legacy expectations. |
+| D60 | Low | UI | 7 | Partial (2026-11-09) | “Search Results” title added when filters active; module `enabled` filtering still needs audit. |
+| D61 | Low | UI | 7 | Partial (2026-11-09) | Explicit labels added in key list/monitoring views; audit remaining views. |
 | D62 | Low | Lists | 7 | Open decision | Rename or restrict to `created_uid`. Ask Dave. |
-| D63 | Medium | Logs | 7 | Not started | `LEFT JOIN`. Show "Deleted user". |
+| D63 | Medium | Logs | 7 | Partial (2026-11-09) | Detail logs show Deleted user/System; batch resolver handles missing refs; audit remaining views/queries. |
 | D64 | Medium | Audit | 6 | Not started | Append-only `admin_audit`. |
 | D65 | High | Routing | 4 | Not started | Allowlist resolved paths. |
 | D66 | High | Data | 2 | Not started | Validation, soft deletes, indexes. FKs on new tables only. |
