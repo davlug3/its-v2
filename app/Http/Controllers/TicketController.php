@@ -6,6 +6,7 @@ use App\Models\Attachement;
 use App\Models\Ticket;
 use App\Models\TicketLog;
 use App\Models\UserProfile;
+use App\Services\ReferenceResolver;
 use App\Services\SupervisorService;
 use App\Services\TicketService;
 use Illuminate\Http\JsonResponse;
@@ -20,6 +21,7 @@ class TicketController extends Controller
     public function __construct(
         private TicketService $tickets,
         private SupervisorService $supervisors,
+        private ReferenceResolver $resolver,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -200,7 +202,10 @@ class TicketController extends Controller
             return response()->json(['message' => 'Forbidden.'], 403);
         }
 
-        return response()->json($ticket);
+        $data = $ticket->toArray();
+        $enriched = $this->resolver->enrichTickets([$data]);
+
+        return response()->json($enriched[0] ?? $data);
     }
 
     public function logs(Request $request, int $id): JsonResponse
@@ -481,10 +486,22 @@ class TicketController extends Controller
         }
 
         $validated = $request->validate([
-            'file' => ['required', 'file', 'max:10240', 'mimes:pdf,jpg,jpeg,png,gif,doc,docx,xls,xlsx,txt,zip'],
+            'file' => ['required', 'file', 'max:25600', 'mimes:pdf,jpg,jpeg,png,gif,doc,docx,xls,xlsx,txt,zip'],
         ]);
 
         $file = $validated['file'];
+
+        // Basic magic-byte guard for common types.
+        $allowedMimes = [
+            'application/pdf', 'image/jpeg', 'image/png', 'image/gif',
+            'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'text/plain', 'application/zip', 'application/x-zip-compressed',
+        ];
+        $detected = (string) $file->getMimeType();
+        if ($detected !== '' && ! in_array($detected, $allowedMimes, true)) {
+            return response()->json(['message' => 'File type not allowed.'], 422);
+        }
 
         $directory = 'attachments/'.$id;
         $storedName = (string) Str::uuid().'.'.$file->getClientOriginalExtension();
@@ -537,7 +554,9 @@ class TicketController extends Controller
             return response()->json(['message' => 'File missing on disk.'], 404);
         }
 
-        return Storage::disk('local')->download($attachment->storage_path, $attachment->file_name_org);
+        return Storage::disk('local')->download($attachment->storage_path, $attachment->file_name_org, [
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
     }
 
     public function deleteAttachment(Request $request, int $id, int $attachmentId): JsonResponse

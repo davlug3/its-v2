@@ -8,7 +8,10 @@ use Illuminate\Support\Facades\DB;
 
 class TicketService
 {
-    public function __construct(private NotificationService $notifications) {}
+    public function __construct(
+        private NotificationService $notifications,
+        private ReferenceResolver $resolver,
+    ) {}
 
     /**
      * Create a ticket.
@@ -224,7 +227,7 @@ class TicketService
             ->get();
 
         return [
-            'tickets' => $tickets->toArray(),
+            'tickets' => $this->resolver->enrichTickets($tickets->toArray()),
             'total' => $total,
             'page' => $page,
             'per_page' => $perPage,
@@ -284,7 +287,7 @@ class TicketService
             ->get();
 
         return [
-            'tickets' => $tickets->toArray(),
+            'tickets' => $this->resolver->enrichTickets($tickets->toArray()),
             'total' => $total,
             'page' => $page,
             'per_page' => $perPage,
@@ -357,11 +360,24 @@ class TicketService
      */
     public function logs(int $ticketId): array
     {
-        return TicketLog::where('ticket_id', $ticketId)
+        $logs = TicketLog::where('ticket_id', $ticketId)
             ->orderBy('date')
             ->orderBy('id')
             ->get()
             ->toArray();
+
+        $userIds = array_values(array_unique(array_filter(array_map(
+            fn (array $l) => (int) ($l['user_id'] ?? 0),
+            $logs,
+        ))));
+        $names = $this->resolver->userNames($userIds);
+
+        return array_map(function (array $l) use ($names): array {
+            $uid = (int) ($l['user_id'] ?? 0);
+            $l['user_name'] = $uid > 0 ? ($names[$uid] ?? null) : null;
+
+            return $l;
+        }, $logs);
     }
 
     /**
@@ -825,7 +841,7 @@ class TicketService
             ->get();
 
         return [
-            'tickets' => $tickets->toArray(),
+            'tickets' => $this->resolver->enrichTickets($tickets->toArray()),
             'total' => $total,
             'page' => $page,
             'per_page' => $perPage,

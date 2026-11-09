@@ -55,6 +55,7 @@ Route::middleware(['auth:api', 'csrf', 'idempotency'])->group(function () {
     Route::prefix('admin')->group(function () {
         Route::middleware('acl:3')->group(function () {
             Route::get('/users', [UserController::class, 'index']);
+            Route::get('/users/options', [UserController::class, 'options']);
             Route::patch('/users/{id}/access', [UserController::class, 'updateAccess']);
             Route::patch('/users/{id}/supervisor', [UserController::class, 'updateSupervisor']);
             Route::post('/users/{id}/reset-password', [UserController::class, 'resetPassword']);

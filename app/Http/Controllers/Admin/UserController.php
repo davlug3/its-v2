@@ -12,6 +12,59 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
+    /**
+     * Lightweight user search for searchable selects (lazy).
+     */
+    public function options(Request $request): JsonResponse
+    {
+        $search = trim((string) $request->query('q', $request->query('search', '')));
+        $assignable = filter_var($request->query('assignable', false), FILTER_VALIDATE_BOOLEAN);
+        $limit = min(50, max(1, (int) $request->query('limit', 20)));
+
+        $query = DB::connection('payroll')
+            ->table('user as u')
+            ->join('payroll as p', 'u.id', '=', 'p.id')
+            ->where('p.status', 'A')
+            ->select(['u.id', 'u.username', 'p.name', 'p.mname', 'p.lname']);
+
+        if ($search !== '') {
+            $query->where(function ($q) use ($search): void {
+                $q->where('u.username', 'like', '%'.$search.'%')
+                    ->orWhere('p.name', 'like', '%'.$search.'%')
+                    ->orWhere('p.mname', 'like', '%'.$search.'%')
+                    ->orWhere('p.lname', 'like', '%'.$search.'%');
+            });
+        }
+
+        if ($assignable) {
+            $ids = DB::connection('mysql')
+                ->table('users')
+                ->whereIn('acl_id', [3, 9])
+                ->pluck('id')
+                ->all();
+
+            if ($ids === []) {
+                return response()->json([]);
+            }
+
+            $query->whereIn('u.id', $ids);
+        }
+
+        $rows = $query->orderBy('p.lname')->orderBy('p.name')->limit($limit)->get();
+
+        $data = array_map(function (object $row): array {
+            $name = trim(preg_replace('/\s+/', ' ', (string) $row->name.' '.(string) ($row->mname ?? '').' '.(string) $row->lname) ?? '');
+
+            return [
+                'id' => (int) $row->id,
+                'username' => (string) $row->username,
+                'label' => $name !== '' ? $name.' ('.$row->username.')' : (string) $row->username,
+            ];
+        }, $rows->all());
+
+        return response()->json($data);
+    }
+
     public function index(Request $request): JsonResponse
     {
         $search = trim((string) $request->query('search', ''));
