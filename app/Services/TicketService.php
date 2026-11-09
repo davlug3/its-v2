@@ -438,31 +438,115 @@ class TicketService
     }
 
     /**
-     * @return array{open: int, closed: int, total: int, recent: array<int, array<string, mixed>>}
+     * Dashboard card metrics (D46–D49). Uses aggregate SQL only.
+     *
+     * @return array<string, int|float|null|array<int, array<string, mixed>>>
      */
-    public function summaryForUser(int $userId): array
+    public function dashboardForUser(int $userId, int $groupId = 0): array
     {
-        $base = Ticket::query()->where(function ($q) use ($userId): void {
-            $q->where('created_uid', $userId)
-                ->orWhere('assigned_uid', $userId)
-                ->orWhere('eu_uid', $userId);
-        });
+        $tz = config('app.timezone', 'UTC');
+        $startOfToday = (int) now($tz)->startOfDay()->timestamp;
+        $endOfToday = (int) now($tz)->endOfDay()->timestamp;
+        $startOfYear = (int) now($tz)->startOfYear()->timestamp;
 
-        $total = (int) (clone $base)->count();
-        $open = (int) (clone $base)->where('state_id', 1)->count();
-        $closed = (int) (clone $base)->where('state_id', 2)->count();
+        $assignedToYou = (int) Ticket::query()
+            ->where('assigned_uid', $userId)
+            ->where('state_id', 1)
+            ->count();
 
-        $recent = (clone $base)
+        $assignedToGroup = 0;
+        if ($groupId > 0) {
+            $assignedToGroup = (int) Ticket::query()
+                ->where('assigned_gid', $groupId)
+                ->where('state_id', 1)
+                ->count();
+        }
+
+        $closedByYouToday = (int) Ticket::query()
+            ->where('resolved_uid', $userId)
+            ->where('state_id', 2)
+            ->whereBetween('resolved_date', [$startOfToday, $endOfToday])
+            ->count();
+
+        $closedByYouYtd = (int) Ticket::query()
+            ->where('resolved_uid', $userId)
+            ->where('state_id', 2)
+            ->whereBetween('resolved_date', [$startOfYear, $endOfToday])
+            ->count();
+
+        $closedByGroupToday = 0;
+        if ($groupId > 0) {
+            $memberIds = DB::table('user_profile')
+                ->where('group_id', $groupId)
+                ->pluck('user_id')
+                ->map(fn ($v) => (int) $v)
+                ->all();
+            if ($memberIds !== []) {
+                $closedByGroupToday = (int) Ticket::query()
+                    ->whereIn('resolved_uid', $memberIds)
+                    ->where('state_id', 2)
+                    ->whereBetween('resolved_date', [$startOfToday, $endOfToday])
+                    ->count();
+            }
+        }
+
+        $yourAvg = Ticket::query()
+            ->where('resolved_uid', $userId)
+            ->where('state_id', 2)
+            ->where('resolved_time', '>', 0)
+            ->where('created_time', '>', 0)
+            ->selectRaw('AVG(resolved_time - created_time) as avg_secs')
+            ->value('avg_secs');
+
+        $systemAvg = Ticket::query()
+            ->where('state_id', 2)
+            ->where('resolved_time', '>', 0)
+            ->where('created_time', '>', 0)
+            ->selectRaw('AVG(resolved_time - created_time) as avg_secs')
+            ->value('avg_secs');
+
+        $allOpenSystem = (int) Ticket::query()->where('state_id', 1)->count();
+
+        $recent = Ticket::query()
+            ->where(function ($q) use ($userId): void {
+                $q->where('created_uid', $userId)
+                    ->orWhere('assigned_uid', $userId)
+                    ->orWhere('eu_uid', $userId);
+            })
             ->orderByDesc('created_date')
             ->limit(5)
             ->get()
             ->toArray();
 
         return [
-            'open' => $open,
-            'closed' => $closed,
-            'total' => $total,
+            'assigned_to_you' => $assignedToYou,
+            'assigned_to_group' => $assignedToGroup,
+            'closed_by_you_today' => $closedByYouToday,
+            'closed_by_you_ytd' => $closedByYouYtd,
+            'closed_by_group_today' => $closedByGroupToday,
+            'your_avg_resolution_seconds' => $yourAvg !== null ? (float) $yourAvg : null,
+            'system_avg_resolution_seconds' => $systemAvg !== null ? (float) $systemAvg : null,
+            'all_open_system' => $allOpenSystem,
             'recent' => $recent,
+            'group_id' => $groupId,
+        ];
+    }
+
+    /**
+     * @deprecated Use dashboardForUser
+     *
+     * @return array{open: int, closed: int, total: int, recent: array<int, array<string, mixed>>}
+     */
+    public function summaryForUser(int $userId): array
+    {
+        $d = $this->dashboardForUser($userId, 0);
+        $recent = $d['recent'] ?? [];
+
+        return [
+            'open' => (int) ($d['assigned_to_you'] ?? 0),
+            'closed' => (int) ($d['closed_by_you_ytd'] ?? 0),
+            'total' => 0,
+            'recent' => is_array($recent) ? $recent : [],
         ];
     }
 

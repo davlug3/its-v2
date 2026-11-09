@@ -27,8 +27,10 @@ class TicketController extends Controller
     public function summary(Request $request): JsonResponse
     {
         $user = $request->user();
+        $profile = UserProfile::where('user_id', $user->id)->first();
+        $groupId = $profile !== null ? (int) ($profile->group_id ?? 0) : 0;
 
-        return response()->json($this->tickets->summaryForUser((int) $user->id));
+        return response()->json($this->tickets->dashboardForUser((int) $user->id, $groupId));
     }
 
     public function index(Request $request): JsonResponse

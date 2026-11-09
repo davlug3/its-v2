@@ -6,7 +6,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import PageHeader from '@/components/common/PageHeader.vue';
-import StatCard from '@/components/common/StatCard.vue';
 import { Skeleton } from '@/components/ui/skeleton';
 import { api } from '@/services/api';
 import { useAuthStore } from '@/stores/auth';
@@ -19,24 +18,59 @@ interface Ticket {
 }
 
 interface DashboardSummary {
-    open: number;
-    closed: number;
-    total: number;
+    assigned_to_you: number;
+    assigned_to_group: number;
+    closed_by_you_today: number;
+    closed_by_you_ytd: number;
+    closed_by_group_today: number;
+    your_avg_resolution_seconds: number | null;
+    system_avg_resolution_seconds: number | null;
+    all_open_system: number;
     recent: Ticket[];
+    group_id?: number;
 }
 
 const auth = useAuthStore();
 
-const summary = ref<DashboardSummary>({ open: 0, closed: 0, total: 0, recent: [] });
+const summary = ref<DashboardSummary>({
+    assigned_to_you: 0,
+    assigned_to_group: 0,
+    closed_by_you_today: 0,
+    closed_by_you_ytd: 0,
+    closed_by_group_today: 0,
+    your_avg_resolution_seconds: null,
+    system_avg_resolution_seconds: null,
+    all_open_system: 0,
+    recent: [],
+});
 const loading = ref(true);
 const error = ref<string | null>(null);
 
-const counts = computed(() => ({ open: summary.value.open, closed: summary.value.closed }));
 const recent = computed(() => summary.value.recent ?? []);
 
 const stateLabel = (id: number): string => (id === 1 ? 'Open' : id === 2 ? 'Closed' : `State ${id}`);
 
 const formatDate = (ts: number): string => (ts ? new Date(ts * 1000).toLocaleDateString() : '—');
+
+const formatDuration = (seconds: number | null): string => {
+    if (seconds === null || !Number.isFinite(seconds) || seconds < 0) return '—';
+    const s = Math.floor(seconds);
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = s % 60;
+    return `${h}h ${m}m ${sec}s`;
+};
+
+const cards = computed(() => [
+    { title: 'Assigned', subtitle: 'To you (open)', value: String(summary.value.assigned_to_you) },
+    { title: 'Assigned', subtitle: 'To group (open)', value: String(summary.value.assigned_to_group) },
+    { title: 'Closed by you', subtitle: 'Today', value: String(summary.value.closed_by_you_today) },
+    { title: 'Closed by you', subtitle: 'This year (YTD)', value: String(summary.value.closed_by_you_ytd) },
+    { title: 'Closed by', subtitle: 'Group today', value: String(summary.value.closed_by_group_today) },
+    { title: 'Your average', subtitle: 'Resolution time', value: formatDuration(summary.value.your_avg_resolution_seconds) },
+    { title: 'Average close time', subtitle: 'Entire system', value: formatDuration(summary.value.system_avg_resolution_seconds) },
+    { title: 'All open tickets', subtitle: 'Entire system', value: String(summary.value.all_open_system) },
+]);
 
 onMounted(async () => {
     try {
@@ -59,9 +93,21 @@ onMounted(async () => {
 
         <p v-if="error" class="text-sm text-destructive">{{ error }}</p>
 
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <StatCard label="Open" :value="counts.open" :loading="loading" />
-            <StatCard label="Closed" :value="counts.closed" :loading="loading" />
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <template v-if="loading">
+                <Skeleton v-for="i in 8" :key="i" class="h-24 w-full" />
+            </template>
+            <template v-else>
+                <Card v-for="card in cards" :key="`${card.title}-${card.subtitle}`">
+                    <CardHeader class="pb-2">
+                        <CardDescription class="text-xs">{{ card.title }}</CardDescription>
+                        <CardTitle class="text-2xl">{{ card.value }}</CardTitle>
+                    </CardHeader>
+                    <CardContent class="pt-0">
+                        <p class="text-xs text-muted-foreground">{{ card.subtitle }}</p>
+                    </CardContent>
+                </Card>
+            </template>
         </div>
 
         <Card>
@@ -91,7 +137,7 @@ onMounted(async () => {
                         </div>
                     </li>
                 </ul>
-                <p class="mt-3 text-xs text-muted-foreground">{{ summary.total }} tickets involve you.</p>
+                <p class="mt-3 text-xs text-muted-foreground">Recent tickets involving you.</p>
             </CardContent>
         </Card>
     </div>
