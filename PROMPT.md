@@ -230,8 +230,8 @@ The legacy data/process files are directly reachable and mostly check only `isse
 | View a specific ticket | ACL >= 2, or ACL 1 when the user is `created_uid` or `eu_uid` |
 | Create a staff ticket | ACL >= 2 |
 | Create an end-user ticket | any authenticated user (normally ACL 1) |
-| Edit ticket metadata / add a note | ACL >= 2, and the user is the assignee, creator, a member of the assigned group, or ACL >= 3 |
-| Close a ticket | ACL >= 2 and (assignee, creator, assigned group member, or ACL >= 3), or ACL 1 when the user is the creator |
+| Edit ticket metadata / add a note | ACL >= 2, and the user is the assignee or creator, or ACL >= 3 |
+| Close a ticket | ACL >= 2 and (assignee, creator, or ACL >= 3). End users (ACL 1) MUST NOT close tickets. |
 | Approve / disapprove / undo | ACL 9, or the actor is the ticket creator’s direct/indirect supervisor; ticket must be closed, self-created, and self-assigned |
 | Batch approve / disapprove | same as individual approval, for every selected ticket |
 | View `tickets_by_subordinates` | ACL >= 3 and the actor has at least one active subordinate (menu hides it otherwise) |
@@ -564,7 +564,7 @@ Also configurable: approved category/group/location labels, ticket list page siz
 
 - **Open** (`state_id = 1`): visible in open lists, editable, closable.
 - **Closed** (`state_id = 2`): visible in closed lists, read-only once `approved_by_supervisor != 0`; may still be approved/disapproved/undone.
-- **No reopen workflow exists.** Do not add one unless the data owner explicitly requests it.
+- **Reopen** is a supported staff-only transition. A non-empty reason is mandatory and permanently recorded. Reopening clears current resolution fields, resets approval to pending (`0`), and preserves all prior closure/approval history.
 
 ### 12.2 Transitions
 
@@ -574,7 +574,8 @@ Also configurable: approved category/group/location labels, ticket list page siz
 | — | End-user create | Open, approval 0 | ACL 1 (or any authenticated user using the EU form); required fields valid; not a duplicate within debounce | No log |
 | — | Email create | Open, approval 0 | Known sender; see §31 | No log |
 | Open | Edit note/metadata | Open | Assignee required; category != 1; not closed+approved | Note text and one log per changed field |
-| Open | Close | Closed | Authorized; id exists | `Ticket Closed.` + survey link |
+| Open | Close | Closed | Authorized staff only; id exists | `Ticket Closed.` + survey link |
+| Closed | Reopen | Open, approval 0 | Authorized staff; non-empty reason; transaction succeeds | `Ticket Reopened. Reason: <reason>` |
 | Closed, approval 0/2 | Approve | Closed, approval 1 | Actor is supervisor/admin; ticket is closed self-assigned | `Supervisor approved ticket.` + optional remarks |
 | Closed, approval 0/1 | Disapprove | Closed, approval 2 | Actor is supervisor/admin; remarks required (FIX D41) | `Supervisor disapproved ticket. Remarks: <remarks>` |
 | Closed, approval 1 | Undo | Closed, approval 0 | Actor is supervisor/admin | `Supervisor undid approval.` |
@@ -653,14 +654,14 @@ Legacy checks, in order:
 
 Legacy inserts one `tickets` row with:
 
-- `subject`, `issue` (escaped), `preview` (plain text derived from `issue`), `location_id`, `category_id`, `state_id = 1`, `created_uid = session user`, `created_date`, `created_time`, `eu_uid`, `assigned_uid`, `assigned_gid = group_id` (default 1).
+- `subject`, `issue` (escaped), `preview` (plain text derived from `issue`), `location_id`, `category_id`, `state_id = 1`, `created_uid = session user`, `created_date`, `created_time`, `eu_uid`, `assigned_uid`, `assigned_gid = 0`, and `units_count` when supplied.
 - `assigned_date`/`assigned_time` remain `0`; `resolved_*` remain `0`; `approved_by_supervisor` defaults `0`.
 - No `place`/`contact` (staff form has no fields).
 - `preview` = `strip_tags(htmlspecialchars_decode(stripslashes($issue)))`, then SQL-escaped.
 
 Then, in the same request:
 
-- If `group_id > 0` (always true because of the default), insert a log row `No. of units/items/persons: <groups.name>`.
+- Do not write a group log. `assigned_gid` remains the legacy group reference and new staff-created rows use `0` (D27/D53).
 - If `assigned_uid > 0`, insert a log row `Assigned to user: <fn ln>` using the assignee’s display name.
 - There is **no** “Ticket Created” log row and **no** notification row.
 
@@ -798,7 +799,7 @@ Editable (when the form is shown):
 | `eu_id` | current `eu_uid` | All users except `id = 1`, ordered by name. |
 | `location_id` | current | `locations.type = 1`, current first. |
 | `category_id` | current | `categories.id != current AND status = 1`; category 1 is rejected server-side. |
-| `group_id` | current `assigned_gid` | All `groups`, ordered by ID, labeled **“No. of units/items/persons”**. Always renders, including group 1. |
+| `units_count` | current `units_count` | Numeric units/items/persons value. Reads and writes `tickets.units_count`; never reinterpret `assigned_gid`. |
 | `assigned_uid` | current | `0` = No User Assignment plus staff users (`acl_id >= 2 AND id != 1`). Server requires a nonzero value. |
 
 ### Validation (legacy order)
@@ -829,7 +830,7 @@ For each changed field, legacy updates one column and inserts one log row. It do
 - End user changed → `UPDATE tickets SET eu_uid = ...`; log `End User Changed: <fn ln>.`
 - Location changed → `UPDATE tickets SET location_id = ...`; log `Location changed to: <name>.`
 - Category changed → `UPDATE tickets SET category_id = ...`; log `Category changed to: <category>.`
-- Group/units changed → `UPDATE tickets SET assigned_gid = ...`; log `No of units/items/persons assigned was changed from <old> to <new>` (no trailing period).
+- Units changed → `UPDATE tickets SET units_count = ...`; log `No of units/items/persons assigned was changed from <old> to <new>` (no trailing period). `assigned_gid` is not changed by this field.
 - Assignee changed → `UPDATE tickets SET assigned_uid = ...`; log `User assignment has changed to <strong><fn ln></strong>`.
 - No update to `assigned_date`/`assigned_time`; they stay `0` unless set elsewhere.
 - No notification.
@@ -859,10 +860,10 @@ Mark a ticket resolved, record who closed it and when, log the closure, and give
 
 ### Entry point and visibility
 
-- The **Close Ticket** button is rendered only when `state_id = 1` and only inside the staff edit form.
+- The **Close Ticket** button is rendered only when `state_id = 1` and only inside the staff edit form. End users never receive a close action in the UI or API.
 - The button sets a hidden `btn_mode = close`, submits the whole edit form to `?p=process_close_ticket&id=<id>`, and asks “The ticket will be closed. Are you sure?”.
 - The endpoint accepts any POST with `submit` set and any logged-in session. It ignores all other form fields, including the note.
-- End users have no close button; direct access is still possible in legacy (FIX D37).
+- End users cannot close tickets through either the UI or API (FIX D37).
 
 ### Fields
 
@@ -891,6 +892,16 @@ The `resolution` column is **never** written. `with_survey` is hardcoded `false`
 - Closing a ticket assigned to someone else auto-approves it even if the creator is an end user. Preserve.
 - The log contains a stray `</p>` and stores the survey URL as HTML. Target should keep the visible text and link but may fix the malformed tag; use an idempotency key instead of exact-string matching.
 - The survey URL is an internal HTTP address; make it configurable and do not expose it to unauthorized users.
+
+### Reopen action (approved workflow)
+
+- Staff-only action; end users cannot reopen.
+- Require a trimmed, non-empty reason (maximum 2,000 characters).
+- In one transaction, lock the ticket, verify it is closed and the actor is authorized, set `state_id = 1`, set `approved_by_supervisor = 0`, and clear current `resolved_uid`, `resolved_date`, and `resolved_time` to `0`.
+- Append `Ticket Reopened. Reason: <reason>` to `tickets_log` and a structured audit event containing ticket ID, actor ID, timestamp, and reason.
+- Preserve prior closure and approval log entries; never erase historical events.
+- Notify the assigned staff member and relevant ticket participants using recipient-scoped in-app notifications.
+- Reject a reopen request without a reason or against an already-open ticket.
 
 ### Rebuild decision
 
