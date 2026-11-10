@@ -11,21 +11,18 @@ class PayrollAccountStatusTest extends TestCase
 {
     public function test_only_status_a_is_active(): void
     {
-        $this->assertStatusIsActive('A', true);
-        $this->assertStatusIsActive('I', false);
-        $this->assertStatusIsActive(null, false);
-    }
-
-    private function assertStatusIsActive(?string $status, bool $expected): void
-    {
         $query = Mockery::mock();
         $connection = Mockery::mock();
 
-        DB::shouldReceive('connection')->once()->with('payroll')->andReturn($connection);
-        $connection->shouldReceive('table')->once()->with('payroll')->andReturn($query);
-        $query->shouldReceive('where')->once()->with('id', 123)->andReturnSelf();
-        $query->shouldReceive('value')->once()->with('status')->andReturn($status);
+        DB::shouldReceive('connection')->times(3)->with('payroll')->andReturn($connection);
+        $connection->shouldReceive('table')->times(3)->with('payroll')->andReturn($query);
+        $query->shouldReceive('where')->times(3)->with('id', 123)->andReturnSelf();
+        $query->shouldReceive('value')->times(3)->with('status')->andReturn('A', 'I', null);
 
-        $this->assertSame($expected, app(PayrollAccountStatus::class)->isActive(123));
+        $accounts = app(PayrollAccountStatus::class);
+
+        $this->assertTrue($accounts->isActive(123));
+        $this->assertFalse($accounts->isActive(123));
+        $this->assertFalse($accounts->isActive(123));
     }
 }
