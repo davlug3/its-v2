@@ -377,7 +377,7 @@ Exit check: every `?p=` alias resolves. Unknown module gives 404. No path traver
 - [ ] Keep JSON shape and `success` count.
 - [ ] Cap batch size. CSRF.
 
-Exit check: AT-07 to AT-26 pass.
+Exit check: AT-07 to AT-26 and AT-55 to AT-65 pass.
 
 ---
 
@@ -562,6 +562,7 @@ Exit check: all quality gates in PROMPT §40 pass.
 | Reports and email | AT-38–AT-43 | 9, 10 |
 | Security regression | AT-44–AT-50 | 4, 5, 11 |
 | Data preservation | AT-51–AT-54 | 2, 13 |
+| Ticket lifecycle extensions | AT-55–AT-65 | 5 |
 
 ---
 
@@ -717,3 +718,20 @@ Summary: 78 defects. 3 decided, 2 open decisions, 73 not started.
 | 2026-11-04 | UI library changed from PrimeVue to shadcn-vue + Reka UI. Vue Router set to 5.x. Forms use vee-validate. |
 | 2026-11-04 | Phase 1 scaffold complete. Laravel 13, Vue 3.5 + Vite 8 + TS 5.9.3, Tailwind 4, shadcn-vue + Reka UI, Yup + vee-validate, JWT, Docker Compose. All local checks pass. |
 | 2026-11-04 | Phase 2 database complete. 8 additive migrations, 4 new tables, 17 Eloquent models. Legacy tables untouched. |
+
+
+### Ticket lifecycle acceptance tests (approved 2026-11-10)
+
+| ID | Scenario | Expected result |
+|---|---|---|
+| AT-55 | Units and legacy group reference | `units_count` changes independently; `assigned_gid` is not repurposed |
+| AT-56 | End user attempts to close through UI and API | No UI action; API returns 403; ticket remains open |
+| AT-57 | Unrelated group membership | Group membership alone grants no ticket permission |
+| AT-58 | Assignee changes A → B | Audit records old/new assignee, actor, timestamp; B is notified and A is notified of removal |
+| AT-59 | Edit closed ticket pending review | Authorized staff can edit; changes are audited; approval remains pending |
+| AT-60 | Edit approved/disapproved closed ticket | Mutation is rejected |
+| AT-61 | Concurrent close/approve/reopen | Only valid serialized transitions succeed; no duplicate/conflicting events |
+| AT-62 | Reopen without a reason or whitespace-only reason | Validation fails; ticket and history remain unchanged |
+| AT-63 | Authorized reopen with reason | Ticket opens, approval resets to 0, current resolver/timestamps clear, reason is logged/audited |
+| AT-64 | Unauthorized staff or end user attempts reopen | API returns 403; ticket remains unchanged |
+| AT-65 | Reopen then close again | Previous history remains; new closure has fresh resolver/timestamps and normal auto-approval |
