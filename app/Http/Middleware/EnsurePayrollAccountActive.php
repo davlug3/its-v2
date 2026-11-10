@@ -1,13 +1,13 @@
 <?php
 
-namespace App\\Http\\Middleware;
+namespace App\Http\Middleware;
 
-use App\\Services\\PayrollAccountStatus;
+use App\Services\PayrollAccountStatus;
 use Closure;
-use Illuminate\\Http\\Request;
-use Illuminate\\Support\\Facades\\Cache;
-use PHPOpenSourceSaver\\JWTAuth\\Facades\\JWTAuth;
-use Symfony\\Component\\HttpFoundation\\Response;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
+use Symfony\Component\HttpFoundation\Response;
 
 class EnsurePayrollAccountActive
 {
@@ -26,7 +26,7 @@ class EnsurePayrollAccountActive
                 try {
                     JWTAuth::parseToken();
                     JWTAuth::invalidate();
-                } catch (\\Throwable $e) {
+                } catch (\Throwable $e) {
                     // The request is denied even if token blacklisting fails.
                 }
             }
