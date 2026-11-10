@@ -603,7 +603,22 @@ class TicketService
      *
      * @return array<string, int|float|null|array<int, array<string, mixed>>>
      */
-    public function dashboardForUser(int $userId, int $groupId = 0): array
+    public function dashboardForUser(int $userId, int $groupId = 0, int $acl = 1, int $departmentId = 0): array
+    {
+        // Regular users only see tickets by their own department and by them.
+        if ($acl === 1) {
+            return $this->dashboardForRegularUser($userId, $departmentId);
+        }
+
+        return $this->dashboardForStaff($userId, $groupId);
+    }
+
+    /**
+     * Staff dashboard metrics (existing behavior).
+     *
+     * @return array<string, int|float|null|array<int, array<string, mixed>>>
+     */
+    private function dashboardForStaff(int $userId, int $groupId = 0): array
     {
         $tz = config('app.timezone', 'UTC');
         $startOfToday = (int) now($tz)->startOfDay()->timestamp;
@@ -690,6 +705,82 @@ class TicketService
             'all_open_system' => $allOpenSystem,
             'recent' => $recent,
             'group_id' => $groupId,
+        ];
+    }
+
+    /**
+     * Regular-user dashboard: tickets by the user's department and by the user.
+     *
+     * @return array<string, int|string|null|array{total: int, open: int, closed: int}|array<int, array<string, mixed>>>
+     */
+    private function dashboardForRegularUser(int $userId, int $departmentId): array
+    {
+        $departmentName = null;
+        if ($departmentId > 0) {
+            $row = DB::connection('payroll')
+                ->table('department')
+                ->where('id', $departmentId)
+                ->value('department');
+            $departmentName = $row !== null ? (string) $row : null;
+        }
+
+        $byDepartment = $this->ticketCountsByLocation($departmentId);
+        $byMe = $this->ticketCountsByUserInvolvement($userId);
+
+        $recent = Ticket::query()
+            ->where(function ($q) use ($userId): void {
+                $q->where('created_uid', $userId)
+                    ->orWhere('assigned_uid', $userId)
+                    ->orWhere('resolved_uid', $userId)
+                    ->orWhere('eu_uid', $userId);
+            })
+            ->orderByDesc('created_date')
+            ->limit(5)
+            ->get()
+            ->toArray();
+
+        return [
+            'department_id' => $departmentId,
+            'department_name' => $departmentName,
+            'by_department' => $byDepartment,
+            'by_me' => $byMe,
+            'recent' => $recent,
+            'group_id' => 0,
+        ];
+    }
+
+    /**
+     * @return array{total: int, open: int, closed: int}
+     */
+    private function ticketCountsByLocation(int $locationId): array
+    {
+        if ($locationId <= 0) {
+            return ['total' => 0, 'open' => 0, 'closed' => 0];
+        }
+
+        return [
+            'total' => (int) Ticket::query()->where('location_id', $locationId)->count(),
+            'open' => (int) Ticket::query()->where('location_id', $locationId)->where('state_id', 1)->count(),
+            'closed' => (int) Ticket::query()->where('location_id', $locationId)->where('state_id', 2)->count(),
+        ];
+    }
+
+    /**
+     * @return array{total: int, open: int, closed: int}
+     */
+    private function ticketCountsByUserInvolvement(int $userId): array
+    {
+        $base = Ticket::query()->where(function ($q) use ($userId): void {
+            $q->where('created_uid', $userId)
+                ->orWhere('assigned_uid', $userId)
+                ->orWhere('resolved_uid', $userId)
+                ->orWhere('eu_uid', $userId);
+        });
+
+        return [
+            'total' => (int) $base->count(),
+            'open' => (int) clone $base->where('state_id', 1)->count(),
+            'closed' => (int) clone $base->where('state_id', 2)->count(),
         ];
     }
 

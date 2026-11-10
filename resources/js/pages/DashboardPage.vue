@@ -17,6 +17,12 @@ interface Ticket {
     created_date: number;
 }
 
+interface TicketCount {
+    total: number;
+    open: number;
+    closed: number;
+}
+
 interface DashboardSummary {
     assigned_to_you: number;
     assigned_to_group: number;
@@ -28,6 +34,10 @@ interface DashboardSummary {
     all_open_system: number;
     recent: Ticket[];
     group_id?: number;
+    department_id?: number;
+    department_name?: string | null;
+    by_department?: TicketCount;
+    by_me?: TicketCount;
 }
 
 const auth = useAuthStore();
@@ -47,6 +57,7 @@ const loading = ref(true);
 const error = ref<string | null>(null);
 
 const recent = computed(() => summary.value.recent ?? []);
+const isRegularUser = computed(() => (auth.user?.acl ?? 1) === 1);
 
 const stateLabel = (id: number): string => (id === 1 ? 'Open' : id === 2 ? 'Closed' : `State ${id}`);
 
@@ -61,7 +72,7 @@ const formatDuration = (seconds: number | null): string => {
     return `${h}h ${m}m ${sec}s`;
 };
 
-const cards = computed(() => [
+const staffCards = computed(() => [
     { title: 'Assigned', subtitle: 'To you (open)', value: String(summary.value.assigned_to_you) },
     { title: 'Assigned', subtitle: 'To group (open)', value: String(summary.value.assigned_to_group) },
     { title: 'Closed by you', subtitle: 'Today', value: String(summary.value.closed_by_you_today) },
@@ -71,6 +82,17 @@ const cards = computed(() => [
     { title: 'Average close time', subtitle: 'Entire system', value: formatDuration(summary.value.system_avg_resolution_seconds) },
     { title: 'All open tickets', subtitle: 'Entire system', value: String(summary.value.all_open_system) },
 ]);
+
+const userCards = computed(() => {
+    const dept: TicketCount = summary.value.by_department ?? { total: 0, open: 0, closed: 0 };
+    const me: TicketCount = summary.value.by_me ?? { total: 0, open: 0, closed: 0 };
+    return [
+        { title: 'Your department', subtitle: 'Tickets', value: String(dept.total), meta: `Open: ${dept.open} · Closed: ${dept.closed}` },
+        { title: 'Your department', subtitle: 'Open', value: String(dept.open), meta: `Closed: ${dept.closed} · Total: ${dept.total}` },
+        { title: 'By you', subtitle: 'Tickets', value: String(me.total), meta: `Open: ${me.open} · Closed: ${me.closed}` },
+        { title: 'By you', subtitle: 'Open', value: String(me.open), meta: `Closed: ${me.closed} · Total: ${me.total}` },
+    ];
+});
 
 onMounted(async () => {
     try {
@@ -85,7 +107,10 @@ onMounted(async () => {
 
 <template>
     <div class="space-y-4">
-        <PageHeader title="Dashboard" :description="`Signed in as ${auth.user?.username ?? ''} (${auth.user?.fullname || '—'}).`">
+        <PageHeader
+            title="Dashboard"
+            :description="`Signed in as ${auth.user?.username ?? ''} (${auth.user?.fullname || '—'}).` + (isRegularUser && summary.department_name ? ` · Department: ${summary.department_name}` : '')"
+        >
             <template #actions>
                 <Button @click="$router.push('/tickets/new')">New ticket</Button>
             </template>
@@ -95,10 +120,22 @@ onMounted(async () => {
 
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <template v-if="loading">
-                <Skeleton v-for="i in 8" :key="i" class="h-24 w-full" />
+                <Skeleton v-for="i in 4" :key="i" class="h-24 w-full" />
+            </template>
+            <template v-else-if="isRegularUser">
+                <Card v-for="card in userCards" :key="`${card.title}-${card.subtitle}`">
+                    <CardHeader class="pb-2">
+                        <CardDescription class="text-xs">{{ card.title }}</CardDescription>
+                        <CardTitle class="text-2xl">{{ card.value }}</CardTitle>
+                    </CardHeader>
+                    <CardContent class="pt-0">
+                        <p class="text-xs text-muted-foreground">{{ card.subtitle }}</p>
+                        <p class="text-xs text-muted-foreground">{{ card.meta }}</p>
+                    </CardContent>
+                </Card>
             </template>
             <template v-else>
-                <Card v-for="card in cards" :key="`${card.title}-${card.subtitle}`">
+                <Card v-for="card in staffCards" :key="`${card.title}-${card.subtitle}`">
                     <CardHeader class="pb-2">
                         <CardDescription class="text-xs">{{ card.title }}</CardDescription>
                         <CardTitle class="text-2xl">{{ card.value }}</CardTitle>

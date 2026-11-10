@@ -29,8 +29,21 @@ class TicketController extends Controller
         $user = $request->user();
         $profile = UserProfile::where('user_id', $user->id)->first();
         $groupId = $profile !== null ? (int) ($profile->group_id ?? 0) : 0;
+        $acl = $profile !== null ? (int) ($profile->acl_id ?? 1) : 1;
 
-        return response()->json($this->tickets->dashboardForUser((int) $user->id, $groupId));
+        // Regular users are scoped to their own department (payroll.department).
+        $departmentId = 0;
+        $payrollDepartment = DB::connection('payroll')
+            ->table('payroll')
+            ->where('id', $user->id)
+            ->value('department');
+        if ($payrollDepartment !== null) {
+            $departmentId = (int) $payrollDepartment;
+        }
+
+        return response()->json(
+            $this->tickets->dashboardForUser((int) $user->id, $groupId, $acl, $departmentId),
+        );
     }
 
     public function index(Request $request): JsonResponse
