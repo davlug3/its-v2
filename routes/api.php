@@ -11,9 +11,9 @@ use App\Http\Controllers\TicketController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/auth/login', [LoginController::class, 'login']);
-Route::post('/auth/logout', [LoginController::class, 'logout'])->middleware('auth:api');
+Route::post('/auth/logout', [LoginController::class, 'logout'])->middleware(['auth:api', 'payroll.active']);
 Route::get('/auth/me', [LoginController::class, 'me'])->middleware('auth:api');
-Route::middleware(['auth:api', 'csrf', 'idempotency'])->group(function () {
+Route::middleware(['auth:api', 'payroll.active', 'csrf', 'idempotency'])->group(function () {
     Route::get('/about', [AboutController::class, 'show']);
     Route::post('/tickets', [TicketController::class, 'store']);
     Route::post('/tickets/end-user', [TicketController::class, 'endUserStore']);
