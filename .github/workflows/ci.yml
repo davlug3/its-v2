@@ -44,6 +44,17 @@ jobs:
           php artisan key:generate
           php artisan jwt:secret --force
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install frontend dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+
+      - name: Build frontend assets
+        run: npm run build
+
       - name: Check code style
         run: composer lint
 
