@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureAcl;
+use App\Http\Middleware\EnsurePayrollAccountActive;
 use App\Http\Middleware\Idempotency;
 use App\Http\Middleware\SecureHeaders;
 use App\Http\Middleware\VerifyCsrfToken;
@@ -35,6 +36,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'acl' => EnsureAcl::class,
             'csrf' => VerifyCsrfToken::class,
             'idempotency' => Idempotency::class,
+            'payroll.active' => EnsurePayrollAccountActive::class,
             'payroll.active' => EnsurePayrollAccountActive::class,
         ]);
     })
