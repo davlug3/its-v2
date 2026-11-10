@@ -13,6 +13,7 @@ import ConfirmDialog from '@/components/common/ConfirmDialog.vue';
 import SearchableSelect from '@/components/common/SearchableSelect.vue';
 import type { SelectOption } from '@/components/common/SearchableSelect.vue';
 import { api, newIdempotencyKey } from '@/services/api';
+import { passwordResetSchema, type PasswordResetInput } from '@/schemas/passwordReset';
 import { useAuthStore } from '@/stores/auth';
 
 interface AdminUser {
@@ -170,14 +171,26 @@ const submitReset = async (): Promise<void> => {
     if (resetTarget.value === null) return;
     resetSaving.value = true;
     resetError.value = null;
+    const input: PasswordResetInput = {
+        password: resetPassword.value,
+        confirm: resetConfirm.value,
+    };
+    try {
+        await passwordResetSchema.validate(input, { abortEarly: false });
+    } catch (e) {
+        const err = e as { errors?: string[] };
+        resetError.value = err.errors?.join(' ') ?? 'Please fix the errors below.';
+        resetSaving.value = false;
+        return;
+    }
     try {
         await api(
             `/admin/users/${resetTarget.value.id}/reset-password`,
             {
                 method: 'POST',
                 body: JSON.stringify({
-                    password: resetPassword.value,
-                    confirm: resetConfirm.value,
+                    password: input.password,
+                    confirm: input.confirm,
                 }),
             },
             newIdempotencyKey(),

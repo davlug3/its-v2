@@ -14,6 +14,7 @@ import SearchableSelect from '@/components/common/SearchableSelect.vue';
 import type { SelectOption } from '@/components/common/SearchableSelect.vue';
 import { Textarea } from '@/components/ui/textarea';
 import { api, getToken, newIdempotencyKey } from '@/services/api';
+import { ticketEditSchema, type TicketEditInput } from '@/schemas/ticketEdit';
 import { useAuthStore } from '@/stores/auth';
 
 interface Ticket {
@@ -152,12 +153,24 @@ const load = async (): Promise<void> => {
 const save = async (): Promise<void> => {
     saving.value = true;
     error.value = null;
+    const input: TicketEditInput = {
+        subject: subject.value,
+        issue: issue.value,
+    };
+    try {
+        await ticketEditSchema.validate(input, { abortEarly: false });
+    } catch (e) {
+        const err = e as { errors?: string[] };
+        error.value = err.errors?.join(' ') ?? 'Please fix the errors below.';
+        saving.value = false;
+        return;
+    }
     try {
         await api(
             `/tickets/${id}`,
             {
                 method: 'PUT',
-                body: JSON.stringify({ subject: subject.value.trim(), issue: issue.value.trim() }),
+                body: JSON.stringify({ subject: input.subject.trim(), issue: input.issue.trim() }),
             },
             newIdempotencyKey(),
         );

@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { api } from '@/services/api';
+import { ticketCreateSchema, type TicketCreateInput } from '@/schemas/ticketCreate';
 import SearchableSelect from '@/components/common/SearchableSelect.vue';
 
 interface Category {
@@ -48,15 +49,19 @@ onMounted(loadCategories);
 
 const submit = async (): Promise<void> => {
     error.value = null;
-    if (
-        subject.value.trim() === '' ||
-        issue.value.trim() === '' ||
-        categoryId.value === null ||
-        place.value.trim() === '' ||
-        contact.value.trim() === '' ||
-        unitsCount.value === null
-    ) {
-        error.value = 'All fields are required.';
+    const input: TicketCreateInput = {
+        subject: subject.value,
+        issue: issue.value,
+        category_id: categoryId.value ?? 1,
+        place: place.value,
+        contact: contact.value,
+        units_count: unitsCount.value,
+    };
+    try {
+        await ticketCreateSchema.validate(input, { abortEarly: false });
+    } catch (e) {
+        const err = e as { errors?: string[] };
+        error.value = err.errors?.join(' ') ?? 'Please fix the errors below.';
         return;
     }
     submitting.value = true;
@@ -69,12 +74,12 @@ const submit = async (): Promise<void> => {
             {
                 method: 'POST',
                 body: JSON.stringify({
-                    subject: subject.value.trim(),
-                    issue: issue.value.trim(),
-                    category_id: categoryId.value ?? 1,
-                    place: place.value.trim(),
-                    contact: contact.value.trim(),
-                    units_count: unitsCount.value,
+                    subject: input.subject.trim(),
+                    issue: input.issue.trim(),
+                    category_id: input.category_id,
+                    place: input.place.trim(),
+                    contact: input.contact.trim(),
+                    units_count: input.units_count,
                 }),
             },
             idempotencyKey.value,
@@ -101,11 +106,11 @@ const submit = async (): Promise<void> => {
                 <form class="space-y-4" @submit.prevent="submit">
                     <div class="space-y-2">
                         <Label for="subject">Subject</Label>
-                        <Input id="subject" v-model="subject" maxlength="255" required />
+                        <Input id="subject" v-model="subject" maxlength="255" />
                     </div>
                     <div class="space-y-2">
                         <Label for="issue">Issue</Label>
-                        <Textarea id="issue" v-model="issue" rows="12" required />
+                        <Textarea id="issue" v-model="issue" rows="12" />
                     </div>
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div class="space-y-2">
@@ -114,15 +119,15 @@ const submit = async (): Promise<void> => {
                         </div>
                         <div class="space-y-2">
                             <Label for="place">Place</Label>
-                            <Input id="place" v-model="place" required />
+                            <Input id="place" v-model="place" />
                         </div>
                         <div class="space-y-2">
                             <Label for="contact">Contact</Label>
-                            <Input id="contact" v-model="contact" required />
+                            <Input id="contact" v-model="contact" />
                         </div>
                         <div class="space-y-2">
                             <Label for="units">Units</Label>
-                            <Input id="units" v-model.number="unitsCount" type="number" min="0" required />
+                            <Input id="units" v-model.number="unitsCount" type="number" min="0" />
                         </div>
                     </div>
 

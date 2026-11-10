@@ -8,7 +8,8 @@ use App\Models\TicketLog;
 use App\Models\UserProfile;
 use App\Services\ReferenceResolver;
 use App\Services\SupervisorService;
-use App\Services\TicketService;
+use App\Services\TicketMutationService;
+use App\Services\TicketQueryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -19,7 +20,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class TicketController extends Controller
 {
     public function __construct(
-        private TicketService $tickets,
+        private TicketQueryService $queries,
+        private TicketMutationService $mutations,
         private SupervisorService $supervisors,
         private ReferenceResolver $resolver,
     ) {}
@@ -42,7 +44,7 @@ class TicketController extends Controller
         }
 
         return response()->json(
-            $this->tickets->dashboardForUser((int) $user->id, $groupId, $acl, $departmentId),
+            $this->queries->dashboardForUser((int) $user->id, $groupId, $acl, $departmentId),
         );
     }
 
@@ -56,7 +58,7 @@ class TicketController extends Controller
         $scope = (string) $request->query('scope', 'mine');
 
         if ($scope === 'closed_by_me') {
-            $result = $this->tickets->listClosedByUser(
+            $result = $this->queries->listClosedByUser(
                 (int) $user->id,
                 $page,
                 $perPage,
@@ -68,7 +70,7 @@ class TicketController extends Controller
         }
 
         if ($scope === 'assigned_to_me') {
-            $result = $this->tickets->listAssignedToUser(
+            $result = $this->queries->listAssignedToUser(
                 (int) $user->id,
                 $page,
                 $perPage,
@@ -80,7 +82,7 @@ class TicketController extends Controller
         }
 
         if ($scope === 'unassigned' && $this->aclOf($request) >= 2) {
-            $result = $this->tickets->listUnassigned(
+            $result = $this->queries->listUnassigned(
                 $page,
                 $perPage,
                 (string) $request->query('sort', ''),
@@ -91,7 +93,7 @@ class TicketController extends Controller
         }
 
         if ($scope === 'involving_me') {
-            $result = $this->tickets->listInvolvingUser(
+            $result = $this->queries->listInvolvingUser(
                 (int) $user->id,
                 $page,
                 $perPage,
@@ -105,7 +107,7 @@ class TicketController extends Controller
         if ($scope === 'end_user_tickets') {
             $stateId = $request->query('state_id');
             $stateId = ($stateId === null || $stateId === '') ? null : (int) $stateId;
-            $result = $this->tickets->listEndUserTickets(
+            $result = $this->queries->listEndUserTickets(
                 (int) $user->id,
                 $stateId,
                 $page,
@@ -118,7 +120,7 @@ class TicketController extends Controller
         if ($scope === 'tickets_by_supervisor' && $this->aclOf($request) >= 3) {
             $profile = UserProfile::where('user_id', $user->id)->first();
             $supervisorId = $profile !== null ? (int) ($profile->supervisor_id ?? 0) : 0;
-            $result = $this->tickets->listBySupervisor($supervisorId, $page, $perPage);
+            $result = $this->queries->listBySupervisor($supervisorId, $page, $perPage);
 
             return response()->json($result);
         }
@@ -138,7 +140,7 @@ class TicketController extends Controller
                 'resolved_uid' => $request->query('resolved_uid', $request->query('closed_by')),
             ];
 
-            $result = $this->tickets->listAll(
+            $result = $this->queries->listAll(
                 $page,
                 $perPage,
                 $filters,
@@ -152,7 +154,7 @@ class TicketController extends Controller
         $stateId = $request->query('state_id');
         $stateId = $stateId === null ? null : (int) $stateId;
 
-        $result = $this->tickets->listForUser(
+        $result = $this->queries->listForUser(
             (int) $user->id,
             $page,
             $perPage,
@@ -176,7 +178,7 @@ class TicketController extends Controller
         // Only helpdesk/admin can assign; end users cannot.
         $canAssign = $this->aclOf($request) >= 3;
 
-        $result = $this->tickets->assign($id, $request->all(), (int) $user->id, $canAssign);
+        $result = $this->mutations->assign($id, $request->all(), (int) $user->id, $canAssign);
 
         if (! $result['ok']) {
             return response()->json(['message' => $result['message']], 422);
@@ -189,7 +191,7 @@ class TicketController extends Controller
     {
         $user = $request->user();
 
-        $result = $this->tickets->create(
+        $result = $this->mutations->create(
             $request->all(),
             (int) $user->id,
             $this->aclOf($request) >= 2,
@@ -209,7 +211,7 @@ class TicketController extends Controller
     {
         $user = $request->user();
 
-        $result = $this->tickets->create(
+        $result = $this->mutations->create(
             $request->all(),
             (int) $user->id,
             false,
@@ -247,7 +249,7 @@ class TicketController extends Controller
             return response()->json(['message' => 'This ticket can no longer be edited.'], 422);
         }
 
-        $result = $this->tickets->edit($id, $request->all(), (int) $user->id);
+        $result = $this->mutations->edit($id, $request->all(), (int) $user->id);
 
         if (! $result['ok']) {
             return response()->json(['message' => $result['message']], 422);
@@ -269,7 +271,7 @@ class TicketController extends Controller
 
         $canClose = $this->aclOf($request) >= 2;
 
-        $result = $this->tickets->close($id, (int) $user->id, $canClose);
+        $result = $this->mutations->close($id, (int) $user->id, $canClose);
 
         if (! $result['ok']) {
             return response()->json(['message' => $result['message']], 422);
@@ -321,7 +323,7 @@ class TicketController extends Controller
             return response()->json(['message' => 'Forbidden.'], 403);
         }
 
-        return response()->json($this->tickets->logs($id));
+        return response()->json($this->queries->logs($id));
     }
 
     public function comment(Request $request, int $id): JsonResponse
@@ -342,7 +344,7 @@ class TicketController extends Controller
             'text' => ['required', 'string', 'max:4000'],
         ]);
 
-        $result = $this->tickets->comment($id, (string) $validated['text'], $userId, $canView);
+        $result = $this->mutations->comment($id, (string) $validated['text'], $userId, $canView);
 
         if (! $result['ok']) {
             return response()->json(['message' => $result['message']], 422);
@@ -364,7 +366,7 @@ class TicketController extends Controller
 
         $isSup = $this->supervisors->isSupervisor($userId, (int) $ticket->created_uid, $acl);
 
-        $result = $this->tickets->approve(
+        $result = $this->mutations->approve(
             $id,
             (string) $request->input('remarks', ''),
             $userId,
@@ -392,7 +394,7 @@ class TicketController extends Controller
 
         $isSup = $this->supervisors->isSupervisor($userId, (int) $ticket->created_uid, $acl);
 
-        $result = $this->tickets->disapprove(
+        $result = $this->mutations->disapprove(
             $id,
             (string) $request->input('remarks', ''),
             $userId,
@@ -420,7 +422,7 @@ class TicketController extends Controller
 
         $isSup = $this->supervisors->isSupervisor($userId, (int) $ticket->created_uid, $acl);
 
-        $result = $this->tickets->undoApprove($id, $userId, $acl, $isSup);
+        $result = $this->mutations->undoApprove($id, $userId, $acl, $isSup);
 
         if (! $result['ok']) {
             return response()->json(['message' => $result['message']], 422);
@@ -442,7 +444,7 @@ class TicketController extends Controller
 
         $allowed = $acl >= 9 ? [] : $this->supervisors->allSubordinates($userId);
 
-        $result = $this->tickets->batchApprove(
+        $result = $this->mutations->batchApprove(
             $ids,
             (string) $request->input('remarks', ''),
             $userId,
@@ -470,7 +472,7 @@ class TicketController extends Controller
 
         $allowed = $acl >= 9 ? [] : $this->supervisors->allSubordinates($userId);
 
-        $result = $this->tickets->batchDisapprove(
+        $result = $this->mutations->batchDisapprove(
             $ids,
             (string) $request->input('remarks', ''),
             $userId,
@@ -508,7 +510,7 @@ class TicketController extends Controller
         $page = max(1, (int) $request->query('page', 1));
         $perPage = min(100, max(1, (int) $request->query('per_page', 40)));
 
-        $result = $this->tickets->bySubordinates(
+        $result = $this->queries->bySubordinates(
             $subordinates,
             $hideOld,
             $page,
@@ -532,7 +534,7 @@ class TicketController extends Controller
         $direct = $this->supervisors->directSubordinates($userId);
         $badgeCutoff = $this->cutoff('approval.badge_cutoff', 1784553600);
 
-        $count = $this->tickets->pendingReviewCount($direct, $badgeCutoff);
+        $count = $this->queries->pendingReviewCount($direct, $badgeCutoff);
 
         return response()->json(['count' => $count]);
     }

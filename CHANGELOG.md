@@ -11,6 +11,37 @@ Versions start at `0.1.0` when the scaffold is ready.
 
 ### Added
 
+- **Architecture evaluation and cleanup (2026-11-10).**
+  - Split the 1,369-line `TicketService` God object into two focused services:
+    - `TicketQueryService` (658 lines) — read-side: listing, aggregation, log retrieval.
+    - `TicketMutationService` (739 lines) — write-side: create, edit, assign, comment,
+      approve/disapprove/undo, batch approve/disapprove, close.
+    `TicketController` now injects both via constructor; no public method moved.
+  - Added Yup schemas for the remaining forms:
+    - `ticketCreateSchema` — new ticket form (`NewTicketPage`).
+    - `ticketEditSchema` — ticket edit form (`TicketDetailPage`).
+    - `passwordResetSchema` — admin password reset (`AdminUsersPage`).
+    - `categoryNameSchema` — category create/edit (`AdminCategoriesPage`).
+    Validation now runs through `schema.validate()` with `abortEarly: false`, replacing
+    inline `if (...)` checks and native `required` attributes.
+  - `README.md` updated to reflect the built application (it previously claimed the
+    scaffold did not exist) and to note the layering simplification.
+
+### Changed
+
+- **CI pipeline (2026-11-10).**
+  - Switched frontend install from `npm` to `pnpm` to match the `pnpm-lock.yaml`
+    lockfile and the Docker `node` service.
+  - Added `pnpm lint` and `pnpm typecheck` steps (previously only `npm run build` ran).
+  - Set `CI=true` for `pnpm install` so non-interactive lockfile verification works.
+- **`eslint.config.mjs`** now ignores `.agents/**` and `skills-lock.json` so the
+  vendored skill assets do not fail the lint gate.
+
+### Fixed
+
+- **`NewTicketPage` unused import.** Removed the unused `newIdempotencyKey` import
+  after the form switched to schema-based validation.
+
 - **Git repository (2026-11-04).**
   - Initialized with branch `main`.
   - Added `.gitignore` for secrets, PHP, Node, tests, editors, and local scratch files.

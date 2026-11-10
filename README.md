@@ -1,7 +1,7 @@
 # IHOMS Ticketing System (ITS) — v2
 
-**Status:** Documentation phase complete. Application scaffold not started.
-**Last updated:** 2026-11-04
+**Status:** Active development. Phases 0–13 complete per `PLAN.md`; see §1 for current state.
+**Last updated:** 2026-11-10
 
 This project rebuilds the legacy PHP/MySQL ITS helpdesk as a Laravel 13 API plus a Vue 3 single-page application.
 The rebuild keeps the legacy data, roles, screens, and workflows.
@@ -12,20 +12,26 @@ It does not redesign the product.
 
 ## 1. Current state
 
-The repository holds documents only.
+The repository holds a working Laravel 13 + Vue 3 application plus its full
+document set. Phases 0–13 are tracked as `Done` in `PLAN.md`; the progress
+tracker there is the source of truth for what is implemented.
 
 | Item | State |
 |---|---|
 | Documents | Present |
-| Laravel application | Not created |
-| Vue application | Not created |
-| Database migrations | Not written |
-| Tests | Not written |
-| Docker setup | Not created |
-| Git repository | Not initialized |
+| Laravel application | Created — 41 PHP files (controllers, models, services, middleware) |
+| Vue application | Created — 189 TS/Vue files (22 pages, shadcn-vue component library, Pinia, Vue Router) |
+| Database migrations | Written — 12 migrations, all additive |
+| Tests | Written — 6 test files, ~11 test methods (PHP) |
+| Docker setup | Created — Docker Compose (app, nginx, node, db, cache, mail) |
+| Git repository | Initialized — `main` branch, CI workflow active |
 
-Do not run commands in this file until Phase 1 in `PLAN.md` completes.
-The setup steps below are marked **Pending** for that reason.
+The setup steps below are verified and runnable. See §3 for the exact commands.
+
+> **Architecture note:** the codebase uses a flatter layering than `ARCHITECTURE.md`
+> documents — Services hold business logic and data access directly, without
+> Repositories, Form Requests, API Resources, or DTOs. See `DECISIONS.md` for
+> the recorded simplification. `ARCHITECTURE.md` remains the aspirational target.
 
 ---
 
@@ -170,14 +176,14 @@ Reasons and evidence are in `DECISIONS.md`.
 
 ## 8. Setup
 
-Phase 1 is complete. Steps:
+The scaffold is complete. Steps:
 
 1. `composer install`
 2. `cp .env.example .env` and fill in the database and IMAP values.
 3. `php artisan key:generate`
 4. `php artisan jwt:secret`
-5. `pnpm install`
-6. `pnpm build`
+5. `npm install`
+6. `npm run build`
 7. `docker compose up -d app nginx`
 
 The application is at `http://localhost:8080`.
@@ -186,10 +192,10 @@ Port 8000 is used by another local project and must not be used.
 Checks:
 
 - `php artisan test`
-- `pnpm typecheck`
-- `pnpm build`
-- `pnpm lint`
-- `pnpm format:check`
+- `npm run typecheck`
+- `npm run build`
+- `npm run lint`
+- `npm run format:check`
 - `./vendor/bin/pint --test`
 - `./vendor/bin/phpstan analyse --memory-limit=512M`
 

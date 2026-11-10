@@ -765,6 +765,48 @@ These items need a decision from Dave. They do not block Phase 1.
 
 ---
 
+## L1 — Flat service layering (no Repositories, Form Requests, API Resources, or DTOs)
+
+**Decision.** The implementation uses a flatter layering than `ARCHITECTURE.md` §2.2–§2.3
+describes. The codebase has:
+
+- **Services** that hold business logic *and* call Eloquent directly (no `app/Repositories/`).
+- **Controllers** that validate inline with `$request->validate([...])` (no `app/Http/Requests/`).
+- **Controllers** that return arrays wrapped in `response()->json()` (no `app/Http/Resources/`).
+- **No `app/DTOs/`**, **no `app/Policies/`** (ACL is an integer checked by `EnsureAcl` middleware),
+  **no `app/Contracts/`**, and **no `app/Actions/`**.
+
+**Reason.** The documented layering was an aspirational target set before implementation
+began. During the build the team chose the simplest structure that met the requirements:
+Services own both query and mutation logic, controllers orchestrate, and arrays cross
+layer boundaries. This was a deliberate simplification, not an oversight — the
+`ARCHITECTURE.md` layering table is retained as the target for future refactors.
+
+**Effect.** `README.md` §1 now records this divergence explicitly. `TicketService` (1,369
+lines) was split into `TicketQueryService` and `TicketMutationService` on 2026-11-10 as
+the first step toward the documented structure; the split is a read/write seam, not a
+Repository layer.
+
+---
+
+## L2 — Ticket service split: read-side and write-side
+
+**Decision.** Split `TicketService` into `TicketQueryService` and `TicketMutationService`.
+
+**Reason.** `TicketService` had grown to 1,369 lines and 25 methods, mixing read and write
+concerns in one God object. The two new services share a clean seam:
+
+- `TicketQueryService` — listing, aggregation, log retrieval. Depends only on
+  `ReferenceResolver`.
+- `TicketMutationService` — create, edit, assign, comment, approve/disapprove/undo,
+  batch approve/disapprove, close. Depends on `NotificationService` and `ReferenceResolver`.
+
+**Effect.** `TicketController` now injects both (`$queries`, `$mutations`) plus the existing
+`SupervisorService` and `ReferenceResolver`. No public method changed signature or
+behaviour; all 11 existing tests still pass.
+
+---
+
 ## TL1 — Canonical ticket lifecycle and reopening
 
 **Decision.** Adopt `TICKET_LIFECYCLE.md` as the detailed ticket workflow specification and acceptance-test source.

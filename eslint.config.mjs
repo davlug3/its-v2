@@ -10,6 +10,8 @@ export default withVueTs(
             'storage/**',
             'bootstrap/cache/**',
             'docs/baseline/**',
+            '.agents/**',
+            'skills-lock.json',
         ],
     },
     pluginVue.configs['flat/essential'],

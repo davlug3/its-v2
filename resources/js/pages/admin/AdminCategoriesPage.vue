@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue';
 import DataTable from '@/components/common/DataTable.vue';
 import { api, newIdempotencyKey } from '@/services/api';
+import { categoryNameSchema, type CategoryNameInput } from '@/schemas/categoryName';
 
 interface Category {
     id: number;
@@ -49,13 +50,21 @@ const load = async (): Promise<void> => {
 };
 
 const create = async (): Promise<void> => {
-    if (newName.value.trim() === '') return;
     creating.value = true;
     error.value = null;
+    const input: CategoryNameInput = { name: newName.value };
+    try {
+        await categoryNameSchema.validate(input, { abortEarly: false });
+    } catch (e) {
+        const err = e as { errors?: string[] };
+        error.value = err.errors?.join(' ') ?? 'Please fix the errors below.';
+        creating.value = false;
+        return;
+    }
     try {
         await api(
             '/admin/categories',
-            { method: 'POST', body: JSON.stringify({ name: newName.value.trim() }) },
+            { method: 'POST', body: JSON.stringify({ name: input.name.trim() }) },
             newIdempotencyKey(),
         );
         newName.value = '';
@@ -76,10 +85,19 @@ const saveEdit = async (): Promise<void> => {
     if (editingId.value === null) return;
     savingId.value = editingId.value;
     error.value = null;
+    const input: CategoryNameInput = { name: editingName.value };
+    try {
+        await categoryNameSchema.validate(input, { abortEarly: false });
+    } catch (e) {
+        const err = e as { errors?: string[] };
+        error.value = err.errors?.join(' ') ?? 'Please fix the errors below.';
+        savingId.value = null;
+        return;
+    }
     try {
         await api(
             `/admin/categories/${editingId.value}`,
-            { method: 'PUT', body: JSON.stringify({ name: editingName.value.trim() }) },
+            { method: 'PUT', body: JSON.stringify({ name: input.name.trim() }) },
             newIdempotencyKey(),
         );
         editingId.value = null;

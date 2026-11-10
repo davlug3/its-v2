@@ -44,16 +44,25 @@ jobs:
           php artisan key:generate
           php artisan jwt:secret --force
 
+      - name: Enable Corepack (pnpm)
+        run: corepack enable
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "22"
 
       - name: Install frontend dependencies
-        run: npm install --ignore-scripts --no-audit --no-fund
+        run: CI=true pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Lint frontend
+        run: pnpm lint
+
+      - name: Type-check frontend
+        run: pnpm typecheck
 
       - name: Build frontend assets
-        run: npm run build
+        run: pnpm build
 
       - name: Check code style
         run: composer lint
