@@ -37,7 +37,6 @@ return Application::configure(basePath: dirname(__DIR__))
             'csrf' => VerifyCsrfToken::class,
             'idempotency' => Idempotency::class,
             'payroll.active' => EnsurePayrollAccountActive::class,
-            'payroll.active' => EnsurePayrollAccountActive::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
