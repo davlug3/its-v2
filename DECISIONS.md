@@ -46,6 +46,7 @@ Related files:
 | T2 | User add/edit drops the group field | Consequence of T1 |
 | P1 | Dual-run password strategy | Pending cutover approval |
 | Q1 | Open questions | Open |
+| TL1 | Canonical ticket lifecycle and reopening | Approved |
 
 ---
 
@@ -760,3 +761,25 @@ These items need a decision from Dave. They do not block Phase 1.
 * Decision: `user_profile.acl_id` is a cached copy synced from the authoritative `its.users.acl_id` on login. The admin user list and its ACL filter read directly from `its.users` so helpdesk/admin rosters populate before a user has ever logged in. Legacy value 0 is treated as End User (1).
 * Reason: User direction ("acl_id should come from its.users").
 * Effect: Supersedes the department-based ACL rule in C6 for accounts that exist in `its.users`. The department rule remains as a fallback for users with no `its.users` row.
+
+
+---
+
+## TL1 — Canonical ticket lifecycle and reopening
+
+**Decision.** Adopt `TICKET_LIFECYCLE.md` as the detailed ticket workflow specification and acceptance-test source.
+
+**Approved rules.**
+
+- `assigned_gid` and `units_count` are used simultaneously for distinct purposes. `assigned_gid` remains the legacy group reference; `units_count` stores units/items/persons.
+- End users cannot close tickets through the UI or API. Closure is staff-controlled.
+- Teams/group membership are not an authorization mechanism. Object access is based on creator, assignee, and elevated ACL permissions; no new authorization reads of `users.group_id`.
+- Assignment changes are audited with old/new assignee, actor, and timestamp. Notify the new assignee and the previous assignee when removed.
+- Closed tickets pending supervisor review remain editable by authorized staff. Every edit is audited and visible in ticket history. Approved/disapproved closed tickets remain locked.
+- Close, reopen, and approval transitions use transactions and row-level locking or equivalent conditional updates.
+- The legacy `resolution` field remains unused; no additional resolution summary is required.
+- Reopening is supported for authorized staff only. A non-empty reason is mandatory, limited to 2,000 characters, and preserved in the ticket log and audit history. Reopen sets the ticket Open, resets supervisor approval to pending, clears current resolver/timestamps, and preserves all prior closure and approval history.
+
+**Reason.** These rules were confirmed by the product owner during the ticket lifecycle review on 2026-11-10.
+
+**Effect.** Update `PROMPT.md`, implement `TICKET_LIFECYCLE.md`, and add AT-55 onward in `PLAN.md`.
