@@ -70,6 +70,8 @@ const id = Number(route.params.id);
 
 const canAssign = computed(() => (auth.user?.acl ?? 1) >= 3);
 
+const canClose = computed(() => (auth.user?.acl ?? 1) >= 2);
+
 const canEdit = computed(() => {
     if (!ticket.value || !auth.user) return false;
     if (ticket.value.created_uid !== auth.user.id) return false;
@@ -343,7 +345,7 @@ onMounted(() => {
                         <div class="flex gap-2">
                             <Button v-if="canEdit" variant="outline" @click="editing = true">Edit</Button>
                             <Button
-                                v-if="ticket.state_id === 1"
+                                v-if="ticket.state_id === 1 && canClose"
                                 :disabled="closing"
                                 @click="close"
                             >

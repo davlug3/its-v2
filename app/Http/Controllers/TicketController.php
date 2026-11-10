@@ -260,15 +260,14 @@ class TicketController extends Controller
     {
         $user = $request->user();
 
-        // Permission check: creator, assigned user, or ACL >= 3.
+        // Permission check: only helpdesk and above (ACL >= 2) may resolve a ticket.
+        // Regular users (ACL 1) cannot close tickets, even ones they created or are assigned to.
         $ticket = Ticket::find($id);
         if ($ticket === null) {
             return response()->json(['message' => 'Ticket not found.'], 404);
         }
 
-        $canClose = $ticket->created_uid === (int) $user->id
-            || $ticket->assigned_uid === (int) $user->id
-            || $this->aclOf($request) >= 3;
+        $canClose = $this->aclOf($request) >= 2;
 
         $result = $this->tickets->close($id, (int) $user->id, $canClose);
 
