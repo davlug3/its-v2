@@ -18,7 +18,10 @@ use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 
 class LoginController extends Controller
 {
-    public function __construct(private PisSyncService $sync) {}
+    public function __construct(
+        private PisSyncService $sync,
+        private PayrollAccountStatus $accounts,
+    ) {}
 
     public function login(Request $request): JsonResponse
     {
@@ -65,6 +68,20 @@ class LoginController extends Controller
         $valid = $this->verifyPassword($user, $credentials['password']);
 
         if (! $valid) {
+            RateLimiter::hit($key, 900);
+
+            AuthAudit::create([
+                'user_id' => $user->id,
+                'username_attempted' => $credentials['username'],
+                'event' => 'failure',
+                'ip' => $request->ip(),
+                'user_agent' => substr((string) $request->userAgent(), 0, 500),
+            ]);
+
+            return response()->json(['message' => 'Invalid username or password.'], 401);
+        }
+
+        if (! $this->accounts->isActive((int) $user->id)) {
             RateLimiter::hit($key, 900);
 
             AuthAudit::create([
