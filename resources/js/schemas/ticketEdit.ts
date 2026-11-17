@@ -8,9 +8,6 @@ export const ticketEditSchema = object({
         .max(255, 'Subject must be 255 characters or fewer.'),
     issue: string().trim().required('Issue description is required.'),
     category_id: number().required('Category is required.').min(1, 'Category is required.'),
-    location_id: number().required('Location is required.').min(1, 'Location is required.'),
-    place: string().trim().required('Place is required.'),
-    contact: string().trim().required('Contact is required.'),
     units_count: number().required('Units count is required.').min(0, 'Units count must be 0 or greater.'),
 });
 

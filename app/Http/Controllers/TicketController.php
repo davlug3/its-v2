@@ -249,8 +249,12 @@ class TicketController extends Controller
             || (int) $ticket->resolved_uid !== 0
             || (int) $ticket->state_id !== 1;
 
-        if ($touched && (isset($data['subject']) || isset($data['issue']))) {
-            return response()->json(['message' => 'Subject and issue can only be edited on untouched tickets.'], 422);
+        if ($touched) {
+            $subjectChanged = isset($data['subject']) && trim((string) $data['subject']) !== (string) $ticket->subject;
+            $issueChanged = isset($data['issue']) && trim((string) $data['issue']) !== (string) $ticket->issue;
+            if ($subjectChanged || $issueChanged) {
+                return response()->json(['message' => 'Subject and issue can only be edited on untouched tickets.'], 422);
+            }
         }
 
         $result = $this->mutations->edit($id, $data, (int) $user->id);

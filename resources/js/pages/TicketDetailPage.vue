@@ -86,7 +86,7 @@ const canEdit = computed(() => {
     return !touched;
 });
 
-// Helpdesk can always assign category, location, place, contact, units.
+// Helpdesk can always assign category and units.
 const canAssignDetails = computed(() => {
     if (!ticket.value || !auth.user) return false;
     return (auth.user.acl ?? 1) >= 2;
@@ -104,9 +104,6 @@ const closing = shallowRef(false);
 const subject = shallowRef('');
 const issue = shallowRef('');
 const categoryId = shallowRef<number | null>(null);
-const locationId = shallowRef<number | null>(null);
-const place = shallowRef('');
-const contact = shallowRef('');
 const unitsCount = shallowRef(0);
 const assignUid = shallowRef(0);
 const assigning = shallowRef(false);
@@ -126,11 +123,7 @@ const fetchCategories = async (): Promise<void> => {
     }
 };
 
-const fetchLocations = async (q: string): Promise<SelectOption[]> => {
-    const params = new URLSearchParams({ q, limit: '30' });
-    const res = await api<Array<{ id: number; label: string }>>(`/locations/options?${params.toString()}`);
-    return (res ?? []).map((l) => ({ value: l.id, label: l.label }));
-};
+
 
 const logs = shallowRef<TicketLog[]>([]);
 const commentText = shallowRef('');
@@ -179,9 +172,6 @@ const load = async (): Promise<void> => {
         subject.value = ticket.value.subject;
         issue.value = ticket.value.issue;
         categoryId.value = ticket.value.category_id;
-        locationId.value = ticket.value.location_id;
-        place.value = ticket.value.place;
-        contact.value = ticket.value.contact;
         unitsCount.value = ticket.value.units_count;
         assignUid.value = ticket.value.assigned_uid;
         await loadLogs();
@@ -200,9 +190,6 @@ const save = async (): Promise<void> => {
         subject: subject.value,
         issue: issue.value,
         category_id: categoryId.value ?? 1,
-        location_id: locationId.value ?? 0,
-        place: place.value,
-        contact: contact.value,
         units_count: unitsCount.value,
     };
     try {
@@ -222,9 +209,6 @@ const save = async (): Promise<void> => {
                     subject: input.subject.trim(),
                     issue: input.issue.trim(),
                     category_id: input.category_id,
-                    location_id: input.location_id,
-                    place: input.place.trim(),
-                    contact: input.contact.trim(),
                     units_count: input.units_count,
                 }),
             },
@@ -437,49 +421,6 @@ onMounted(() => {
                         </div>
                     </div>
 
-                    <!-- Category, location, place, contact, units — always editable by helpdesk -->
-                    <div v-if="canAssignDetails" class="space-y-3 border-t border-border pt-3">
-                        <h3 class="text-sm font-medium text-foreground">Assign details</h3>
-                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                            <div class="space-y-2">
-                                <Label>Category</Label>
-                                <SearchableSelect
-                                    v-model="categoryId"
-                                    :options="categoryOptions"
-                                    placeholder="Select category"
-                                />
-                            </div>
-                            <div class="space-y-2">
-                                <Label>Location</Label>
-                                <SearchableSelect
-                                    v-model="locationId"
-                                    :options="[{ value: locationId ?? 0, label: ticket?.location_name ?? 'Current' }]"
-                                    :fetch-options="fetchLocations"
-                                    placeholder="Select location"
-                                />
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                            <div class="space-y-2">
-                                <Label for="place">Place</Label>
-                                <Input id="place" v-model="place" />
-                            </div>
-                            <div class="space-y-2">
-                                <Label for="contact">Contact</Label>
-                                <Input id="contact" v-model="contact" />
-                            </div>
-                        </div>
-                        <div class="space-y-2">
-                            <Label for="units">Units</Label>
-                            <Input id="units" v-model.number="unitsCount" type="number" min="0" />
-                        </div>
-                        <div class="flex gap-2">
-                            <Button :disabled="saving" @click="save">
-                                {{ saving ? 'Saving…' : 'Save details' }}
-                            </Button>
-                        </div>
-                    </div>
-
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div class="space-y-3">
                             <h3 class="text-sm font-medium text-foreground">Ticket details</h3>
@@ -549,21 +490,43 @@ onMounted(() => {
                         </div>
                     </div>
 
-                    <div v-if="canAssign" class="flex items-end gap-2 border-t border-border pt-3">
-                        <div class="space-y-1">
-                            <Label for="assign-uid">Assign to</Label>
-                            <SearchableSelect
-                                id="assign-uid"
-                                v-model="assignUid"
-                                :options="[{ value: 0, label: '— Unassigned —' }]"
-                                :fetch-options="fetchAssignees"
-                                :placeholder="ticket.assigned_name ?? 'Select assignee'"
-                            />
+                    <div v-if="canAssignDetails" class="space-y-3 border-t border-border pt-3">
+                        <h3 class="text-sm font-medium text-foreground">Assign details</h3>
+                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            <div class="space-y-2">
+                                <Label>Category</Label>
+                                <SearchableSelect
+                                    v-model="categoryId"
+                                    :options="categoryOptions"
+                                    placeholder="Select category"
+                                />
+                            </div>
+                            <div class="space-y-2">
+                                <Label for="units">Units</Label>
+                                <Input id="units" v-model.number="unitsCount" type="number" min="0" />
+                            </div>
                         </div>
-                        <Button :disabled="assigning" @click="doAssign">
-                            {{ assigning ? 'Assigning…' : 'Assign' }}
-                        </Button>
+                        <div v-if="canAssign" class="flex items-end gap-2">
+                            <div class="space-y-1">
+                                <Label for="assign-uid">Assign to</Label>
+                                <SearchableSelect
+                                    id="assign-uid"
+                                    v-model="assignUid"
+                                    :options="[{ value: 0, label: '— Unassigned —' }]"
+                                    :fetch-options="fetchAssignees"
+                                    :placeholder="ticket.assigned_name ?? 'Select assignee'"
+                                />
+                            </div>
+                            <Button :disabled="assigning" @click="doAssign">
+                                {{ assigning ? 'Assigning…' : 'Assign' }}
+                            </Button>
+                        </div>
                         <p v-if="assignError" class="text-sm text-destructive">{{ assignError }}</p>
+                        <div class="flex gap-2">
+                            <Button :disabled="saving" @click="save">
+                                {{ saving ? 'Saving…' : 'Save details' }}
+                            </Button>
+                        </div>
                     </div>
                 </CardContent>
             </Card>
