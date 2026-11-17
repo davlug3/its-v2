@@ -74,31 +74,30 @@ const formatDuration = (seconds: number | null): string => {
 };
 
 const staffCards = computed(() => [
-    { title: 'Assigned', subtitle: 'To you (open)', value: String(summary.value.assigned_to_you) },
+    { title: 'Assigned to you', subtitle: 'Open tickets', value: String(summary.value.assigned_to_you) },
     {
-        title: 'Assigned',
-        subtitle: 'To group (open)',
+        title: 'Assigned to group',
+        subtitle: 'Open tickets',
         value: String(summary.value.assigned_to_group),
     },
-    { title: 'Closed by you', subtitle: 'Today', value: String(summary.value.closed_by_you_today) },
     {
         title: 'Closed by you',
-        subtitle: 'This year (YTD)',
-        value: String(summary.value.closed_by_you_ytd),
+        subtitle: 'Today / YTD',
+        value: `${summary.value.closed_by_you_today} / ${summary.value.closed_by_you_ytd}`,
     },
     {
-        title: 'Closed by',
-        subtitle: 'Group today',
+        title: 'Closed by group',
+        subtitle: 'Today',
         value: String(summary.value.closed_by_group_today),
     },
     {
-        title: 'Your average',
-        subtitle: 'Resolution time',
+        title: 'Your avg. resolution',
+        subtitle: 'Time per ticket',
         value: formatDuration(summary.value.your_avg_resolution_seconds),
     },
     {
-        title: 'Average close time',
-        subtitle: 'Entire system',
+        title: 'System avg. close time',
+        subtitle: 'All tickets',
         value: formatDuration(summary.value.system_avg_resolution_seconds),
     },
     {
@@ -114,25 +113,25 @@ const userCards = computed(() => {
     return [
         {
             title: 'Your department',
-            subtitle: 'Tickets',
+            subtitle: 'Total tickets',
             value: String(dept.total),
             meta: `Open: ${dept.open} · Closed: ${dept.closed}`,
         },
         {
             title: 'Your department',
-            subtitle: 'Open',
+            subtitle: 'Open tickets',
             value: String(dept.open),
             meta: `Closed: ${dept.closed} · Total: ${dept.total}`,
         },
         {
             title: 'By you',
-            subtitle: 'Tickets',
+            subtitle: 'Total tickets',
             value: String(me.total),
             meta: `Open: ${me.open} · Closed: ${me.closed}`,
         },
         {
             title: 'By you',
-            subtitle: 'Open',
+            subtitle: 'Open tickets',
             value: String(me.open),
             meta: `Closed: ${me.closed} · Total: ${me.total}`,
         },
@@ -170,7 +169,7 @@ onMounted(async () => {
 
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <template v-if="loading">
-                <Skeleton v-for="i in 4" :key="i" class="h-24 w-full" />
+                <Skeleton v-for="i in 7" :key="i" class="h-24 w-full" />
             </template>
             <template v-else-if="isRegularUser">
                 <Card v-for="card in userCards" :key="`${card.title}-${card.subtitle}`">

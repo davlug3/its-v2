@@ -233,17 +233,18 @@ onUnmounted(() => {
                                 </button>
                             </div>
                             <div class="max-h-80 overflow-y-auto">
-                                <p
+                                <div
                                     v-if="notifications.length === 0"
-                                    class="p-3 text-sm text-muted-foreground"
+                                    class="flex flex-col items-center gap-2 p-6 text-center"
                                 >
-                                    No notifications.
-                                </p>
+                                    <Bell class="h-8 w-8 text-muted-foreground/50" />
+                                    <p class="text-sm text-muted-foreground">No notifications.</p>
+                                </div>
                                 <button
                                     v-for="n in notifications"
                                     :key="n.id"
                                     type="button"
-                                    class="block w-full border-b border-border px-3 py-2 text-left text-sm hover:bg-haze"
+                                    class="block w-full cursor-pointer border-b border-border px-3 py-2 text-left text-sm transition-colors hover:bg-haze"
                                     :class="n.state === 1 ? 'font-medium' : 'text-muted-foreground'"
                                     @click="markRead(n)"
                                 >

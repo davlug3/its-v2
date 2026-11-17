@@ -42,6 +42,8 @@ const lastPage = ref(1);
 const pageSize = ref(20);
 const loading = shallowRef(true);
 const error = shallowRef<string | null>(null);
+const showFilters = shallowRef(true);
+const showMoreColumns = shallowRef(false);
 
 const ticketId = shallowRef('');
 const euUid = shallowRef<string | number | null>('');
@@ -113,16 +115,21 @@ const fetchLocations = async (q: string): Promise<SelectOption[]> => {
 const sortKey = ref('created');
 const sortDir = shallowRef<'asc' | 'desc'>('desc');
 
-const columns = computed(() => [
-    { key: 'id', label: 'ID', sortable: true, width: 80, resizable: true },
-    { key: 'subject', label: 'Subject', sortable: true, resizable: true },
-    { key: 'state_id', label: 'State', sortable: true, width: 100, resizable: true },
-    { key: 'created_name', label: 'Requester', sortable: false, width: 160, resizable: true },
-    { key: 'location_name', label: 'Location', sortable: false, width: 160, resizable: true },
-    { key: 'category_name', label: 'Category', sortable: false, width: 140, resizable: true },
-    { key: 'assigned_name', label: 'Assigned', sortable: false, width: 150, resizable: true },
-    { key: 'created_date', label: 'Created', sortable: true, width: 120, resizable: true },
-]);
+const columns = computed(() => {
+    const cols = [
+        { key: 'id', label: 'ID', sortable: true, width: 80, resizable: true },
+        { key: 'subject', label: 'Subject', sortable: true, resizable: true },
+        { key: 'state_id', label: 'State', sortable: true, width: 100, resizable: true },
+        { key: 'created_name', label: 'Requester', sortable: false, width: 160, resizable: true },
+        { key: 'assigned_name', label: 'Assigned', sortable: false, width: 150, resizable: true },
+        { key: 'created_date', label: 'Created', sortable: true, width: 120, resizable: true },
+    ];
+    if (showMoreColumns.value) {
+        cols.splice(4, 0, { key: 'location_name', label: 'Location', sortable: false, width: 160, resizable: true });
+        cols.splice(5, 0, { key: 'category_name', label: 'Category', sortable: false, width: 140, resizable: true });
+    }
+    return cols;
+});
 
 const stateLabel = (id: number): string =>
     id === 1 ? 'Open' : id === 2 ? 'Closed' : `State ${id}`;
@@ -238,60 +245,29 @@ onMounted(() => {
         </PageHeader>
 
         <Card>
-            <CardHeader>
+            <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle>Filters</CardTitle>
+                <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    @click="showFilters = !showFilters"
+                >
+                    {{ showFilters ? 'Hide' : 'Show' }}
+                </Button>
             </CardHeader>
-            <CardContent>
-                <form class="space-y-3" @submit.prevent="apply">
+            <CardContent v-if="showFilters">
+                <form class="space-y-4" @submit.prevent="apply">
                     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                        <div class="space-y-1">
+                        <div class="space-y-2">
                             <Label for="ticket_id">Ticket ID</Label>
                             <Input id="ticket_id" v-model="ticketId" placeholder="ID" />
                         </div>
-                        <div class="space-y-1">
-                            <Label>End User</Label>
-                            <SearchableSelect
-                                v-model="euUid"
-                                :options="[{ value: '', label: 'All' }]"
-                                :fetch-options="fetchUsers"
-                                placeholder="All"
-                            />
-                        </div>
-                        <div class="space-y-1">
-                            <Label>Location</Label>
-                            <SearchableSelect
-                                v-model="locationId"
-                                :options="[{ value: '', label: 'All locations' }]"
-                                :fetch-options="fetchLocations"
-                                placeholder="All locations"
-                            />
-                        </div>
-                        <div class="space-y-1">
-                            <Label>Category</Label>
-                            <SearchableSelect
-                                v-model="categoryId"
-                                :options="categoryOptions"
-                                placeholder="All categories"
-                            />
-                        </div>
-                        <div class="space-y-1">
+                        <div class="space-y-2">
                             <Label for="subject">Subject</Label>
                             <Input id="subject" v-model="subject" placeholder="Subject contains…" />
                         </div>
-                        <div class="space-y-1">
-                            <Label for="issue">Issue</Label>
-                            <Input id="issue" v-model="issue" placeholder="Issue contains…" />
-                        </div>
-                        <div class="space-y-1">
-                            <Label>Closed By</Label>
-                            <SearchableSelect
-                                v-model="closedBy"
-                                :options="[{ value: '', label: 'All' }]"
-                                :fetch-options="fetchAssignees"
-                                placeholder="All"
-                            />
-                        </div>
-                        <div class="space-y-1">
+                        <div class="space-y-2">
                             <Label>State</Label>
                             <SearchableSelect
                                 v-model="stateFilter"
@@ -299,7 +275,7 @@ onMounted(() => {
                                 placeholder="All"
                             />
                         </div>
-                        <div class="space-y-1">
+                        <div class="space-y-2">
                             <Label>Assigned to</Label>
                             <SearchableSelect
                                 v-model="assignedFilter"
@@ -309,9 +285,62 @@ onMounted(() => {
                             />
                         </div>
                     </div>
-                    <div class="flex gap-2">
-                        <Button type="submit">Search</Button>
-                        <Button type="button" variant="outline" @click="reset">Reset</Button>
+
+                    <div v-if="showMoreColumns || showFilters" class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                        <div class="space-y-2">
+                            <Label>End User</Label>
+                            <SearchableSelect
+                                v-model="euUid"
+                                :options="[{ value: '', label: 'All' }]"
+                                :fetch-options="fetchUsers"
+                                placeholder="All"
+                            />
+                        </div>
+                        <div class="space-y-2">
+                            <Label>Location</Label>
+                            <SearchableSelect
+                                v-model="locationId"
+                                :options="[{ value: '', label: 'All locations' }]"
+                                :fetch-options="fetchLocations"
+                                placeholder="All locations"
+                            />
+                        </div>
+                        <div class="space-y-2">
+                            <Label>Category</Label>
+                            <SearchableSelect
+                                v-model="categoryId"
+                                :options="categoryOptions"
+                                placeholder="All categories"
+                            />
+                        </div>
+                        <div class="space-y-2">
+                            <Label for="issue">Issue</Label>
+                            <Input id="issue" v-model="issue" placeholder="Issue contains…" />
+                        </div>
+                        <div class="space-y-2">
+                            <Label>Closed By</Label>
+                            <SearchableSelect
+                                v-model="closedBy"
+                                :options="[{ value: '', label: 'All' }]"
+                                :fetch-options="fetchAssignees"
+                                placeholder="All"
+                            />
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <Button type="submit" class="min-h-[44px]">Search</Button>
+                        <Button type="button" variant="outline" class="min-h-[44px]" @click="reset">
+                            Reset
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            @click="showMoreColumns = !showMoreColumns"
+                        >
+                            {{ showMoreColumns ? 'Fewer columns' : 'More columns' }}
+                        </Button>
                     </div>
                 </form>
             </CardContent>
@@ -329,7 +358,7 @@ onMounted(() => {
                     :columns="columns"
                     :rows="tickets as unknown as Record<string, unknown>[]"
                     :loading="loading"
-                    empty-message="No tickets."
+                    empty-message="No tickets found. Try adjusting your filters."
                     pagination="server"
                     :page-size="pageSize"
                     :total="total"
