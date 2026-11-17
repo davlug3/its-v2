@@ -5,6 +5,7 @@ import { useRoute, useRouter } from 'vue-router';
 import DOMPurify from 'dompurify';
 
 import { Badge } from '@/components/ui/badge';
+import { MapPin, Phone, User, UserCheck, Users } from '@lucide/vue';
 import { Button } from '@/components/ui/button';
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -424,22 +425,23 @@ onMounted(() => {
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <!-- Ticket details -->
                         <div class="space-y-2">
-                            <h3 class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                                Ticket details
-                            </h3>
-                            <div class="space-y-0">
-                                <div class="flex items-center justify-between rounded-md px-2 py-1.5 transition-colors hover:bg-haze/50">
-                                    <span class="text-sm text-muted-foreground">Location</span>
+                            <h3 class="text-sm font-semibold text-foreground">Ticket details</h3>
+                            <div class="space-y-0.5 rounded-md border border-border bg-paper/50 p-1">
+                                <div class="flex items-center gap-2 rounded px-2 py-1.5 transition-colors hover:bg-haze/50">
+                                    <MapPin class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                                    <span class="flex-1 text-sm text-muted-foreground">Department</span>
                                     <span class="text-sm font-medium text-foreground">
-                                        {{ ticket.location_name ?? (ticket.location_id ? 'Unknown location' : '—') }}
+                                        {{ ticket.location_name ?? (ticket.location_id ? 'Unknown department' : '—') }}
                                     </span>
                                 </div>
-                                <div class="flex items-center justify-between rounded-md px-2 py-1.5 transition-colors hover:bg-haze/50">
-                                    <span class="text-sm text-muted-foreground">Place</span>
+                                <div class="flex items-center gap-2 rounded px-2 py-1.5 transition-colors hover:bg-haze/50">
+                                    <MapPin class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                                    <span class="flex-1 text-sm text-muted-foreground">Place</span>
                                     <span class="text-sm font-medium text-foreground">{{ ticket.place || '—' }}</span>
                                 </div>
-                                <div class="flex items-center justify-between rounded-md px-2 py-1.5 transition-colors hover:bg-haze/50">
-                                    <span class="text-sm text-muted-foreground">Contact</span>
+                                <div class="flex items-center gap-2 rounded px-2 py-1.5 transition-colors hover:bg-haze/50">
+                                    <Phone class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                                    <span class="flex-1 text-sm text-muted-foreground">Contact</span>
                                     <span class="text-sm font-medium text-foreground">{{ ticket.contact || '—' }}</span>
                                 </div>
                             </div>
@@ -447,39 +449,42 @@ onMounted(() => {
 
                         <!-- People -->
                         <div class="space-y-2">
-                            <h3 class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                                People
-                            </h3>
-                            <div class="space-y-0">
-                                <div class="flex items-center justify-between rounded-md px-2 py-1.5 transition-colors hover:bg-haze/50">
-                                    <span class="text-sm text-muted-foreground">Created by</span>
+                            <h3 class="text-sm font-semibold text-foreground">People</h3>
+                            <div class="space-y-0.5 rounded-md border border-border bg-paper/50 p-1">
+                                <div class="flex items-center gap-2 rounded px-2 py-1.5 transition-colors hover:bg-haze/50">
+                                    <User class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                                    <span class="flex-1 text-sm text-muted-foreground">Created by</span>
                                     <span class="text-sm font-medium text-foreground">
                                         {{ ticket.created_name ?? (ticket.created_uid ? 'Deleted user' : '—') }}
                                     </span>
                                 </div>
-                                <div class="flex items-center justify-between rounded-md px-2 py-1.5 transition-colors hover:bg-haze/50">
-                                    <span class="text-sm text-muted-foreground">Assigned to</span>
+                                <div class="flex items-center gap-2 rounded px-2 py-1.5 transition-colors hover:bg-haze/50">
+                                    <Users class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                                    <span class="flex-1 text-sm text-muted-foreground">Assigned to</span>
                                     <span class="text-sm font-medium text-foreground">
                                         {{ ticket.assigned_name ?? (ticket.assigned_uid ? 'Deleted user' : 'Unassigned') }}
                                     </span>
                                 </div>
                                 <div
                                     v-if="ticket.eu_uid && ticket.eu_uid !== ticket.created_uid"
-                                    class="flex items-center justify-between rounded-md px-3 py-2 transition-colors hover:bg-haze/50"
+                                    class="flex items-center gap-2 rounded px-2 py-1.5 transition-colors hover:bg-haze/50"
                                 >
-                                    <span class="text-sm text-muted-foreground">End user</span>
+                                    <User class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                                    <span class="flex-1 text-sm text-muted-foreground">End user</span>
                                     <span class="text-sm font-medium text-foreground">{{ ticket.eu_name ?? 'Deleted user' }}</span>
                                 </div>
                                 <div
                                     v-if="ticket.resolved_uid"
-                                    class="flex items-center justify-between rounded-md px-3 py-2 transition-colors hover:bg-haze/50"
+                                    class="flex items-center gap-2 rounded px-2 py-1.5 transition-colors hover:bg-haze/50"
                                 >
-                                    <span class="text-sm text-muted-foreground">Resolved by</span>
+                                    <UserCheck class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                                    <span class="flex-1 text-sm text-muted-foreground">Resolved by</span>
                                     <span class="text-sm font-medium text-foreground">{{ ticket.resolved_name ?? 'Deleted user' }}</span>
                                 </div>
                             </div>
                         </div>
                     </div>
+
 
                     <div v-if="canAssignDetails" class="space-y-2 border-t border-border pt-2">
                         <h3 class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
