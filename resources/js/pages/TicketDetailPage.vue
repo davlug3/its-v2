@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { computed, onMounted, useTemplateRef , shallowRef } from 'vue';
+import { computed, onMounted, useTemplateRef, shallowRef } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+
+import DOMPurify from 'dompurify';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -84,6 +86,8 @@ const canEdit = computed(() => {
 });
 
 const ticket = shallowRef<Ticket | null>(null);
+
+const safeIssue = computed(() => (ticket.value ? DOMPurify.sanitize(ticket.value.issue) : ''));
 const loading = shallowRef(true);
 const error = shallowRef<string | null>(null);
 const editing = shallowRef(false);
@@ -367,7 +371,7 @@ onMounted(() => {
                         </div>
                     </div>
                     <div v-else class="space-y-3">
-                        <p class="text-sm whitespace-pre-wrap">{{ ticket.issue }}</p>
+                        <div class="prose prose-sm max-w-none text-sm" v-html="safeIssue"></div>
                         <div class="flex gap-2">
                             <Button v-if="canEdit" variant="outline" @click="editing = true"
                                 >Edit</Button
