@@ -332,6 +332,13 @@ onMounted(() => {
     <div class="space-y-4">
         <PageHeader :title="`Ticket #${id}`">
             <template #actions>
+                <Button
+                    v-if="ticket && ticket.state_id === 1 && canClose"
+                    :disabled="closing"
+                    @click="close"
+                >
+                    {{ closing ? 'Closing…' : 'Close ticket' }}
+                </Button>
                 <Button variant="outline" @click="router.push('/my-tickets')">Back</Button>
             </template>
         </PageHeader>
@@ -376,13 +383,6 @@ onMounted(() => {
                             <Button v-if="canEdit" variant="outline" @click="editing = true"
                                 >Edit</Button
                             >
-                            <Button
-                                v-if="ticket.state_id === 1 && canClose"
-                                :disabled="closing"
-                                @click="close"
-                            >
-                                {{ closing ? 'Closing…' : 'Close ticket' }}
-                            </Button>
                         </div>
                     </div>
 
