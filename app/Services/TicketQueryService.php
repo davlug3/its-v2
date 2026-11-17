@@ -171,7 +171,7 @@ class TicketQueryService
         // Post-enrichment filter for unified search across resolved fields.
         if ($q !== '' && strcasecmp($q, 'null') !== 0) {
             $qLower = mb_strtolower($q);
-            $enriched = array_values(array_filter($enriched, function (array $t) use ($qLower): bool {
+            $enriched = array_values(array_filter($enriched, function (array $t) use ($q, $qLower): bool {
                 foreach (['subject', 'issue', 'created_name', 'eu_name', 'assigned_name', 'location_name', 'category_name', 'resolved_name'] as $field) {
                     $val = $t[$field] ?? '';
                     if (is_string($val) && str_contains(mb_strtolower($val), $qLower)) {
@@ -181,6 +181,7 @@ class TicketQueryService
                 if (isset($t['id']) && str_contains((string) $t['id'], $q)) {
                     return true;
                 }
+
                 return false;
             }));
             $total = count($enriched);

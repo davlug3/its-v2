@@ -3,8 +3,9 @@ import { onMounted, ref, watch , shallowRef } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import DataTable from '@/components/common/DataTable.vue';
+import TicketListFilters from '@/components/common/TicketListFilters.vue';
 import PageHeader from '@/components/common/PageHeader.vue';
 import SearchableSelect from '@/components/common/SearchableSelect.vue';
 import type { SelectOption } from '@/components/common/SearchableSelect.vue';
@@ -24,6 +25,19 @@ const page = ref(1);
 const pageSize = ref(20);
 const loading = shallowRef(true);
 const error = shallowRef<string | null>(null);
+const searchQuery = shallowRef('');
+
+const onSearch = (query: string): void => {
+    searchQuery.value = query;
+    page.value = 1;
+    void load();
+};
+
+const onReset = (): void => {
+    searchQuery.value = '';
+    page.value = 1;
+    void load();
+};
 const stateFilter = shallowRef<string | number | null>('');
 
 const stateOptions: SelectOption[] = [
@@ -54,6 +68,7 @@ const load = async (): Promise<void> => {
         });
         if (stateFilter.value !== null && stateFilter.value !== '')
             params.set('state_id', String(stateFilter.value));
+        if (searchQuery.value.trim()) params.set('q', searchQuery.value.trim());
         const res = await api<{ tickets: Ticket[]; total: number; page?: number }>(
             '/tickets?' + params.toString(),
         );
@@ -88,8 +103,12 @@ onMounted(load);
         <PageHeader title="My tickets" description="Tickets you created or resolved." />
         <p v-if="error" class="text-sm text-destructive">{{ error }}</p>
         <Card>
-            <CardHeader><CardTitle>Tickets</CardTitle></CardHeader>
-            <CardContent class="space-y-3">
+            <CardContent class="space-y-4 pt-6">
+                <TicketListFilters
+                    search-placeholder="Search tickets…"
+                    @search="onSearch"
+                    @reset="onReset"
+                />
                 <div class="max-w-xs">
                     <SearchableSelect
                         v-model="stateFilter"

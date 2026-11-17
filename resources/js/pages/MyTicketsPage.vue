@@ -4,9 +4,10 @@ import { useRouter } from 'vue-router';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import DataTable from '@/components/common/DataTable.vue';
 import PageHeader from '@/components/common/PageHeader.vue';
+import TicketListFilters from '@/components/common/TicketListFilters.vue';
 import { api } from '@/services/api';
 
 interface Ticket {
@@ -22,6 +23,7 @@ const tickets = ref<Ticket[]>([]);
 const total = shallowRef(0);
 const loading = shallowRef(true);
 const error = shallowRef<string | null>(null);
+const searchQuery = shallowRef('');
 
 const columns = [
     { key: 'id', label: 'ID', sortable: true, width: 80, resizable: true },
@@ -29,6 +31,16 @@ const columns = [
     { key: 'state_id', label: 'State', sortable: true, width: 120, resizable: true },
     { key: 'created_date', label: 'Created', sortable: true, width: 140, resizable: true },
 ];
+
+const onSearch = (query: string): void => {
+    searchQuery.value = query;
+    void load();
+};
+
+const onReset = (): void => {
+    searchQuery.value = '';
+    void load();
+};
 
 const stateLabel = (id: number): string =>
     id === 1 ? 'Open' : id === 2 ? 'Closed' : `State ${id}`;
@@ -39,7 +51,9 @@ const load = async (): Promise<void> => {
     loading.value = true;
     error.value = null;
     try {
-        const res = await api<{ tickets: Ticket[]; total: number }>('/tickets?page=1&per_page=50');
+        const params = new URLSearchParams({ page: '1', per_page: '50' });
+        if (searchQuery.value.trim()) params.set('q', searchQuery.value.trim());
+        const res = await api<{ tickets: Ticket[]; total: number }>(`/tickets?${params.toString()}`);
         tickets.value = res.tickets ?? [];
         total.value = res.total ?? 0;
     } catch (e) {
@@ -63,10 +77,12 @@ onMounted(load);
         <p v-if="error" class="text-sm text-destructive">{{ error }}</p>
 
         <Card>
-            <CardHeader>
-                <CardTitle>Tickets involving you</CardTitle>
-            </CardHeader>
-            <CardContent>
+            <CardContent class="space-y-4 pt-6">
+                <TicketListFilters
+                    search-placeholder="Search my tickets…"
+                    @search="onSearch"
+                    @reset="onReset"
+                />
                 <DataTable
                     table-id="my-tickets"
                     :columns="columns"
