@@ -510,14 +510,9 @@ onMounted(() => {
                             </Button>
                         </div>
                     </div>
-                </CardContent>
-            </Card>
-
-            <Card>
-                <CardHeader>
-                    <CardTitle>Attachments</CardTitle>
-                </CardHeader>
-                <CardContent class="space-y-4">
+                <div class="space-y-3 border-t border-border pt-3">
+                <h3 class="text-sm font-semibold text-foreground">Attachments</h3>
+                <div class="space-y-2">
                     <p v-if="uploadError" class="text-sm text-destructive">{{ uploadError }}</p>
                     <div class="flex items-center gap-2">
                         <input
@@ -561,6 +556,8 @@ onMounted(() => {
                         </li>
                     </ul>
                     <p v-else class="text-sm text-muted-foreground">No attachments.</p>
+                </div>
+                </div>
                 </CardContent>
             </Card>
 
