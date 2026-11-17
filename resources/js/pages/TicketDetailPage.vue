@@ -474,20 +474,6 @@ onMounted(() => {
 
 
                     <div v-if="canAssignDetails" class="space-y-1 border-t border-border pt-2">
-                        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                            <div class="space-y-0">
-                                <Label class="text-xs">Category</Label>
-                                <SearchableSelect
-                                    v-model="categoryId"
-                                    :options="categoryOptions"
-                                    placeholder="Select category"
-                                />
-                            </div>
-                            <div class="space-y-0">
-                                <Label for="units" class="text-xs">Units</Label>
-                                <Input id="units" v-model.number="unitsCount" type="number" min="0" class="h-8" />
-                            </div>
-                        </div>
                         <div v-if="canAssign" class="flex items-end gap-2">
                             <div class="space-y-0 flex-1">
                                 <Label for="assign-uid" class="text-xs">Assign to</Label>
@@ -502,6 +488,20 @@ onMounted(() => {
                             <Button size="sm" :disabled="assigning" @click="doAssign">
                                 {{ assigning ? 'Assigning…' : 'Assign' }}
                             </Button>
+                        </div>
+                        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                            <div class="space-y-0">
+                                <Label>Category</Label>
+                                <SearchableSelect
+                                    v-model="categoryId"
+                                    :options="categoryOptions"
+                                    placeholder="Select category"
+                                />
+                            </div>
+                            <div class="space-y-0">
+                                <Label for="units" class="text-xs">Units</Label>
+                                <Input id="units" v-model.number="unitsCount" type="number" min="0" class="h-8" />
+                            </div>
                         </div>
                         <p v-if="assignError" class="text-sm text-destructive">{{ assignError }}</p>
                         <div class="flex gap-2">
