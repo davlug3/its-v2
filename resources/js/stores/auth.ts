@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { computed, ref } from 'vue';
+import { computed, shallowRef } from 'vue';
 
 import { api, setCsrfToken, setToken } from '@/services/api';
 import { loginSchema, type LoginInput } from '@/schemas/login';
@@ -12,10 +12,10 @@ interface AuthUser {
 }
 
 export const useAuthStore = defineStore('auth', () => {
-    const user = ref<AuthUser | null>(null);
-    const token = ref<string | null>(localStorage.getItem('auth_token'));
-    const loading = ref(false);
-    const error = ref<string | null>(null);
+    const user = shallowRef<AuthUser | null>(null);
+    const token = shallowRef<string | null>(localStorage.getItem('auth_token'));
+    const loading = shallowRef(false);
+    const error = shallowRef<string | null>(null);
 
     const isAuthenticated = computed(() => token.value !== null);
 

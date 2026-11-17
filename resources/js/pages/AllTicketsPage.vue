@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref , shallowRef } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { Badge } from '@/components/ui/badge';
@@ -36,22 +36,22 @@ interface Ticket {
 const router = useRouter();
 
 const tickets = ref<Ticket[]>([]);
-const total = ref(0);
+const total = shallowRef(0);
 const page = ref(1);
 const lastPage = ref(1);
 const pageSize = ref(20);
-const loading = ref(true);
-const error = ref<string | null>(null);
+const loading = shallowRef(true);
+const error = shallowRef<string | null>(null);
 
-const ticketId = ref('');
-const euUid = ref<string | number | null>('');
-const locationId = ref<string | number | null>('');
-const categoryId = ref<string | number | null>('');
-const subject = ref('');
-const issue = ref('');
-const closedBy = ref<string | number | null>('');
-const stateFilter = ref<string | number | null>('');
-const assignedFilter = ref<string | number | null>('');
+const ticketId = shallowRef('');
+const euUid = shallowRef<string | number | null>('');
+const locationId = shallowRef<string | number | null>('');
+const categoryId = shallowRef<string | number | null>('');
+const subject = shallowRef('');
+const issue = shallowRef('');
+const closedBy = shallowRef<string | number | null>('');
+const stateFilter = shallowRef<string | number | null>('');
+const assignedFilter = shallowRef<string | number | null>('');
 
 const categories = ref<Array<{ id: number; category: string }>>([]);
 
@@ -111,7 +111,7 @@ const fetchLocations = async (q: string): Promise<SelectOption[]> => {
 };
 
 const sortKey = ref('created');
-const sortDir = ref<'asc' | 'desc'>('desc');
+const sortDir = shallowRef<'asc' | 'desc'>('desc');
 
 const columns = computed(() => [
     { key: 'id', label: 'ID', sortable: true, width: 80, resizable: true },

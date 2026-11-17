@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, shallowRef } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { Button } from '@/components/ui/button';
@@ -18,15 +18,15 @@ interface Category {
 }
 
 const router = useRouter();
-const subject = ref('');
-const issue = ref('');
-const categoryId = ref<number | null>(null);
-const place = ref('');
-const contact = ref('');
-const unitsCount = ref(0);
-const submitting = ref(false);
-const error = ref<string | null>(null);
-const idempotencyKey = ref<string | null>(null);
+const subject = shallowRef('');
+const issue = shallowRef('');
+const categoryId = shallowRef<number | null>(null);
+const place = shallowRef('');
+const contact = shallowRef('');
+const unitsCount = shallowRef(0);
+const submitting = shallowRef(false);
+const error = shallowRef<string | null>(null);
+const idempotencyKey = shallowRef<string | null>(null);
 
 const categories = ref<Category[]>([]);
 

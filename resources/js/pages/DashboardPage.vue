@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref , shallowRef } from 'vue';
 import { RouterLink } from 'vue-router';
 
 import { Badge } from '@/components/ui/badge';
@@ -53,8 +53,8 @@ const summary = ref<DashboardSummary>({
     all_open_system: 0,
     recent: [],
 });
-const loading = ref(true);
-const error = ref<string | null>(null);
+const loading = shallowRef(true);
+const error = shallowRef<string | null>(null);
 
 const recent = computed(() => summary.value.recent ?? []);
 const isRegularUser = computed(() => (auth.user?.acl ?? 1) === 1);

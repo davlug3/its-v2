@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch , shallowRef } from 'vue';
 
 import {
     Table,
@@ -62,7 +62,7 @@ const emit = defineEmits<{
 
 // Controlled vs uncontrolled sort state
 const internalSortKey = ref(props.sortKey || props.columns.find((c) => c.sortable)?.key || '');
-const internalSortDir = ref<'asc' | 'desc'>(props.sortDir || 'asc');
+const internalSortDir = shallowRef<'asc' | 'desc'>(props.sortDir || 'asc');
 
 const activeSortKey = computed(() =>
     props.sortKey !== undefined && props.sortKey !== '' ? props.sortKey : internalSortKey.value,
@@ -167,7 +167,7 @@ const sortedRows = computed(() => {
 // Global page-size preference persisted across tables.
 const GLOBAL_PAGE_SIZE_KEY = 'datatable:global-page-size';
 
-const internalPageSize = ref<number>(props.pageSize || 20);
+const internalPageSize = shallowRef<number>(props.pageSize || 20);
 
 const loadPageSize = (): void => {
     try {

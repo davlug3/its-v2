@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, useTemplateRef , shallowRef } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import { Badge } from '@/components/ui/badge';
@@ -83,31 +83,31 @@ const canEdit = computed(() => {
     return !touched;
 });
 
-const ticket = ref<Ticket | null>(null);
-const loading = ref(true);
-const error = ref<string | null>(null);
-const editing = ref(false);
-const saving = ref(false);
-const closing = ref(false);
+const ticket = shallowRef<Ticket | null>(null);
+const loading = shallowRef(true);
+const error = shallowRef<string | null>(null);
+const editing = shallowRef(false);
+const saving = shallowRef(false);
+const closing = shallowRef(false);
 
-const subject = ref('');
-const issue = ref('');
-const assignUid = ref(0);
-const assigning = ref(false);
-const assignError = ref<string | null>(null);
+const subject = shallowRef('');
+const issue = shallowRef('');
+const assignUid = shallowRef(0);
+const assigning = shallowRef(false);
+const assignError = shallowRef<string | null>(null);
 
-const logs = ref<TicketLog[]>([]);
-const commentText = ref('');
-const commenting = ref(false);
-const commentError = ref<string | null>(null);
+const logs = shallowRef<TicketLog[]>([]);
+const commentText = shallowRef('');
+const commenting = shallowRef(false);
+const commentError = shallowRef<string | null>(null);
 
-const attachments = ref<Attachment[]>([]);
-const uploading = ref(false);
-const uploadError = ref<string | null>(null);
-const fileInput = ref<HTMLInputElement | null>(null);
+const attachments = shallowRef<Attachment[]>([]);
+const uploading = shallowRef(false);
+const uploadError = shallowRef<string | null>(null);
+const fileInput = useTemplateRef<HTMLInputElement>('fileInput');
 
-const deleteAttachmentOpen = ref(false);
-const deleteAttachmentTarget = ref<number | null>(null);
+const deleteAttachmentOpen = shallowRef(false);
+const deleteAttachmentTarget = shallowRef<number | null>(null);
 
 const fetchAssignees = async (q: string): Promise<SelectOption[]> => {
     const params = new URLSearchParams({ assignable: '1', q, limit: '30' });

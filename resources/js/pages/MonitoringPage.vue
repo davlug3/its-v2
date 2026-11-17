@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue';
+import { onMounted, onUnmounted, ref , shallowRef } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,9 +21,9 @@ const POLL_MS = 5000; // D51: 5-second cadence (configurable)
 
 const router = useRouter();
 const rows = ref<Row[]>([]);
-const loading = ref(true);
-const error = ref<string | null>(null);
-const lastUpdated = ref('');
+const loading = shallowRef(true);
+const error = shallowRef<string | null>(null);
+const lastUpdated = shallowRef('');
 let inFlight = false;
 
 const columns = [

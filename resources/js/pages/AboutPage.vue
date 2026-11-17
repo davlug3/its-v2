@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onMounted, ref , shallowRef } from 'vue';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PageHeader from '@/components/common/PageHeader.vue';
@@ -21,8 +21,8 @@ interface AboutInfo {
 }
 
 const info = ref<AboutInfo | null>(null);
-const loading = ref(true);
-const error = ref<string | null>(null);
+const loading = shallowRef(true);
+const error = shallowRef<string | null>(null);
 
 onMounted(async () => {
     try {

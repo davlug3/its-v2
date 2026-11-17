@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, ref, watch , shallowRef } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { Badge } from '@/components/ui/badge';
@@ -19,12 +19,12 @@ interface Ticket {
 
 const router = useRouter();
 const tickets = ref<Ticket[]>([]);
-const total = ref(0);
+const total = shallowRef(0);
 const page = ref(1);
 const pageSize = ref(20);
-const loading = ref(true);
-const error = ref<string | null>(null);
-const stateFilter = ref<string | number | null>('');
+const loading = shallowRef(true);
+const error = shallowRef<string | null>(null);
+const stateFilter = shallowRef<string | number | null>('');
 
 const stateOptions: SelectOption[] = [
     { value: '', label: 'All states' },

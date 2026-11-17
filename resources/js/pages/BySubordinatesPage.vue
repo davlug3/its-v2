@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref , shallowRef } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { Button } from '@/components/ui/button';
@@ -41,24 +41,24 @@ interface Page {
 const router = useRouter();
 
 const tickets = ref<Ticket[]>([]);
-const total = ref(0);
+const total = shallowRef(0);
 const page = ref(1);
 const pageSize = ref(40);
-const loading = ref(true);
-const error = ref<string | null>(null);
+const loading = shallowRef(true);
+const error = shallowRef<string | null>(null);
 
-const indirect = ref(false);
-const hideOld = ref(true);
+const indirect = shallowRef(false);
+const hideOld = shallowRef(true);
 
 const selected = ref<Set<number>>(new Set());
 const selectedCount = computed(() => selected.value.size);
 
-const remarksOpen = ref(false);
-const remarksMode = ref<'single' | 'batch'>('single');
-const remarksTarget = ref<number | null>(null);
-const remarksText = ref('');
-const remarksSaving = ref(false);
-const remarksError = ref<string | null>(null);
+const remarksOpen = shallowRef(false);
+const remarksMode = shallowRef<'single' | 'batch'>('single');
+const remarksTarget = shallowRef<number | null>(null);
+const remarksText = shallowRef('');
+const remarksSaving = shallowRef(false);
+const remarksError = shallowRef<string | null>(null);
 
 const columns = [
     { key: 'select', label: '', sortable: false, width: 48, resizable: false },
@@ -182,7 +182,7 @@ const submitDisapprove = async (): Promise<void> => {
     }
 };
 
-const batchApproveOpen = ref(false);
+const batchApproveOpen = shallowRef(false);
 
 const requestBatchApprove = (): void => {
     if (selected.value.size === 0) return;

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onMounted, ref , shallowRef } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,13 +21,13 @@ interface Ticket {
 const router = useRouter();
 
 const tickets = ref<Ticket[]>([]);
-const total = ref(0);
+const total = shallowRef(0);
 const page = ref(1);
 const pageSize = ref(20);
-const loading = ref(true);
-const error = ref<string | null>(null);
+const loading = shallowRef(true);
+const error = shallowRef<string | null>(null);
 const sortKey = ref('id');
-const sortDir = ref<'asc' | 'desc'>('desc');
+const sortDir = shallowRef<'asc' | 'desc'>('desc');
 
 const columns = [
     { key: 'id', label: 'ID', sortable: true, width: 80, resizable: true },

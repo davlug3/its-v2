@@ -84,7 +84,7 @@ class TicketMutationService
         $this->notifications->notify(
             (int) $ticket->eu_uid,
             'Ticket Created - '.$ticket->id,
-            'This is a confirmation email letting you know that your ticket was successfully created.<br /><br />Ticket ID: '.$ticket->id,
+            "This is a confirmation email letting you know that your ticket was successfully created.\n\nTicket ID: ".$ticket->id,
         );
 
         return ['ok' => true, 'ticket_id' => $ticket->id, 'message' => 'Ticket created.'];

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, onUnmounted, ref, watch , shallowRef } from 'vue';
 
 import { Input } from '@/components/ui/input';
 
@@ -10,7 +10,6 @@ export interface SelectOption {
 
 const props = withDefaults(
     defineProps<{
-        modelValue: string | number | null;
         options: SelectOption[];
         placeholder?: string;
         debounce?: number;
@@ -24,14 +23,12 @@ const props = withDefaults(
     },
 );
 
-const emit = defineEmits<{
-    (e: 'update:modelValue', value: string | number | null): void;
-}>();
+const model = defineModel<string | number | null>({ default: null });
 
-const open = ref(false);
-const query = ref('');
-const debouncedQuery = ref('');
-const loading = ref(false);
+const open = shallowRef(false);
+const query = shallowRef('');
+const debouncedQuery = shallowRef('');
+const loading = shallowRef(false);
 const asyncOptions = ref<SelectOption[] | null>(null);
 
 let timer: ReturnType<typeof setTimeout> | null = null;
@@ -69,7 +66,7 @@ const filtered = computed(() => {
 });
 
 const selectedLabel = computed(() => {
-    const found = baseOptions.value.find((o) => o.value === props.modelValue);
+    const found = baseOptions.value.find((o) => o.value === model.value);
     return found ? found.label : '';
 });
 
@@ -102,15 +99,23 @@ const onFocus = (): void => {
     }
 };
 
+let blurTimer: ReturnType<typeof setTimeout> | null = null;
+
 const onBlur = (): void => {
     // delay to allow click on option
-    setTimeout(() => {
+    if (blurTimer) clearTimeout(blurTimer);
+    blurTimer = setTimeout(() => {
         open.value = false;
     }, 150);
 };
 
+onUnmounted(() => {
+    if (timer) clearTimeout(timer);
+    if (blurTimer) clearTimeout(blurTimer);
+});
+
 const select = (opt: SelectOption): void => {
-    emit('update:modelValue', opt.value);
+    model.value = opt.value;
     query.value = '';
     debouncedQuery.value = '';
     asyncOptions.value = null;
@@ -118,13 +123,13 @@ const select = (opt: SelectOption): void => {
 };
 
 const clear = (): void => {
-    emit('update:modelValue', null);
+    model.value = null;
     query.value = '';
 };
 
-// sync display when modelValue changes externally
+// sync display when model changes externally
 watch(
-    () => props.modelValue,
+    () => model.value,
     () => {
         query.value = '';
     },
@@ -157,7 +162,7 @@ watch(
             >
                 {{ opt.label }}
             </button>
-            <div v-if="modelValue !== null" class="mt-1 border-t border-border pt-1">
+            <div v-if="model !== null" class="mt-1 border-t border-border pt-1">
                 <button
                     type="button"
                     class="px-2 text-xs text-muted-foreground hover:text-foreground"

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, shallowRef } from 'vue';
 import { RouterLink, RouterView, useRoute } from 'vue-router';
 
 import { Bell, ChevronDown, Menu } from '@lucide/vue';
@@ -41,11 +41,11 @@ const visibleGroups = computed(() =>
         .filter((group) => group.items.length > 0),
 );
 
-const mobileNavOpen = ref(false);
+const mobileNavOpen = shallowRef(false);
 
-const notificationsOpen = ref(false);
-const notifications = ref<Notification[]>([]);
-const unreadCount = ref(0);
+const notificationsOpen = shallowRef(false);
+const notifications = shallowRef<Notification[]>([]);
+const unreadCount = shallowRef(0);
 let pollTimer: ReturnType<typeof setInterval> | null = null;
 
 const loadUnread = async (): Promise<void> => {
@@ -248,7 +248,7 @@ onUnmounted(() => {
                                     @click="markRead(n)"
                                 >
                                     <div class="font-medium">{{ n.subject || 'Notification' }}</div>
-                                    <div class="text-xs" v-html="n.data"></div>
+                                    <div class="whitespace-pre-wrap text-xs">{{ n.data }}</div>
                                 </button>
                             </div>
                         </div>

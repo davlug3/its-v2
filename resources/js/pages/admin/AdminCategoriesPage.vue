@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, shallowRef } from 'vue';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,8 +18,8 @@ interface Category {
 }
 
 const categories = ref<Category[]>([]);
-const loading = ref(true);
-const error = ref<string | null>(null);
+const loading = shallowRef(true);
+const error = shallowRef<string | null>(null);
 
 const columns = [
     { key: 'id', label: 'ID', sortable: true, width: 80, resizable: true },
@@ -27,15 +27,15 @@ const columns = [
     { key: 'actions', label: 'Actions', sortable: false, width: 180, resizable: true },
 ];
 
-const newName = ref('');
-const creating = ref(false);
+const newName = shallowRef('');
+const creating = shallowRef(false);
 
-const editingId = ref<number | null>(null);
-const editingName = ref('');
-const savingId = ref<number | null>(null);
+const editingId = shallowRef<number | null>(null);
+const editingName = shallowRef('');
+const savingId = shallowRef<number | null>(null);
 
-const deleteOpen = ref(false);
-const deleteTarget = ref<Category | null>(null);
+const deleteOpen = shallowRef(false);
+const deleteTarget = shallowRef<Category | null>(null);
 
 const load = async (): Promise<void> => {
     loading.value = true;

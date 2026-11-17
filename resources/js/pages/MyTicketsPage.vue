@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onMounted, ref , shallowRef } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { Badge } from '@/components/ui/badge';
@@ -19,9 +19,9 @@ interface Ticket {
 const router = useRouter();
 
 const tickets = ref<Ticket[]>([]);
-const total = ref(0);
-const loading = ref(true);
-const error = ref<string | null>(null);
+const total = shallowRef(0);
+const loading = shallowRef(true);
+const error = shallowRef<string | null>(null);
 
 const columns = [
     { key: 'id', label: 'ID', sortable: true, width: 80, resizable: true },

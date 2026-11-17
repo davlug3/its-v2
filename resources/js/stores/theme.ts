@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { shallowRef } from 'vue';
 
 export const useThemeStore = defineStore('theme', () => {
-    const isDark = ref<boolean>(localStorage.getItem('theme') === 'dark');
+    const isDark = shallowRef<boolean>(localStorage.getItem('theme') === 'dark');
 
     function apply(): void {
         document.documentElement.classList.toggle('dark', isDark.value);

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref , shallowRef } from 'vue';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,10 +10,10 @@ import SearchableSelect from '@/components/common/SearchableSelect.vue';
 import type { SelectOption } from '@/components/common/SearchableSelect.vue';
 import { api, getToken } from '@/services/api';
 
-const from = ref('');
-const to = ref('');
-const employeeId = ref<string | number | null>('');
-const format = ref<'csv' | 'json'>('csv');
+const from = shallowRef('');
+const to = shallowRef('');
+const employeeId = shallowRef<string | number | null>('');
+const format = shallowRef<'csv' | 'json'>('csv');
 
 const fetchEmployees = async (q: string): Promise<SelectOption[]> => {
     const params = new URLSearchParams({ q, limit: '30' });
@@ -24,8 +24,8 @@ const fetchEmployees = async (q: string): Promise<SelectOption[]> => {
         (res ?? []).map((u) => ({ value: u.id, label: u.label })),
     );
 };
-const loading = ref(false);
-const error = ref<string | null>(null);
+const loading = shallowRef(false);
+const error = shallowRef<string | null>(null);
 const summary = ref<Record<string, unknown> | null>(null);
 
 const today = new Date();

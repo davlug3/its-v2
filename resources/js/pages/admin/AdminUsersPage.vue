@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, shallowRef } from 'vue';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -46,11 +46,11 @@ interface Page {
 const auth = useAuthStore();
 
 const rows = ref<AdminUser[]>([]);
-const loading = ref(true);
-const error = ref<string | null>(null);
-const search = ref('');
-const aclFilter = ref<string | null>('all');
-const statusFilter = ref<string | null>('all');
+const loading = shallowRef(true);
+const error = shallowRef<string | null>(null);
+const search = shallowRef('');
+const aclFilter = shallowRef<string | null>('all');
+const statusFilter = shallowRef<string | null>('all');
 
 const aclOptions: SelectOption[] = [
     { value: 'all', label: 'All access' },
@@ -70,13 +70,13 @@ const accessOptions: SelectOption[] = [
     { value: 3, label: 'Helpdesk' },
     { value: 9, label: 'Admin' },
 ];
-const page = ref(1);
-const lastPage = ref(1);
-const total = ref(0);
-const pageSize = ref(40);
+const page = shallowRef(1);
+const lastPage = shallowRef(1);
+const total = shallowRef(0);
+const pageSize = shallowRef(40);
 
-const sortKey = ref('name');
-const sortDir = ref<'asc' | 'desc'>('asc');
+const sortKey = shallowRef('name');
+const sortDir = shallowRef<'asc' | 'desc'>('asc');
 
 const columns = [
     { key: 'id', label: 'ID', sortable: true, width: 70, resizable: true },
@@ -86,15 +86,15 @@ const columns = [
     { key: 'actions', label: 'Actions', sortable: false, width: 220, resizable: true },
 ];
 
-const resetOpen = ref(false);
-const resetTarget = ref<AdminUser | null>(null);
-const resetPassword = ref('');
-const resetConfirm = ref('');
-const resetSaving = ref(false);
-const resetError = ref<string | null>(null);
+const resetOpen = shallowRef(false);
+const resetTarget = shallowRef<AdminUser | null>(null);
+const resetPassword = shallowRef('');
+const resetConfirm = shallowRef('');
+const resetSaving = shallowRef(false);
+const resetError = shallowRef<string | null>(null);
 
-const disableOpen = ref(false);
-const disableTarget = ref<AdminUser | null>(null);
+const disableOpen = shallowRef(false);
+const disableTarget = shallowRef<AdminUser | null>(null);
 
 const canResetPassword = computed(() => auth.user?.acl === 9);
 
