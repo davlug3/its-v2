@@ -76,17 +76,6 @@ const canAssign = computed(() => (auth.user?.acl ?? 1) >= 3);
 
 const canClose = computed(() => (auth.user?.acl ?? 1) >= 2);
 
-const canEdit = computed(() => {
-    if (!ticket.value || !auth.user) return false;
-    // Only helpdesk (ACL >= 2) or above may edit subject/issue.
-    if ((auth.user.acl ?? 1) < 2) return false;
-    const touched =
-        ticket.value.assigned_uid !== 0 ||
-        ticket.value.resolved_uid !== 0 ||
-        ticket.value.state_id !== 1;
-    return !touched;
-});
-
 // Helpdesk can always assign category and units.
 const canAssignDetails = computed(() => {
     if (!ticket.value || !auth.user) return false;
@@ -98,12 +87,9 @@ const ticket = shallowRef<Ticket | null>(null);
 const safeIssue = computed(() => (ticket.value ? DOMPurify.sanitize(ticket.value.issue) : ''));
 const loading = shallowRef(true);
 const error = shallowRef<string | null>(null);
-const editing = shallowRef(false);
 const saving = shallowRef(false);
 const closing = shallowRef(false);
 
-const subject = shallowRef('');
-const issue = shallowRef('');
 const categoryId = shallowRef<number | null>(null);
 const unitsCount = shallowRef(1);
 const assignUid = shallowRef(0);
@@ -170,8 +156,6 @@ const load = async (): Promise<void> => {
     error.value = null;
     try {
         ticket.value = await api<Ticket>(`/tickets/${id}`);
-        subject.value = ticket.value.subject;
-        issue.value = ticket.value.issue;
         categoryId.value = ticket.value.category_id;
         unitsCount.value = ticket.value.units_count;
         assignUid.value = ticket.value.assigned_uid;
@@ -188,8 +172,6 @@ const save = async (): Promise<void> => {
     saving.value = true;
     error.value = null;
     const input: TicketEditInput = {
-        subject: subject.value,
-        issue: issue.value,
         category_id: categoryId.value ?? 1,
         units_count: unitsCount.value,
     };
@@ -207,15 +189,12 @@ const save = async (): Promise<void> => {
             {
                 method: 'PUT',
                 body: JSON.stringify({
-                    subject: input.subject.trim(),
-                    issue: input.issue.trim(),
                     category_id: input.category_id,
                     units_count: input.units_count,
                 }),
             },
             newIdempotencyKey(),
         );
-        editing.value = false;
         await load();
     } catch (e) {
         error.value = (e as { message?: string }).message ?? 'Failed to save.';
@@ -397,29 +376,8 @@ onMounted(() => {
                     </CardTitle>
                 </CardHeader>
                 <CardContent class="space-y-4">
-                    <div v-if="editing" class="space-y-3">
-                        <div class="space-y-2">
-                            <Label for="subject">Subject</Label>
-                            <Input id="subject" v-model="subject" />
-                        </div>
-                        <div class="space-y-2">
-                            <Label for="issue">Issue</Label>
-                            <Textarea id="issue" v-model="issue" rows="6" />
-                        </div>
-                        <div class="flex gap-2">
-                            <Button :disabled="saving" @click="save">
-                                {{ saving ? 'Saving…' : 'Save' }}
-                            </Button>
-                            <Button variant="outline" @click="editing = false">Cancel</Button>
-                        </div>
-                    </div>
-                    <div v-else class="space-y-3">
+                    <div class="space-y-3">
                         <div class="prose prose-sm max-w-none text-sm" v-html="safeIssue"></div>
-                        <div class="flex gap-2">
-                            <Button v-if="canEdit" variant="outline" @click="editing = true"
-                                >Edit subject & issue</Button
-                            >
-                        </div>
                     </div>
 
                     <div class="space-y-0 rounded-md border border-border bg-paper/50 p-0.5">
