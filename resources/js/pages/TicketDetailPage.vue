@@ -421,34 +421,34 @@ onMounted(() => {
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <!-- Ticket details -->
-                        <div class="space-y-3">
+                        <div class="space-y-2">
                             <h3 class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                                 Ticket details
                             </h3>
-                            <div class="space-y-1">
-                                <div class="flex items-center justify-between rounded-md px-3 py-2 transition-colors hover:bg-haze/50">
+                            <div class="space-y-0">
+                                <div class="flex items-center justify-between rounded-md px-2 py-1.5 transition-colors hover:bg-haze/50">
                                     <span class="text-sm text-muted-foreground">Category</span>
                                     <span class="text-sm font-medium text-foreground">
                                         {{ ticket.category_name ?? (ticket.category_id ? 'Unknown category' : '—') }}
                                     </span>
                                 </div>
-                                <div class="flex items-center justify-between rounded-md px-3 py-2 transition-colors hover:bg-haze/50">
+                                <div class="flex items-center justify-between rounded-md px-2 py-1.5 transition-colors hover:bg-haze/50">
                                     <span class="text-sm text-muted-foreground">Location</span>
                                     <span class="text-sm font-medium text-foreground">
                                         {{ ticket.location_name ?? (ticket.location_id ? 'Unknown location' : '—') }}
                                     </span>
                                 </div>
-                                <div class="flex items-center justify-between rounded-md px-3 py-2 transition-colors hover:bg-haze/50">
+                                <div class="flex items-center justify-between rounded-md px-2 py-1.5 transition-colors hover:bg-haze/50">
                                     <span class="text-sm text-muted-foreground">Place</span>
                                     <span class="text-sm font-medium text-foreground">{{ ticket.place || '—' }}</span>
                                 </div>
-                                <div class="flex items-center justify-between rounded-md px-3 py-2 transition-colors hover:bg-haze/50">
+                                <div class="flex items-center justify-between rounded-md px-2 py-1.5 transition-colors hover:bg-haze/50">
                                     <span class="text-sm text-muted-foreground">Contact</span>
                                     <span class="text-sm font-medium text-foreground">{{ ticket.contact || '—' }}</span>
                                 </div>
-                                <div class="flex items-center justify-between rounded-md px-3 py-2 transition-colors hover:bg-haze/50">
+                                <div class="flex items-center justify-between rounded-md px-2 py-1.5 transition-colors hover:bg-haze/50">
                                     <span class="text-sm text-muted-foreground">Units</span>
                                     <span class="text-sm font-medium text-foreground">{{ ticket.units_count }}</span>
                                 </div>
@@ -456,18 +456,18 @@ onMounted(() => {
                         </div>
 
                         <!-- People -->
-                        <div class="space-y-3">
+                        <div class="space-y-2">
                             <h3 class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                                 People
                             </h3>
-                            <div class="space-y-1">
-                                <div class="flex items-center justify-between rounded-md px-3 py-2 transition-colors hover:bg-haze/50">
+                            <div class="space-y-0">
+                                <div class="flex items-center justify-between rounded-md px-2 py-1.5 transition-colors hover:bg-haze/50">
                                     <span class="text-sm text-muted-foreground">Created by</span>
                                     <span class="text-sm font-medium text-foreground">
                                         {{ ticket.created_name ?? (ticket.created_uid ? 'Deleted user' : '—') }}
                                     </span>
                                 </div>
-                                <div class="flex items-center justify-between rounded-md px-3 py-2 transition-colors hover:bg-haze/50">
+                                <div class="flex items-center justify-between rounded-md px-2 py-1.5 transition-colors hover:bg-haze/50">
                                     <span class="text-sm text-muted-foreground">Assigned to</span>
                                     <span class="text-sm font-medium text-foreground">
                                         {{ ticket.assigned_name ?? (ticket.assigned_uid ? 'Deleted user' : 'Unassigned') }}
@@ -491,10 +491,12 @@ onMounted(() => {
                         </div>
                     </div>
 
-                    <div v-if="canAssignDetails" class="space-y-3 border-t border-border pt-3">
-                        <h3 class="text-sm font-medium text-foreground">Assign details</h3>
-                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                            <div class="space-y-2">
+                    <div v-if="canAssignDetails" class="space-y-2 border-t border-border pt-2">
+                        <h3 class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                            Assign details
+                        </h3>
+                        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                            <div class="space-y-1">
                                 <Label>Category</Label>
                                 <SearchableSelect
                                     v-model="categoryId"
@@ -502,7 +504,7 @@ onMounted(() => {
                                     placeholder="Select category"
                                 />
                             </div>
-                            <div class="space-y-2">
+                            <div class="space-y-1">
                                 <Label for="units">Units</Label>
                                 <Input id="units" v-model.number="unitsCount" type="number" min="0" />
                             </div>
