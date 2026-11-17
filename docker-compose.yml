@@ -67,24 +67,9 @@ services:
             - .:/var/www/html
         command: ['php', 'artisan', 'queue:work', '--tries=3', '--timeout=90']
 
-    db:
-        image: mysql:8.4
-        profiles: ['local-db']
-        restart: unless-stopped
-        environment:
-            MYSQL_DATABASE: its
-            MYSQL_USER: its
-            MYSQL_PASSWORD: secret
-            MYSQL_ROOT_PASSWORD: root
-        ports:
-            - '3307:3306'
-        volumes:
-            - dbdata:/var/lib/mysql
-        healthcheck:
-            test: ['CMD-SHELL', 'mysqladmin ping -h 127.0.0.1 -uroot -proot --silent']
-            interval: 10s
-            timeout: 5s
-            retries: 10
+    # db service removed: local Docker MySQL retired.
+    # Development connects directly to the production database at 192.163.10.131.
+    # See README.md section 8 for connection details.
 
     redis:
         image: redis:8-alpine
@@ -102,5 +87,4 @@ services:
             retries: 5
 
 volumes:
-    dbdata:
     redisdata:

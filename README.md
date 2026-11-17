@@ -181,6 +181,9 @@ The scaffold is complete. Steps:
 
 1. `composer install`
 2. `cp .env.example .env` and fill in the database and IMAP values.
+   Database connection uses the production server at `192.163.10.131`.
+   Set `DB_USERNAME` / `DB_PASSWORD` and `PAYROLL_DB_USERNAME` / `PAYROLL_DB_PASSWORD`
+   to your authorized credentials.
 3. `php artisan key:generate`
 4. `php artisan jwt:secret`
 5. `npm install`
