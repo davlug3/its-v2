@@ -53,7 +53,7 @@ class SecureHeadersTest extends TestCase
         $response = $middleware->handle($request, fn () => new Response('ok', 200));
         $csp = (string) $response->headers->get('Content-Security-Policy');
 
-        $this->assertStringContainsString('localhost:5173', $csp);
-        $this->assertStringContainsString('ws://localhost:5173', $csp);
+        $this->assertStringContainsString('localhost:*', $csp);
+        $this->assertStringContainsString('ws://localhost:*', $csp);
     }
 }

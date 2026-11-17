@@ -26,11 +26,11 @@ class SecureHeaders
         $connectSrc = "'self'";
 
         // Allow Vite dev server/HMR in local development.
-        // The port is read from VITE_PORT so it tracks the actual dev server.
+        // Use a wildcard port so any Vite dev server port works, even when
+        // the configured port is already taken and Vite picks the next one.
         if (app()->isLocal() || config('app.debug')) {
-            $port = (int) config('app.vite_port', 5173);
-            $vite = "http://localhost:{$port} http://127.0.0.1:{$port} ws://localhost:{$port} ws://127.0.0.1:{$port}";
-            $viteHttp = "http://localhost:{$port} http://127.0.0.1:{$port}";
+            $vite = 'http://localhost:* http://127.0.0.1:* ws://localhost:* ws://127.0.0.1:*';
+            $viteHttp = 'http://localhost:* http://127.0.0.1:*';
             $scriptSrc .= ' '.$viteHttp;
             $styleSrc .= ' '.$viteHttp;
             $imgSrc .= ' '.$viteHttp;
