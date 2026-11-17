@@ -421,72 +421,73 @@ onMounted(() => {
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                        <!-- Ticket details -->
                         <div class="space-y-3">
-                            <h3 class="text-sm font-medium text-foreground">Ticket details</h3>
-                            <dl class="space-y-2 text-sm">
-                                <div class="flex justify-between gap-2">
-                                    <dt class="text-muted-foreground">Category</dt>
-                                    <dd class="text-right font-medium">
-                                        {{
-                                            ticket.category_name ??
-                                            (ticket.category_id ? 'Unknown category' : '—')
-                                        }}
-                                    </dd>
+                            <h3 class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                                Ticket details
+                            </h3>
+                            <div class="space-y-1">
+                                <div class="flex items-center justify-between rounded-md px-3 py-2 transition-colors hover:bg-haze/50">
+                                    <span class="text-sm text-muted-foreground">Category</span>
+                                    <span class="text-sm font-medium text-foreground">
+                                        {{ ticket.category_name ?? (ticket.category_id ? 'Unknown category' : '—') }}
+                                    </span>
                                 </div>
-                                <div class="flex justify-between gap-2">
-                                    <dt class="text-muted-foreground">Location</dt>
-                                    <dd class="text-right font-medium">
-                                        {{
-                                            ticket.location_name ??
-                                            (ticket.location_id ? 'Unknown location' : '—')
-                                        }}
-                                    </dd>
+                                <div class="flex items-center justify-between rounded-md px-3 py-2 transition-colors hover:bg-haze/50">
+                                    <span class="text-sm text-muted-foreground">Location</span>
+                                    <span class="text-sm font-medium text-foreground">
+                                        {{ ticket.location_name ?? (ticket.location_id ? 'Unknown location' : '—') }}
+                                    </span>
                                 </div>
-                                <div class="flex justify-between gap-2">
-                                    <dt class="text-muted-foreground">Place</dt>
-                                    <dd class="text-right font-medium">{{ ticket.place || '—' }}</dd>
+                                <div class="flex items-center justify-between rounded-md px-3 py-2 transition-colors hover:bg-haze/50">
+                                    <span class="text-sm text-muted-foreground">Place</span>
+                                    <span class="text-sm font-medium text-foreground">{{ ticket.place || '—' }}</span>
                                 </div>
-                                <div class="flex justify-between gap-2">
-                                    <dt class="text-muted-foreground">Contact</dt>
-                                    <dd class="text-right font-medium">{{ ticket.contact || '—' }}</dd>
+                                <div class="flex items-center justify-between rounded-md px-3 py-2 transition-colors hover:bg-haze/50">
+                                    <span class="text-sm text-muted-foreground">Contact</span>
+                                    <span class="text-sm font-medium text-foreground">{{ ticket.contact || '—' }}</span>
                                 </div>
-                                <div class="flex justify-between gap-2">
-                                    <dt class="text-muted-foreground">Units</dt>
-                                    <dd class="text-right font-medium">{{ ticket.units_count }}</dd>
+                                <div class="flex items-center justify-between rounded-md px-3 py-2 transition-colors hover:bg-haze/50">
+                                    <span class="text-sm text-muted-foreground">Units</span>
+                                    <span class="text-sm font-medium text-foreground">{{ ticket.units_count }}</span>
                                 </div>
-                            </dl>
+                            </div>
                         </div>
+
+                        <!-- People -->
                         <div class="space-y-3">
-                            <h3 class="text-sm font-medium text-foreground">People</h3>
-                            <dl class="space-y-2 text-sm">
-                                <div class="flex justify-between gap-2">
-                                    <dt class="text-muted-foreground">Created by</dt>
-                                    <dd class="text-right font-medium">
-                                        {{
-                                            ticket.created_name ??
-                                            (ticket.created_uid ? 'Deleted user' : '—')
-                                        }}
-                                    </dd>
+                            <h3 class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                                People
+                            </h3>
+                            <div class="space-y-1">
+                                <div class="flex items-center justify-between rounded-md px-3 py-2 transition-colors hover:bg-haze/50">
+                                    <span class="text-sm text-muted-foreground">Created by</span>
+                                    <span class="text-sm font-medium text-foreground">
+                                        {{ ticket.created_name ?? (ticket.created_uid ? 'Deleted user' : '—') }}
+                                    </span>
                                 </div>
-                                <div class="flex justify-between gap-2">
-                                    <dt class="text-muted-foreground">Assigned to</dt>
-                                    <dd class="text-right font-medium">
-                                        {{
-                                            ticket.assigned_name ??
-                                            (ticket.assigned_uid ? 'Deleted user' : 'Unassigned')
-                                        }}
-                                    </dd>
+                                <div class="flex items-center justify-between rounded-md px-3 py-2 transition-colors hover:bg-haze/50">
+                                    <span class="text-sm text-muted-foreground">Assigned to</span>
+                                    <span class="text-sm font-medium text-foreground">
+                                        {{ ticket.assigned_name ?? (ticket.assigned_uid ? 'Deleted user' : 'Unassigned') }}
+                                    </span>
                                 </div>
-                                <div v-if="ticket.eu_uid && ticket.eu_uid !== ticket.created_uid" class="flex justify-between gap-2">
-                                    <dt class="text-muted-foreground">End user</dt>
-                                    <dd class="text-right font-medium">{{ ticket.eu_name ?? 'Deleted user' }}</dd>
+                                <div
+                                    v-if="ticket.eu_uid && ticket.eu_uid !== ticket.created_uid"
+                                    class="flex items-center justify-between rounded-md px-3 py-2 transition-colors hover:bg-haze/50"
+                                >
+                                    <span class="text-sm text-muted-foreground">End user</span>
+                                    <span class="text-sm font-medium text-foreground">{{ ticket.eu_name ?? 'Deleted user' }}</span>
                                 </div>
-                                <div v-if="ticket.resolved_uid" class="flex justify-between gap-2">
-                                    <dt class="text-muted-foreground">Resolved by</dt>
-                                    <dd class="text-right font-medium">{{ ticket.resolved_name ?? 'Deleted user' }}</dd>
+                                <div
+                                    v-if="ticket.resolved_uid"
+                                    class="flex items-center justify-between rounded-md px-3 py-2 transition-colors hover:bg-haze/50"
+                                >
+                                    <span class="text-sm text-muted-foreground">Resolved by</span>
+                                    <span class="text-sm font-medium text-foreground">{{ ticket.resolved_name ?? 'Deleted user' }}</span>
                                 </div>
-                            </dl>
+                            </div>
                         </div>
                     </div>
 
