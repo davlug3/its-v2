@@ -77,13 +77,19 @@ const canClose = computed(() => (auth.user?.acl ?? 1) >= 2);
 
 const canEdit = computed(() => {
     if (!ticket.value || !auth.user) return false;
-    // Only helpdesk (ACL >= 2) or above may edit ticket fields.
+    // Only helpdesk (ACL >= 2) or above may edit subject/issue.
     if ((auth.user.acl ?? 1) < 2) return false;
     const touched =
         ticket.value.assigned_uid !== 0 ||
         ticket.value.resolved_uid !== 0 ||
         ticket.value.state_id !== 1;
     return !touched;
+});
+
+// Helpdesk can always assign category, location, place, contact, units.
+const canAssignDetails = computed(() => {
+    if (!ticket.value || !auth.user) return false;
+    return (auth.user.acl ?? 1) >= 2;
 });
 
 const ticket = shallowRef<Ticket | null>(null);
@@ -432,7 +438,7 @@ onMounted(() => {
                     </div>
 
                     <!-- Category, location, place, contact, units — always editable by helpdesk -->
-                    <div v-if="canEdit" class="space-y-3 border-t border-border pt-3">
+                    <div v-if="canAssignDetails" class="space-y-3 border-t border-border pt-3">
                         <h3 class="text-sm font-medium text-foreground">Assign details</h3>
                         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                             <div class="space-y-2">

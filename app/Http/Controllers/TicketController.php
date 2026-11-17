@@ -242,15 +242,18 @@ class TicketController extends Controller
             return response()->json(['message' => 'You do not have permission to edit this ticket.'], 403);
         }
 
+        $data = $request->all();
+
+        // Subject/issue can only be changed on untouched tickets.
         $touched = (int) $ticket->assigned_uid !== 0
             || (int) $ticket->resolved_uid !== 0
             || (int) $ticket->state_id !== 1;
 
-        if ($touched) {
-            return response()->json(['message' => 'This ticket can no longer be edited.'], 422);
+        if ($touched && (isset($data['subject']) || isset($data['issue']))) {
+            return response()->json(['message' => 'Subject and issue can only be edited on untouched tickets.'], 422);
         }
 
-        $result = $this->mutations->edit($id, $request->all(), (int) $user->id);
+        $result = $this->mutations->edit($id, $data, (int) $user->id);
 
         if (! $result['ok']) {
             return response()->json(['message' => $result['message']], 422);
