@@ -77,6 +77,8 @@ const canClose = computed(() => (auth.user?.acl ?? 1) >= 2);
 
 const canEdit = computed(() => {
     if (!ticket.value || !auth.user) return false;
+    // Only helpdesk (ACL >= 2) or above may edit ticket fields.
+    if ((auth.user.acl ?? 1) < 2) return false;
     if (ticket.value.created_uid !== auth.user.id) return false;
     const touched =
         ticket.value.assigned_uid !== 0 ||

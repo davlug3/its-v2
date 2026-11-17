@@ -236,9 +236,9 @@ class TicketController extends Controller
             return response()->json(['message' => 'Ticket not found.'], 404);
         }
 
-        // Only the creator may edit, and only while the ticket is untouched.
-        if ($ticket->created_uid !== (int) $user->id) {
-            return response()->json(['message' => 'Only the ticket creator may edit it.'], 403);
+        // Only helpdesk (ACL >= 2) who is also the creator may edit.
+        if ($this->aclOf($request) < 2 || $ticket->created_uid !== (int) $user->id) {
+            return response()->json(['message' => 'You do not have permission to edit this ticket.'], 403);
         }
 
         $touched = (int) $ticket->assigned_uid !== 0
