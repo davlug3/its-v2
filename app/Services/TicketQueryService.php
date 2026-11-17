@@ -550,8 +550,8 @@ class TicketQueryService
 
         return [
             'total' => (int) $base->count(),
-            'open' => (int) clone $base->where('state_id', 1)->count(),
-            'closed' => (int) clone $base->where('state_id', 2)->count(),
+            'open' => (int) (clone $base)->where('state_id', 1)->count(),
+            'closed' => (int) (clone $base)->where('state_id', 2)->count(),
         ];
     }
 

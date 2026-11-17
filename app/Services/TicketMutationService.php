@@ -17,7 +17,6 @@ class TicketMutationService
 {
     public function __construct(
         private NotificationService $notifications,
-        private ReferenceResolver $resolver,
     ) {}
 
     /**
