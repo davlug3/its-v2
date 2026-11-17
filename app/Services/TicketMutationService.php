@@ -65,7 +65,7 @@ class TicketMutationService
             $ticket->eu_uid = $actorId;
             $ticket->approved_by_supervisor = 0;
             $ticket->source = $isStaff ? 'staff' : 'enduser';
-            $ticket->units_count = (int) ($data['units_count'] ?? 0);
+            $ticket->units_count = (int) ($data['units_count'] ?? 1);
             $ticket->save();
 
             $log = new TicketLog;
