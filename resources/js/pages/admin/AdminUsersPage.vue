@@ -4,7 +4,14 @@ import { computed, onMounted, ref } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import DataTable from '@/components/common/DataTable.vue';
@@ -101,10 +108,16 @@ const load = async (): Promise<void> => {
     loading.value = true;
     error.value = null;
     try {
-        const params = new URLSearchParams({ page: String(page.value), per_page: String(pageSize.value), sort: sortKey.value, dir: sortDir.value });
+        const params = new URLSearchParams({
+            page: String(page.value),
+            per_page: String(pageSize.value),
+            sort: sortKey.value,
+            dir: sortDir.value,
+        });
         if (search.value.trim() !== '') params.set('search', search.value.trim());
         if (aclFilter.value && aclFilter.value !== 'all') params.set('acl', aclFilter.value);
-        if (statusFilter.value && statusFilter.value !== 'all') params.set('status', statusFilter.value);
+        if (statusFilter.value && statusFilter.value !== 'all')
+            params.set('status', statusFilter.value);
 
         const res = await api<Page>(`/admin/users?${params.toString()}`);
         rows.value = res.data;
@@ -211,7 +224,11 @@ const requestDisable = (user: AdminUser): void => {
 const confirmDisable = async (): Promise<void> => {
     if (disableTarget.value === null) return;
     try {
-        await api(`/admin/users/${disableTarget.value.id}`, { method: 'DELETE' }, newIdempotencyKey());
+        await api(
+            `/admin/users/${disableTarget.value.id}`,
+            { method: 'DELETE' },
+            newIdempotencyKey(),
+        );
         disableOpen.value = false;
         disableTarget.value = null;
         await load();
@@ -235,8 +252,16 @@ onMounted(load);
             <CardContent class="space-y-4">
                 <form class="flex flex-wrap gap-2" @submit.prevent="applyFilters">
                     <Input v-model="search" placeholder="Search username or name" />
-                    <SearchableSelect v-model="aclFilter" :options="aclOptions" placeholder="All access" />
-                    <SearchableSelect v-model="statusFilter" :options="statusOptions" placeholder="All status" />
+                    <SearchableSelect
+                        v-model="aclFilter"
+                        :options="aclOptions"
+                        placeholder="All access"
+                    />
+                    <SearchableSelect
+                        v-model="statusFilter"
+                        :options="statusOptions"
+                        placeholder="All status"
+                    />
                     <Button type="submit">Apply</Button>
                 </form>
 
@@ -261,7 +286,16 @@ onMounted(load);
                     <template #cell-username="{ row }">
                         <div class="font-medium">{{ (row as unknown as AdminUser).username }}</div>
                         <div class="text-xs text-muted-foreground">
-                            {{ [ (row as unknown as AdminUser).name, (row as unknown as AdminUser).mname, (row as unknown as AdminUser).lname ].filter(Boolean).join(' ').trim() || '—' }}
+                            {{
+                                [
+                                    (row as unknown as AdminUser).name,
+                                    (row as unknown as AdminUser).mname,
+                                    (row as unknown as AdminUser).lname,
+                                ]
+                                    .filter(Boolean)
+                                    .join(' ')
+                                    .trim() || '—'
+                            }}
                         </div>
                     </template>
                     <template #cell-acl_id="{ row }">
@@ -269,7 +303,10 @@ onMounted(load);
                             <SearchableSelect
                                 :model-value="(row as unknown as AdminUser).acl_id ?? 1"
                                 :options="accessOptions"
-                                @update:model-value="(v: string | number | null) => updateAccess(row as unknown as AdminUser, Number(v))"
+                                @update:model-value="
+                                    (v: string | number | null) =>
+                                        updateAccess(row as unknown as AdminUser, Number(v))
+                                "
                             />
                             <Badge variant="outline" class="whitespace-nowrap">
                                 {{ aclLabel((row as unknown as AdminUser).acl_id) }}
@@ -292,7 +329,11 @@ onMounted(load);
                                 :disabled="(row as unknown as AdminUser).deleted_at !== null"
                                 @click="requestDisable(row as unknown as AdminUser)"
                             >
-                                {{ (row as unknown as AdminUser).deleted_at !== null ? 'Disabled' : 'Disable' }}
+                                {{
+                                    (row as unknown as AdminUser).deleted_at !== null
+                                        ? 'Disabled'
+                                        : 'Disable'
+                                }}
                             </Button>
                         </div>
                     </template>

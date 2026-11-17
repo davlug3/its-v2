@@ -34,7 +34,6 @@ const debouncedQuery = ref('');
 const loading = ref(false);
 const asyncOptions = ref<SelectOption[] | null>(null);
 
-
 let timer: ReturnType<typeof setTimeout> | null = null;
 
 const scheduleSearch = (value: string): void => {
@@ -124,9 +123,12 @@ const clear = (): void => {
 };
 
 // sync display when modelValue changes externally
-watch(() => props.modelValue, () => {
-    query.value = '';
-});
+watch(
+    () => props.modelValue,
+    () => {
+        query.value = '';
+    },
+);
 </script>
 
 <template>
@@ -140,7 +142,7 @@ watch(() => props.modelValue, () => {
         />
         <div
             v-if="open"
-            class="absolute left-0 top-full z-50 mt-1 w-full rounded-md border border-border bg-background p-1 shadow-md"
+            class="absolute top-full left-0 z-50 mt-1 w-full rounded-md border border-border bg-background p-1 shadow-md"
         >
             <p v-if="loading" class="px-2 py-1 text-sm text-muted-foreground">Loading…</p>
             <p v-else-if="filtered.length === 0" class="px-2 py-1 text-sm text-muted-foreground">
@@ -156,7 +158,11 @@ watch(() => props.modelValue, () => {
                 {{ opt.label }}
             </button>
             <div v-if="modelValue !== null" class="mt-1 border-t border-border pt-1">
-                <button type="button" class="px-2 text-xs text-muted-foreground hover:text-foreground" @click="clear">
+                <button
+                    type="button"
+                    class="px-2 text-xs text-muted-foreground hover:text-foreground"
+                    @click="clear"
+                >
                     Clear selection
                 </button>
             </div>

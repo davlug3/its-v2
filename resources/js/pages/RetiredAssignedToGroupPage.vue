@@ -12,8 +12,9 @@ import PageHeader from '@/components/common/PageHeader.vue';
             </CardHeader>
             <CardContent>
                 <p class="text-sm text-muted-foreground">
-                    Group/team assignment views are retired in this version. Use <strong>Assigned to you</strong>,
-                    <strong>Unassigned tickets</strong>, or <strong>All tickets</strong> instead.
+                    Group/team assignment views are retired in this version. Use
+                    <strong>Assigned to you</strong>, <strong>Unassigned tickets</strong>, or
+                    <strong>All tickets</strong> instead.
                 </p>
             </CardContent>
         </Card>

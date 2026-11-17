@@ -115,7 +115,12 @@ const submit = async (): Promise<void> => {
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div class="space-y-2">
                             <Label for="category">Category</Label>
-                            <SearchableSelect id="category" v-model="categoryId" :options="categoryOptions" placeholder="Select category" />
+                            <SearchableSelect
+                                id="category"
+                                v-model="categoryId"
+                                :options="categoryOptions"
+                                placeholder="Select category"
+                            />
                         </div>
                         <div class="space-y-2">
                             <Label for="place">Place</Label>
@@ -137,7 +142,9 @@ const submit = async (): Promise<void> => {
                         <Button type="submit" :disabled="submitting">
                             {{ submitting ? 'Creating…' : 'Create ticket' }}
                         </Button>
-                        <Button type="button" variant="outline" @click="router.back()">Cancel</Button>
+                        <Button type="button" variant="outline" @click="router.back()"
+                            >Cancel</Button
+                        >
                     </div>
                 </form>
             </CardContent>

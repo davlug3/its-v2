@@ -111,7 +111,9 @@ const deleteAttachmentTarget = ref<number | null>(null);
 
 const fetchAssignees = async (q: string): Promise<SelectOption[]> => {
     const params = new URLSearchParams({ assignable: '1', q, limit: '30' });
-    const res = await api<Array<{ id: number; label: string }>>(`/admin/users/options?${params.toString()}`);
+    const res = await api<Array<{ id: number; label: string }>>(
+        `/admin/users/options?${params.toString()}`,
+    );
     return (res ?? []).map((u) => ({ value: u.id, label: u.label }));
 };
 
@@ -225,7 +227,11 @@ const onFileChange = async (event: Event): Promise<void> => {
     try {
         const form = new FormData();
         form.append('file', file);
-        await api(`/tickets/${id}/attachments`, { method: 'POST', body: form }, newIdempotencyKey());
+        await api(
+            `/tickets/${id}/attachments`,
+            { method: 'POST', body: form },
+            newIdempotencyKey(),
+        );
         await loadAttachments();
         await loadLogs();
         if (fileInput.value) fileInput.value.value = '';
@@ -239,9 +245,12 @@ const onFileChange = async (event: Event): Promise<void> => {
 const downloadAttachment = async (attachment: Attachment): Promise<void> => {
     try {
         const token = getToken();
-        const response = await fetch(`/api/v1/tickets/${id}/attachments/${attachment.id}/download`, {
-            headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
+        const response = await fetch(
+            `/api/v1/tickets/${id}/attachments/${attachment.id}/download`,
+            {
+                headers: token ? { Authorization: `Bearer ${token}` } : {},
+            },
+        );
         if (!response.ok) throw new Error('Download failed.');
         const blob = await response.blob();
         const url = URL.createObjectURL(blob);
@@ -265,7 +274,11 @@ const requestDeleteAttachment = (attachmentId: number): void => {
 const confirmDeleteAttachment = async (): Promise<void> => {
     if (deleteAttachmentTarget.value === null) return;
     try {
-        await api(`/tickets/${id}/attachments/${deleteAttachmentTarget.value}`, { method: 'DELETE' }, newIdempotencyKey());
+        await api(
+            `/tickets/${id}/attachments/${deleteAttachmentTarget.value}`,
+            { method: 'DELETE' },
+            newIdempotencyKey(),
+        );
         deleteAttachmentOpen.value = false;
         deleteAttachmentTarget.value = null;
         await loadAttachments();
@@ -354,9 +367,11 @@ onMounted(() => {
                         </div>
                     </div>
                     <div v-else class="space-y-3">
-                        <p class="whitespace-pre-wrap text-sm">{{ ticket.issue }}</p>
+                        <p class="text-sm whitespace-pre-wrap">{{ ticket.issue }}</p>
                         <div class="flex gap-2">
-                            <Button v-if="canEdit" variant="outline" @click="editing = true">Edit</Button>
+                            <Button v-if="canEdit" variant="outline" @click="editing = true"
+                                >Edit</Button
+                            >
                             <Button
                                 v-if="ticket.state_id === 1 && canClose"
                                 :disabled="closing"
@@ -368,12 +383,50 @@ onMounted(() => {
                     </div>
 
                     <dl class="grid grid-cols-2 gap-2 text-xs text-muted-foreground sm:grid-cols-4">
-                        <div><dt class="font-medium">Category</dt><dd>{{ ticket.category_name ?? (ticket.category_id ? 'Unknown category' : '—') }}</dd></div>
-                        <div><dt class="font-medium">Location</dt><dd>{{ ticket.location_name ?? (ticket.location_id ? 'Unknown location' : '—') }}</dd></div>
-                        <div><dt class="font-medium">Created by</dt><dd>{{ ticket.created_name ?? (ticket.created_uid ? 'Deleted user' : '—') }}</dd></div>
-                        <div><dt class="font-medium">Assigned to</dt><dd>{{ ticket.assigned_name ?? (ticket.assigned_uid ? 'Deleted user' : 'Unassigned') }}</dd></div>
-                        <div v-if="ticket.eu_uid && ticket.eu_uid !== ticket.created_uid"><dt class="font-medium">End user</dt><dd>{{ ticket.eu_name ?? 'Deleted user' }}</dd></div>
-                        <div v-if="ticket.resolved_uid"><dt class="font-medium">Resolved by</dt><dd>{{ ticket.resolved_name ?? 'Deleted user' }}</dd></div>
+                        <div>
+                            <dt class="font-medium">Category</dt>
+                            <dd>
+                                {{
+                                    ticket.category_name ??
+                                    (ticket.category_id ? 'Unknown category' : '—')
+                                }}
+                            </dd>
+                        </div>
+                        <div>
+                            <dt class="font-medium">Location</dt>
+                            <dd>
+                                {{
+                                    ticket.location_name ??
+                                    (ticket.location_id ? 'Unknown location' : '—')
+                                }}
+                            </dd>
+                        </div>
+                        <div>
+                            <dt class="font-medium">Created by</dt>
+                            <dd>
+                                {{
+                                    ticket.created_name ??
+                                    (ticket.created_uid ? 'Deleted user' : '—')
+                                }}
+                            </dd>
+                        </div>
+                        <div>
+                            <dt class="font-medium">Assigned to</dt>
+                            <dd>
+                                {{
+                                    ticket.assigned_name ??
+                                    (ticket.assigned_uid ? 'Deleted user' : 'Unassigned')
+                                }}
+                            </dd>
+                        </div>
+                        <div v-if="ticket.eu_uid && ticket.eu_uid !== ticket.created_uid">
+                            <dt class="font-medium">End user</dt>
+                            <dd>{{ ticket.eu_name ?? 'Deleted user' }}</dd>
+                        </div>
+                        <div v-if="ticket.resolved_uid">
+                            <dt class="font-medium">Resolved by</dt>
+                            <dd>{{ ticket.resolved_name ?? 'Deleted user' }}</dd>
+                        </div>
                     </dl>
 
                     <div v-if="canAssign" class="flex items-end gap-2 border-t border-border pt-3">
@@ -409,7 +462,9 @@ onMounted(() => {
                             :disabled="uploading"
                             @change="onFileChange"
                         />
-                        <span v-if="uploading" class="text-sm text-muted-foreground">Uploading…</span>
+                        <span v-if="uploading" class="text-sm text-muted-foreground"
+                            >Uploading…</span
+                        >
                     </div>
                     <ul v-if="attachments.length" class="space-y-2">
                         <li
@@ -424,7 +479,11 @@ onMounted(() => {
                             >
                                 {{ a.file_name_org }} ({{ formatBytes(a.size_bytes) }})
                             </button>
-                            <Button size="sm" variant="destructive" @click="requestDeleteAttachment(a.id)">
+                            <Button
+                                size="sm"
+                                variant="destructive"
+                                @click="requestDeleteAttachment(a.id)"
+                            >
                                 Delete
                             </Button>
                         </li>
@@ -439,20 +498,37 @@ onMounted(() => {
                 </CardHeader>
                 <CardContent class="space-y-4">
                     <ul v-if="logs.length" class="space-y-3">
-                        <li v-for="entry in logs" :key="entry.id" class="rounded-md border border-border p-3">
-                            <div class="flex items-center justify-between text-xs text-muted-foreground">
-                                <span>{{ entry.user_name ?? (entry.user_id > 0 ? 'Deleted user' : 'System') }} · {{ entry.action ?? 'note' }}</span>
+                        <li
+                            v-for="entry in logs"
+                            :key="entry.id"
+                            class="rounded-md border border-border p-3"
+                        >
+                            <div
+                                class="flex items-center justify-between text-xs text-muted-foreground"
+                            >
+                                <span
+                                    >{{
+                                        entry.user_name ??
+                                        (entry.user_id > 0 ? 'Deleted user' : 'System')
+                                    }}
+                                    · {{ entry.action ?? 'note' }}</span
+                                >
                                 <span>{{ formatLogDate(entry.date) }}</span>
                             </div>
-                            <p class="mt-1 whitespace-pre-wrap text-sm">{{ entry.data }}</p>
+                            <p class="mt-1 text-sm whitespace-pre-wrap">{{ entry.data }}</p>
                         </li>
                     </ul>
                     <p v-else class="text-sm text-muted-foreground">No history yet.</p>
 
-                    <form class="space-y-2 border-t border-border pt-3" @submit.prevent="submitComment">
+                    <form
+                        class="space-y-2 border-t border-border pt-3"
+                        @submit.prevent="submitComment"
+                    >
                         <Label for="comment">Add comment</Label>
                         <Textarea id="comment" v-model="commentText" rows="3" />
-                        <p v-if="commentError" class="text-sm text-destructive">{{ commentError }}</p>
+                        <p v-if="commentError" class="text-sm text-destructive">
+                            {{ commentError }}
+                        </p>
                         <Button type="submit" :disabled="commenting">
                             {{ commenting ? 'Posting…' : 'Post comment' }}
                         </Button>
@@ -460,15 +536,15 @@ onMounted(() => {
                 </CardContent>
             </Card>
         </template>
-    <ConfirmDialog
-        :open="deleteAttachmentOpen"
-        title="Delete attachment"
-        message="Delete this attachment?"
-        confirm-label="Delete"
-        :destructive="true"
-        @update:open="deleteAttachmentOpen = $event"
-        @confirm="confirmDeleteAttachment"
-        @cancel="deleteAttachmentOpen = false"
-    />
+        <ConfirmDialog
+            :open="deleteAttachmentOpen"
+            title="Delete attachment"
+            message="Delete this attachment?"
+            confirm-label="Delete"
+            :destructive="true"
+            @update:open="deleteAttachmentOpen = $event"
+            @confirm="confirmDeleteAttachment"
+            @cancel="deleteAttachmentOpen = false"
+        />
     </div>
 </template>

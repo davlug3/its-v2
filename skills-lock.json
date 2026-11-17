@@ -1,35 +1,35 @@
 {
-  "version": 1,
-  "skills": {
-    "design-taste-frontend": {
-      "source": "Leonxlnx/taste-skill",
-      "sourceType": "github",
-      "skillPath": "skills/taste-skill/SKILL.md",
-      "computedHash": "acda6bf83f200405aa200eb245448fdc11cfce43d97bc2d9b8bf13a27f362d95"
-    },
-    "impeccable": {
-      "source": "pbakaus/impeccable",
-      "sourceType": "github",
-      "skillPath": ".agents/skills/impeccable/SKILL.md",
-      "computedHash": "731d7fbd8800a9ad70a04c8834c25304370b4c3310866ff26bfd14e0c3b12975"
-    },
-    "laravel-specialist": {
-      "source": "jeffallan/claude-skills",
-      "sourceType": "github",
-      "skillPath": "skills/laravel-specialist/SKILL.md",
-      "computedHash": "3403773759d65079d1a31052b4a87c526a164eee343bf360dba00ee46dd4a6e4"
-    },
-    "php-pro": {
-      "source": "jeffallan/claude-skills",
-      "sourceType": "github",
-      "skillPath": "skills/php-pro/SKILL.md",
-      "computedHash": "3fb08b157480ecb653de286dd749fb9edbcd2c45d99dc51ea0666eeb6652f051"
-    },
-    "ui-ux-pro-max": {
-      "source": "nextlevelbuilder/ui-ux-pro-max-skill",
-      "sourceType": "github",
-      "skillPath": ".claude/skills/ui-ux-pro-max/SKILL.md",
-      "computedHash": "411316b5893571bda59f1517b1fd639682cbbc26f8c804c08a071f2b7b864992"
+    "version": 1,
+    "skills": {
+        "design-taste-frontend": {
+            "source": "Leonxlnx/taste-skill",
+            "sourceType": "github",
+            "skillPath": "skills/taste-skill/SKILL.md",
+            "computedHash": "acda6bf83f200405aa200eb245448fdc11cfce43d97bc2d9b8bf13a27f362d95"
+        },
+        "impeccable": {
+            "source": "pbakaus/impeccable",
+            "sourceType": "github",
+            "skillPath": ".agents/skills/impeccable/SKILL.md",
+            "computedHash": "731d7fbd8800a9ad70a04c8834c25304370b4c3310866ff26bfd14e0c3b12975"
+        },
+        "laravel-specialist": {
+            "source": "jeffallan/claude-skills",
+            "sourceType": "github",
+            "skillPath": "skills/laravel-specialist/SKILL.md",
+            "computedHash": "3403773759d65079d1a31052b4a87c526a164eee343bf360dba00ee46dd4a6e4"
+        },
+        "php-pro": {
+            "source": "jeffallan/claude-skills",
+            "sourceType": "github",
+            "skillPath": "skills/php-pro/SKILL.md",
+            "computedHash": "3fb08b157480ecb653de286dd749fb9edbcd2c45d99dc51ea0666eeb6652f051"
+        },
+        "ui-ux-pro-max": {
+            "source": "nextlevelbuilder/ui-ux-pro-max-skill",
+            "sourceType": "github",
+            "skillPath": ".claude/skills/ui-ux-pro-max/SKILL.md",
+            "computedHash": "411316b5893571bda59f1517b1fd639682cbbc26f8c804c08a071f2b7b864992"
+        }
     }
-  }
 }

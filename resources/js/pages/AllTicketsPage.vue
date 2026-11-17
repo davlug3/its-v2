@@ -68,13 +68,23 @@ const categoryOptions = computed<SelectOption[]>(() =>
 );
 
 const hasSearchFilters = computed(() => {
-    const vals = [ticketId.value, subject.value, issue.value, euUid.value, locationId.value, categoryId.value, closedBy.value];
+    const vals = [
+        ticketId.value,
+        subject.value,
+        issue.value,
+        euUid.value,
+        locationId.value,
+        categoryId.value,
+        closedBy.value,
+    ];
     return vals.some((v) => v !== null && v !== '' && String(v).toLowerCase() !== 'null');
 });
 
 const fetchUsers = async (q: string): Promise<SelectOption[]> => {
     const params = new URLSearchParams({ q, limit: '30' });
-    const res = await api<Array<{ id: number; label: string }>>(`/admin/users/options?${params.toString()}`);
+    const res = await api<Array<{ id: number; label: string }>>(
+        `/admin/users/options?${params.toString()}`,
+    );
     return [{ value: '', label: 'All' } as SelectOption].concat(
         (res ?? []).map((u) => ({ value: u.id, label: u.label })),
     );
@@ -82,7 +92,9 @@ const fetchUsers = async (q: string): Promise<SelectOption[]> => {
 
 const fetchAssignees = async (q: string): Promise<SelectOption[]> => {
     const params = new URLSearchParams({ assignable: '1', q, limit: '30' });
-    const res = await api<Array<{ id: number; label: string }>>(`/admin/users/options?${params.toString()}`);
+    const res = await api<Array<{ id: number; label: string }>>(
+        `/admin/users/options?${params.toString()}`,
+    );
     return [{ value: '', label: 'All' } as SelectOption].concat(
         (res ?? []).map((u) => ({ value: u.id, label: u.label })),
     );
@@ -90,7 +102,9 @@ const fetchAssignees = async (q: string): Promise<SelectOption[]> => {
 
 const fetchLocations = async (q: string): Promise<SelectOption[]> => {
     const params = new URLSearchParams({ q, limit: '30' });
-    const res = await api<Array<{ id: number; label: string }>>(`/locations/options?${params.toString()}`);
+    const res = await api<Array<{ id: number; label: string }>>(
+        `/locations/options?${params.toString()}`,
+    );
     return [{ value: '', label: 'All locations' } as SelectOption].concat(
         (res ?? []).map((l) => ({ value: l.id, label: l.label })),
     );
@@ -110,7 +124,8 @@ const columns = computed(() => [
     { key: 'created_date', label: 'Created', sortable: true, width: 120, resizable: true },
 ]);
 
-const stateLabel = (id: number): string => (id === 1 ? 'Open' : id === 2 ? 'Closed' : `State ${id}`);
+const stateLabel = (id: number): string =>
+    id === 1 ? 'Open' : id === 2 ? 'Closed' : `State ${id}`;
 const formatDate = (ts: number): string => (ts ? new Date(ts * 1000).toLocaleDateString() : '—');
 
 const setParam = (params: URLSearchParams, key: string, value: string | number | null): void => {
@@ -122,7 +137,11 @@ const load = async (): Promise<void> => {
     loading.value = true;
     error.value = null;
     try {
-        const params = new URLSearchParams({ scope: 'all', page: String(page.value), per_page: String(pageSize.value) });
+        const params = new URLSearchParams({
+            scope: 'all',
+            page: String(page.value),
+            per_page: String(pageSize.value),
+        });
         setParam(params, 'ticket_id', ticketId.value.trim());
         setParam(params, 'subject', subject.value.trim());
         setParam(params, 'issue', issue.value.trim());
@@ -135,9 +154,12 @@ const load = async (): Promise<void> => {
         params.set('sort', sortKey.value);
         params.set('dir', sortDir.value);
 
-        const res = await api<{ tickets: Ticket[]; total: number; last_page?: number; current_page?: number }>(
-            `/tickets?${params.toString()}`,
-        );
+        const res = await api<{
+            tickets: Ticket[];
+            total: number;
+            last_page?: number;
+            current_page?: number;
+        }>(`/tickets?${params.toString()}`);
         tickets.value = res.tickets ?? [];
         total.value = res.total ?? 0;
         page.value = res.current_page ?? page.value;
@@ -206,7 +228,10 @@ onMounted(() => {
 
 <template>
     <div class="space-y-4">
-        <PageHeader :title="hasSearchFilters ? 'Search Results' : 'All tickets'" description="Search and filter tickets.">
+        <PageHeader
+            :title="hasSearchFilters ? 'Search Results' : 'All tickets'"
+            description="Search and filter tickets."
+        >
             <template #actions>
                 <Button variant="outline" @click="printResults">Print results</Button>
             </template>
@@ -225,15 +250,29 @@ onMounted(() => {
                         </div>
                         <div class="space-y-1">
                             <Label>End User</Label>
-                            <SearchableSelect v-model="euUid" :options="[{ value: '', label: 'All' }]" :fetch-options="fetchUsers" placeholder="All" />
+                            <SearchableSelect
+                                v-model="euUid"
+                                :options="[{ value: '', label: 'All' }]"
+                                :fetch-options="fetchUsers"
+                                placeholder="All"
+                            />
                         </div>
                         <div class="space-y-1">
                             <Label>Location</Label>
-                            <SearchableSelect v-model="locationId" :options="[{ value: '', label: 'All locations' }]" :fetch-options="fetchLocations" placeholder="All locations" />
+                            <SearchableSelect
+                                v-model="locationId"
+                                :options="[{ value: '', label: 'All locations' }]"
+                                :fetch-options="fetchLocations"
+                                placeholder="All locations"
+                            />
                         </div>
                         <div class="space-y-1">
                             <Label>Category</Label>
-                            <SearchableSelect v-model="categoryId" :options="categoryOptions" placeholder="All categories" />
+                            <SearchableSelect
+                                v-model="categoryId"
+                                :options="categoryOptions"
+                                placeholder="All categories"
+                            />
                         </div>
                         <div class="space-y-1">
                             <Label for="subject">Subject</Label>
@@ -245,15 +284,29 @@ onMounted(() => {
                         </div>
                         <div class="space-y-1">
                             <Label>Closed By</Label>
-                            <SearchableSelect v-model="closedBy" :options="[{ value: '', label: 'All' }]" :fetch-options="fetchAssignees" placeholder="All" />
+                            <SearchableSelect
+                                v-model="closedBy"
+                                :options="[{ value: '', label: 'All' }]"
+                                :fetch-options="fetchAssignees"
+                                placeholder="All"
+                            />
                         </div>
                         <div class="space-y-1">
                             <Label>State</Label>
-                            <SearchableSelect v-model="stateFilter" :options="stateOptions" placeholder="All" />
+                            <SearchableSelect
+                                v-model="stateFilter"
+                                :options="stateOptions"
+                                placeholder="All"
+                            />
                         </div>
                         <div class="space-y-1">
                             <Label>Assigned to</Label>
-                            <SearchableSelect v-model="assignedFilter" :options="[{ value: '', label: 'All' }]" :fetch-options="fetchAssignees" placeholder="All" />
+                            <SearchableSelect
+                                v-model="assignedFilter"
+                                :options="[{ value: '', label: 'All' }]"
+                                :fetch-options="fetchAssignees"
+                                placeholder="All"
+                            />
                         </div>
                     </div>
                     <div class="flex gap-2">
@@ -289,22 +342,39 @@ onMounted(() => {
                     @row-click="(row) => router.push(`/tickets/${(row as unknown as Ticket).id}`)"
                 >
                     <template #cell-state_id="{ value }">
-                        <Badge :variant="value === 2 ? 'secondary' : 'outline'">{{ stateLabel(value as number) }}</Badge>
+                        <Badge :variant="value === 2 ? 'secondary' : 'outline'">{{
+                            stateLabel(value as number)
+                        }}</Badge>
                     </template>
                     <template #cell-created_name="{ row }">
-                        <span class="text-sm">{{ (row as unknown as Ticket).created_name ?? (row as unknown as Ticket).eu_name ?? ((row as unknown as Ticket).created_uid ? 'Deleted user' : '—') }}</span>
+                        <span class="text-sm">{{
+                            (row as unknown as Ticket).created_name ??
+                            (row as unknown as Ticket).eu_name ??
+                            ((row as unknown as Ticket).created_uid ? 'Deleted user' : '—')
+                        }}</span>
                     </template>
                     <template #cell-location_name="{ row }">
-                        <span class="text-sm">{{ (row as unknown as Ticket).location_name ?? ((row as unknown as Ticket).location_id ? 'Unknown location' : '—') }}</span>
+                        <span class="text-sm">{{
+                            (row as unknown as Ticket).location_name ??
+                            ((row as unknown as Ticket).location_id ? 'Unknown location' : '—')
+                        }}</span>
                     </template>
                     <template #cell-category_name="{ row }">
-                        <span class="text-sm">{{ (row as unknown as Ticket).category_name ?? ((row as unknown as Ticket).category_id ? 'Unknown category' : '—') }}</span>
+                        <span class="text-sm">{{
+                            (row as unknown as Ticket).category_name ??
+                            ((row as unknown as Ticket).category_id ? 'Unknown category' : '—')
+                        }}</span>
                     </template>
                     <template #cell-assigned_name="{ row }">
-                        <span class="text-sm">{{ (row as unknown as Ticket).assigned_name ?? ((row as unknown as Ticket).assigned_uid ? 'Deleted user' : '—') }}</span>
+                        <span class="text-sm">{{
+                            (row as unknown as Ticket).assigned_name ??
+                            ((row as unknown as Ticket).assigned_uid ? 'Deleted user' : '—')
+                        }}</span>
                     </template>
                     <template #cell-created_date="{ value }">
-                        <span class="text-sm text-muted-foreground">{{ formatDate(value as number) }}</span>
+                        <span class="text-sm text-muted-foreground">{{
+                            formatDate(value as number)
+                        }}</span>
                     </template>
                 </DataTable>
             </CardContent>

@@ -36,7 +36,8 @@ const columns = [
     { key: 'created_date', label: 'Created', sortable: true, width: 140, resizable: true },
 ];
 
-const stateLabel = (id: number): string => (id === 1 ? 'Open' : id === 2 ? 'Closed' : `State ${id}`);
+const stateLabel = (id: number): string =>
+    id === 1 ? 'Open' : id === 2 ? 'Closed' : `State ${id}`;
 const formatDate = (ts: number): string => (ts ? new Date(ts * 1000).toLocaleDateString() : '—');
 
 const load = async (): Promise<void> => {
@@ -50,7 +51,9 @@ const load = async (): Promise<void> => {
             sort: sortKey.value,
             dir: sortDir.value,
         });
-        const res = await api<{ tickets: Ticket[]; total: number; page?: number }>('/tickets?' + params.toString());
+        const res = await api<{ tickets: Ticket[]; total: number; page?: number }>(
+            '/tickets?' + params.toString(),
+        );
         tickets.value = res.tickets ?? [];
         total.value = res.total ?? 0;
     } catch (e) {
@@ -60,24 +63,68 @@ const load = async (): Promise<void> => {
     }
 };
 
-const onSort = (key: string, dir: 'asc' | 'desc'): void => { sortKey.value = key; sortDir.value = dir; page.value = 1; void load(); };
-const onPageChange = (p: number): void => { page.value = p; void load(); };
-const onPageSizeChange = (size: number): void => { pageSize.value = size; page.value = 1; void load(); };
+const onSort = (key: string, dir: 'asc' | 'desc'): void => {
+    sortKey.value = key;
+    sortDir.value = dir;
+    page.value = 1;
+    void load();
+};
+const onPageChange = (p: number): void => {
+    page.value = p;
+    void load();
+};
+const onPageSizeChange = (size: number): void => {
+    pageSize.value = size;
+    page.value = 1;
+    void load();
+};
 
 onMounted(load);
 </script>
 
 <template>
     <div class="space-y-4">
-        <PageHeader title="Tickets involving you" description="Tickets where you are creator, assignee, or resolver (all states)." />
+        <PageHeader
+            title="Tickets involving you"
+            description="Tickets where you are creator, assignee, or resolver (all states)."
+        />
         <p v-if="error" class="text-sm text-destructive">{{ error }}</p>
         <Card>
             <CardHeader><CardTitle>Tickets</CardTitle></CardHeader>
             <CardContent>
-                <DataTable table-id="involving-me" :columns="columns" :rows="tickets as unknown as Record<string, unknown>[]" :loading="loading" empty-message="No tickets." pagination="server" :page-size="pageSize" :total="total" :page="page" :sort-key="sortKey" :sort-dir="sortDir" @sort="onSort" @page-change="onPageChange" @page-size-change="onPageSizeChange" @row-click="(row) => router.push(`/tickets/${(row as unknown as Ticket).id}`)">
-                    <template #cell-state_id="{ value }"><Badge :variant="value === 2 ? 'secondary' : 'outline'">{{ stateLabel(value as number) }}</Badge></template>
-                    <template #cell-created_name="{ row }"><span class="text-sm">{{ (row as unknown as Ticket).created_name ?? ((row as unknown as Ticket).created_uid ? 'Deleted user' : '—') }}</span></template>
-                    <template #cell-created_date="{ value }"><span class="text-sm text-muted-foreground">{{ formatDate(value as number) }}</span></template>
+                <DataTable
+                    table-id="involving-me"
+                    :columns="columns"
+                    :rows="tickets as unknown as Record<string, unknown>[]"
+                    :loading="loading"
+                    empty-message="No tickets."
+                    pagination="server"
+                    :page-size="pageSize"
+                    :total="total"
+                    :page="page"
+                    :sort-key="sortKey"
+                    :sort-dir="sortDir"
+                    @sort="onSort"
+                    @page-change="onPageChange"
+                    @page-size-change="onPageSizeChange"
+                    @row-click="(row) => router.push(`/tickets/${(row as unknown as Ticket).id}`)"
+                >
+                    <template #cell-state_id="{ value }"
+                        ><Badge :variant="value === 2 ? 'secondary' : 'outline'">{{
+                            stateLabel(value as number)
+                        }}</Badge></template
+                    >
+                    <template #cell-created_name="{ row }"
+                        ><span class="text-sm">{{
+                            (row as unknown as Ticket).created_name ??
+                            ((row as unknown as Ticket).created_uid ? 'Deleted user' : '—')
+                        }}</span></template
+                    >
+                    <template #cell-created_date="{ value }"
+                        ><span class="text-sm text-muted-foreground">{{
+                            formatDate(value as number)
+                        }}</span></template
+                    >
                 </DataTable>
             </CardContent>
         </Card>

@@ -1,7 +1,14 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
 import EmptyState from '@/components/common/EmptyState.vue';
 
@@ -57,8 +64,14 @@ const emit = defineEmits<{
 const internalSortKey = ref(props.sortKey || props.columns.find((c) => c.sortable)?.key || '');
 const internalSortDir = ref<'asc' | 'desc'>(props.sortDir || 'asc');
 
-const activeSortKey = computed(() => (props.sortKey !== undefined && props.sortKey !== '' ? props.sortKey : internalSortKey.value));
-const activeSortDir = computed(() => (props.sortKey !== undefined && props.sortKey !== '' ? props.sortDir || 'asc' : internalSortDir.value));
+const activeSortKey = computed(() =>
+    props.sortKey !== undefined && props.sortKey !== '' ? props.sortKey : internalSortKey.value,
+);
+const activeSortDir = computed(() =>
+    props.sortKey !== undefined && props.sortKey !== ''
+        ? props.sortDir || 'asc'
+        : internalSortDir.value,
+);
 
 const toggleSort = (key: string): void => {
     const col = props.columns.find((c) => c.key === key);
@@ -189,7 +202,9 @@ onMounted(() => {
 });
 
 const clientTotalPages = computed(() =>
-    props.pagination === 'client' ? Math.max(1, Math.ceil(sortedRows.value.length / activePageSize.value)) : 1,
+    props.pagination === 'client'
+        ? Math.max(1, Math.ceil(sortedRows.value.length / activePageSize.value))
+        : 1,
 );
 
 const displayedRows = computed(() => {
@@ -203,7 +218,9 @@ const displayedRows = computed(() => {
 const currentPage = computed(() => (props.page !== undefined ? props.page : 1));
 
 const totalPages = computed(() =>
-    props.pagination === 'server' ? Math.max(1, Math.ceil(props.total / activePageSize.value)) : clientTotalPages.value,
+    props.pagination === 'server'
+        ? Math.max(1, Math.ceil(props.total / activePageSize.value))
+        : clientTotalPages.value,
 );
 
 const totalRows = computed(() =>
@@ -230,7 +247,7 @@ watch(() => props.tableId, loadWidths);
                         <TableHead
                             v-for="col in columns"
                             :key="col.key"
-                            class="relative select-none border-r border-border last:border-r-0"
+                            class="relative border-r border-border select-none last:border-r-0"
                             :style="{ width: colWidth(col) + 'px' }"
                         >
                             <span
@@ -243,7 +260,7 @@ watch(() => props.tableId, loadWidths);
                             <span v-else>{{ col.label }}</span>
                             <span
                                 v-if="col.resizable !== false"
-                                class="absolute right-0 top-0 z-10 h-full w-2 cursor-col-resize bg-border/40 transition-colors hover:bg-cobalt-core"
+                                class="hover:bg-cobalt-core absolute top-0 right-0 z-10 h-full w-2 cursor-col-resize bg-border/40 transition-colors"
                                 @mousedown="startResize($event, col)"
                             />
                         </TableHead>
@@ -271,7 +288,12 @@ watch(() => props.tableId, loadWidths);
                             class="cursor-pointer hover:bg-haze/50"
                             @click="emit('row-click', row)"
                         >
-                            <TableCell v-for="col in columns" :key="col.key" class="border-r border-border last:border-r-0" :style="{ width: colWidth(col) + 'px' }">
+                            <TableCell
+                                v-for="col in columns"
+                                :key="col.key"
+                                class="border-r border-border last:border-r-0"
+                                :style="{ width: colWidth(col) + 'px' }"
+                            >
                                 <slot :name="`cell-${col.key}`" :row="row" :value="row[col.key]">
                                     {{ row[col.key] }}
                                 </slot>
@@ -282,7 +304,10 @@ watch(() => props.tableId, loadWidths);
             </Table>
         </div>
 
-        <div v-if="pagination !== 'none'" class="flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">
+        <div
+            v-if="pagination !== 'none'"
+            class="flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground"
+        >
             <span>{{ totalRows }} rows</span>
             <div class="flex flex-wrap items-center gap-2">
                 <label class="flex items-center gap-1">
@@ -292,7 +317,9 @@ watch(() => props.tableId, loadWidths);
                         :value="activePageSize"
                         @change="setPageSize(Number(($event.target as HTMLSelectElement).value))"
                     >
-                        <option v-for="opt in pageSizeOptions" :key="opt" :value="opt">{{ opt }}</option>
+                        <option v-for="opt in pageSizeOptions" :key="opt" :value="opt">
+                            {{ opt }}
+                        </option>
                     </select>
                 </label>
                 <button

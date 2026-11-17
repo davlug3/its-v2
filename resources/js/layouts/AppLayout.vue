@@ -5,7 +5,14 @@ import { RouterLink, RouterView, useRoute } from 'vue-router';
 import { Bell, ChevronDown, Menu } from '@lucide/vue';
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 
 import { useAuthStore } from '@/stores/auth';
@@ -124,7 +131,9 @@ onUnmounted(() => {
             </div>
             <nav class="space-y-4 p-2">
                 <div v-for="group in visibleGroups" :key="group.label">
-                    <p class="px-3 pt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    <p
+                        class="px-3 pt-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase"
+                    >
                         {{ group.label }}
                     </p>
                     <RouterLink
@@ -143,13 +152,15 @@ onUnmounted(() => {
 
         <div class="flex min-w-0 flex-1 flex-col">
             <!-- Header -->
-            <header class="sticky top-0 z-40 flex h-14 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur">
+            <header
+                class="sticky top-0 z-40 flex h-14 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur"
+            >
                 <!-- Mobile menu -->
                 <Sheet v-model:open="mobileNavOpen">
                     <SheetTrigger as-child>
                         <button
                             type="button"
-                            class="rounded-md p-2 text-muted-foreground transition-colors hover:bg-haze hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden"
+                            class="rounded-md p-2 text-muted-foreground transition-colors hover:bg-haze hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none md:hidden"
                         >
                             <Menu class="h-5 w-5" />
                         </button>
@@ -160,7 +171,9 @@ onUnmounted(() => {
                         </SheetHeader>
                         <nav class="space-y-4 p-2">
                             <div v-for="group in visibleGroups" :key="group.label">
-                                <p class="px-3 pt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                <p
+                                    class="px-3 pt-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase"
+                                >
                                     {{ group.label }}
                                 </p>
                                 <RouterLink
@@ -180,7 +193,9 @@ onUnmounted(() => {
                 </Sheet>
 
                 <div class="flex min-w-0 items-center gap-2">
-                    <span class="hidden text-sm font-semibold text-foreground sm:inline">IHOMS</span>
+                    <span class="hidden text-sm font-semibold text-foreground sm:inline"
+                        >IHOMS</span
+                    >
                     <span class="text-muted-foreground">/</span>
                     <span class="truncate text-sm text-muted-foreground">{{ pageTitle }}</span>
                 </div>
@@ -190,22 +205,24 @@ onUnmounted(() => {
                     <div class="relative">
                         <button
                             type="button"
-                            class="relative rounded-md p-2 text-muted-foreground transition-colors hover:bg-haze hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            class="relative rounded-md p-2 text-muted-foreground transition-colors hover:bg-haze hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                             @click="toggleNotifications"
                         >
                             <Bell class="h-5 w-5" />
                             <span
                                 v-if="unreadCount > 0"
-                                class="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground"
+                                class="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground"
                             >
                                 {{ unreadCount > 99 ? '99+' : unreadCount }}
                             </span>
                         </button>
                         <div
                             v-if="notificationsOpen"
-                            class="absolute right-0 top-12 z-50 w-80 rounded-md border border-border bg-background shadow-lg"
+                            class="absolute top-12 right-0 z-50 w-80 rounded-md border border-border bg-background shadow-lg"
                         >
-                            <div class="flex items-center justify-between border-b border-border px-3 py-2">
+                            <div
+                                class="flex items-center justify-between border-b border-border px-3 py-2"
+                            >
                                 <span class="text-sm font-semibold">Notifications</span>
                                 <button
                                     type="button"
@@ -216,7 +233,10 @@ onUnmounted(() => {
                                 </button>
                             </div>
                             <div class="max-h-80 overflow-y-auto">
-                                <p v-if="notifications.length === 0" class="p-3 text-sm text-muted-foreground">
+                                <p
+                                    v-if="notifications.length === 0"
+                                    class="p-3 text-sm text-muted-foreground"
+                                >
                                     No notifications.
                                 </p>
                                 <button
@@ -239,7 +259,7 @@ onUnmounted(() => {
                         <DropdownMenuTrigger as-child>
                             <button
                                 type="button"
-                                class="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-haze hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                class="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-haze hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                             >
                                 <Avatar class="h-7 w-7">
                                     <AvatarFallback class="text-xs">{{ initials }}</AvatarFallback>
@@ -249,10 +269,14 @@ onUnmounted(() => {
                             </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" class="w-48">
-                            <DropdownMenuLabel>{{ auth.user?.fullname || auth.user?.username }}</DropdownMenuLabel>
+                            <DropdownMenuLabel>{{
+                                auth.user?.fullname || auth.user?.username
+                            }}</DropdownMenuLabel>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem as-child>
-                                <RouterLink to="/user-options" class="w-full">User options</RouterLink>
+                                <RouterLink to="/user-options" class="w-full"
+                                    >User options</RouterLink
+                                >
                             </DropdownMenuItem>
                             <DropdownMenuItem as-child>
                                 <RouterLink to="/about" class="w-full">About</RouterLink>

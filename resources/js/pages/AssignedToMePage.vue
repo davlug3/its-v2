@@ -50,7 +50,9 @@ const load = async (): Promise<void> => {
             sort: sortKey.value,
             dir: sortDir.value,
         });
-        const res = await api<{ tickets: Ticket[]; total: number; page?: number }>('/tickets?' + params.toString());
+        const res = await api<{ tickets: Ticket[]; total: number; page?: number }>(
+            '/tickets?' + params.toString(),
+        );
         tickets.value = res.tickets ?? [];
         total.value = res.total ?? 0;
         page.value = res.page ?? page.value;
@@ -111,13 +113,21 @@ onMounted(load);
                     @row-click="(row) => router.push(`/tickets/${(row as unknown as Ticket).id}`)"
                 >
                     <template #cell-created_name="{ row }">
-                        <span class="text-sm">{{ (row as unknown as Ticket).created_name ?? ((row as unknown as Ticket).created_uid ? 'Deleted user' : '—') }}</span>
+                        <span class="text-sm">{{
+                            (row as unknown as Ticket).created_name ??
+                            ((row as unknown as Ticket).created_uid ? 'Deleted user' : '—')
+                        }}</span>
                     </template>
                     <template #cell-category_name="{ row }">
-                        <span class="text-sm">{{ (row as unknown as Ticket).category_name ?? ((row as unknown as Ticket).category_id ? 'Unknown category' : '—') }}</span>
+                        <span class="text-sm">{{
+                            (row as unknown as Ticket).category_name ??
+                            ((row as unknown as Ticket).category_id ? 'Unknown category' : '—')
+                        }}</span>
                     </template>
                     <template #cell-created_date="{ value }">
-                        <span class="text-sm text-muted-foreground">{{ formatDate(value as number) }}</span>
+                        <span class="text-sm text-muted-foreground">{{
+                            formatDate(value as number)
+                        }}</span>
                     </template>
                 </DataTable>
             </CardContent>

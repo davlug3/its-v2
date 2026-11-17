@@ -104,7 +104,9 @@ onUnmounted(() => {
     <div class="space-y-4">
         <PageHeader title="Monitoring" description="Live open-ticket grid.">
             <template #actions>
-                <span class="text-xs text-muted-foreground">Last update: {{ lastUpdated || '—' }}</span>
+                <span class="text-xs text-muted-foreground"
+                    >Last update: {{ lastUpdated || '—' }}</span
+                >
             </template>
         </PageHeader>
 
@@ -129,7 +131,9 @@ onUnmounted(() => {
                         <span class="font-mono text-sm">{{ value }}</span>
                     </template>
                     <template #cell-created_date="{ value }">
-                        <span class="text-sm text-muted-foreground">{{ formatDate(value as number) }}</span>
+                        <span class="text-sm text-muted-foreground">{{
+                            formatDate(value as number)
+                        }}</span>
                     </template>
                     <template #cell-assigned="{ value }">
                         <span class="text-sm">{{ (value as string | number) || '—' }}</span>

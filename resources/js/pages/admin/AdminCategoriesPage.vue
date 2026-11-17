@@ -118,7 +118,11 @@ const confirmDelete = async (): Promise<void> => {
     if (deleteTarget.value === null) return;
     error.value = null;
     try {
-        await api(`/admin/categories/${deleteTarget.value.id}`, { method: 'DELETE' }, newIdempotencyKey());
+        await api(
+            `/admin/categories/${deleteTarget.value.id}`,
+            { method: 'DELETE' },
+            newIdempotencyKey(),
+        );
         deleteOpen.value = false;
         deleteTarget.value = null;
         await load();
@@ -184,14 +188,34 @@ onMounted(load);
                     <template #cell-actions="{ row }">
                         <div class="flex gap-2" @click.stop>
                             <template v-if="editingId === (row as unknown as Category).id">
-                                <Button size="sm" :disabled="savingId === (row as unknown as Category).id" @click="saveEdit">
-                                    {{ savingId === (row as unknown as Category).id ? 'Saving…' : 'Save' }}
+                                <Button
+                                    size="sm"
+                                    :disabled="savingId === (row as unknown as Category).id"
+                                    @click="saveEdit"
+                                >
+                                    {{
+                                        savingId === (row as unknown as Category).id
+                                            ? 'Saving…'
+                                            : 'Save'
+                                    }}
                                 </Button>
-                                <Button size="sm" variant="outline" @click="editingId = null">Cancel</Button>
+                                <Button size="sm" variant="outline" @click="editingId = null"
+                                    >Cancel</Button
+                                >
                             </template>
                             <template v-else>
-                                <Button size="sm" variant="outline" @click="startEdit(row as unknown as Category)">Edit</Button>
-                                <Button size="sm" variant="destructive" @click="requestDelete(row as unknown as Category)">Delete</Button>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    @click="startEdit(row as unknown as Category)"
+                                    >Edit</Button
+                                >
+                                <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    @click="requestDelete(row as unknown as Category)"
+                                    >Delete</Button
+                                >
                             </template>
                         </div>
                     </template>

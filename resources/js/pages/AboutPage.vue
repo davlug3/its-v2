@@ -76,7 +76,9 @@ onMounted(async () => {
                         <dd class="font-mono text-xs">{{ info?.app_version }}</dd>
                     </div>
                     <div>
-                        <dt class="text-xs font-medium text-muted-foreground">Version (client build)</dt>
+                        <dt class="text-xs font-medium text-muted-foreground">
+                            Version (client build)
+                        </dt>
                         <dd class="font-mono text-xs">{{ APP_VERSION }}</dd>
                     </div>
                     <div>

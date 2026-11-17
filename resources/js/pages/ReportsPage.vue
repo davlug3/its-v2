@@ -17,7 +17,9 @@ const format = ref<'csv' | 'json'>('csv');
 
 const fetchEmployees = async (q: string): Promise<SelectOption[]> => {
     const params = new URLSearchParams({ q, limit: '30' });
-    const res = await api<Array<{ id: number; label: string }>>(`/admin/users/options?${params.toString()}`);
+    const res = await api<Array<{ id: number; label: string }>>(
+        `/admin/users/options?${params.toString()}`,
+    );
     return [{ value: '', label: 'All employees' } as SelectOption].concat(
         (res ?? []).map((u) => ({ value: u.id, label: u.label })),
     );
@@ -41,7 +43,8 @@ const generate = async (): Promise<void> => {
         const params = new URLSearchParams();
         if (from.value) params.set('from', from.value);
         if (to.value) params.set('to', to.value);
-        if (employeeId.value !== null && employeeId.value !== '') params.set('employees[]', String(employeeId.value));
+        if (employeeId.value !== null && employeeId.value !== '')
+            params.set('employees[]', String(employeeId.value));
 
         if (format.value === 'csv') {
             const token = getToken();

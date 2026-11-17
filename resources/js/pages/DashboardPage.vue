@@ -59,7 +59,8 @@ const error = ref<string | null>(null);
 const recent = computed(() => summary.value.recent ?? []);
 const isRegularUser = computed(() => (auth.user?.acl ?? 1) === 1);
 
-const stateLabel = (id: number): string => (id === 1 ? 'Open' : id === 2 ? 'Closed' : `State ${id}`);
+const stateLabel = (id: number): string =>
+    id === 1 ? 'Open' : id === 2 ? 'Closed' : `State ${id}`;
 
 const formatDate = (ts: number): string => (ts ? new Date(ts * 1000).toLocaleDateString() : '—');
 
@@ -74,23 +75,67 @@ const formatDuration = (seconds: number | null): string => {
 
 const staffCards = computed(() => [
     { title: 'Assigned', subtitle: 'To you (open)', value: String(summary.value.assigned_to_you) },
-    { title: 'Assigned', subtitle: 'To group (open)', value: String(summary.value.assigned_to_group) },
+    {
+        title: 'Assigned',
+        subtitle: 'To group (open)',
+        value: String(summary.value.assigned_to_group),
+    },
     { title: 'Closed by you', subtitle: 'Today', value: String(summary.value.closed_by_you_today) },
-    { title: 'Closed by you', subtitle: 'This year (YTD)', value: String(summary.value.closed_by_you_ytd) },
-    { title: 'Closed by', subtitle: 'Group today', value: String(summary.value.closed_by_group_today) },
-    { title: 'Your average', subtitle: 'Resolution time', value: formatDuration(summary.value.your_avg_resolution_seconds) },
-    { title: 'Average close time', subtitle: 'Entire system', value: formatDuration(summary.value.system_avg_resolution_seconds) },
-    { title: 'All open tickets', subtitle: 'Entire system', value: String(summary.value.all_open_system) },
+    {
+        title: 'Closed by you',
+        subtitle: 'This year (YTD)',
+        value: String(summary.value.closed_by_you_ytd),
+    },
+    {
+        title: 'Closed by',
+        subtitle: 'Group today',
+        value: String(summary.value.closed_by_group_today),
+    },
+    {
+        title: 'Your average',
+        subtitle: 'Resolution time',
+        value: formatDuration(summary.value.your_avg_resolution_seconds),
+    },
+    {
+        title: 'Average close time',
+        subtitle: 'Entire system',
+        value: formatDuration(summary.value.system_avg_resolution_seconds),
+    },
+    {
+        title: 'All open tickets',
+        subtitle: 'Entire system',
+        value: String(summary.value.all_open_system),
+    },
 ]);
 
 const userCards = computed(() => {
     const dept: TicketCount = summary.value.by_department ?? { total: 0, open: 0, closed: 0 };
     const me: TicketCount = summary.value.by_me ?? { total: 0, open: 0, closed: 0 };
     return [
-        { title: 'Your department', subtitle: 'Tickets', value: String(dept.total), meta: `Open: ${dept.open} · Closed: ${dept.closed}` },
-        { title: 'Your department', subtitle: 'Open', value: String(dept.open), meta: `Closed: ${dept.closed} · Total: ${dept.total}` },
-        { title: 'By you', subtitle: 'Tickets', value: String(me.total), meta: `Open: ${me.open} · Closed: ${me.closed}` },
-        { title: 'By you', subtitle: 'Open', value: String(me.open), meta: `Closed: ${me.closed} · Total: ${me.total}` },
+        {
+            title: 'Your department',
+            subtitle: 'Tickets',
+            value: String(dept.total),
+            meta: `Open: ${dept.open} · Closed: ${dept.closed}`,
+        },
+        {
+            title: 'Your department',
+            subtitle: 'Open',
+            value: String(dept.open),
+            meta: `Closed: ${dept.closed} · Total: ${dept.total}`,
+        },
+        {
+            title: 'By you',
+            subtitle: 'Tickets',
+            value: String(me.total),
+            meta: `Open: ${me.open} · Closed: ${me.closed}`,
+        },
+        {
+            title: 'By you',
+            subtitle: 'Open',
+            value: String(me.open),
+            meta: `Closed: ${me.closed} · Total: ${me.total}`,
+        },
     ];
 });
 
@@ -109,7 +154,12 @@ onMounted(async () => {
     <div class="space-y-4">
         <PageHeader
             title="Dashboard"
-            :description="`Signed in as ${auth.user?.username ?? ''} (${auth.user?.fullname || '—'}).` + (isRegularUser && summary.department_name ? ` · Department: ${summary.department_name}` : '')"
+            :description="
+                `Signed in as ${auth.user?.username ?? ''} (${auth.user?.fullname || '—'}).` +
+                (isRegularUser && summary.department_name
+                    ? ` · Department: ${summary.department_name}`
+                    : '')
+            "
         >
             <template #actions>
                 <Button @click="$router.push('/tickets/new')">New ticket</Button>
@@ -159,15 +209,25 @@ onMounted(async () => {
                     <Skeleton class="h-6 w-4/6" />
                 </div>
                 <p v-else-if="recent.length === 0" class="text-sm text-muted-foreground">
-                    No tickets yet. <RouterLink to="/tickets/new" class="underline">Create one</RouterLink>.
+                    No tickets yet.
+                    <RouterLink to="/tickets/new" class="underline">Create one</RouterLink>.
                 </p>
                 <ul v-else class="divide-y divide-border">
-                    <li v-for="t in recent" :key="t.id" class="flex items-center justify-between py-2">
-                        <RouterLink :to="`/tickets/${t.id}`" class="min-w-0 truncate text-sm hover:underline">
+                    <li
+                        v-for="t in recent"
+                        :key="t.id"
+                        class="flex items-center justify-between py-2"
+                    >
+                        <RouterLink
+                            :to="`/tickets/${t.id}`"
+                            class="min-w-0 truncate text-sm hover:underline"
+                        >
                             #{{ t.id }} {{ t.subject }}
                         </RouterLink>
                         <div class="ml-3 flex shrink-0 items-center gap-3">
-                            <span class="text-xs text-muted-foreground">{{ formatDate(t.created_date) }}</span>
+                            <span class="text-xs text-muted-foreground">{{
+                                formatDate(t.created_date)
+                            }}</span>
                             <Badge :variant="t.state_id === 2 ? 'secondary' : 'outline'">
                                 {{ stateLabel(t.state_id) }}
                             </Badge>

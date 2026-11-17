@@ -37,8 +37,14 @@ const load = async (): Promise<void> => {
     loading.value = true;
     error.value = null;
     try {
-        const params = new URLSearchParams({ scope: 'tickets_by_supervisor', page: String(page.value), per_page: String(pageSize.value) });
-        const res = await api<{ tickets: Ticket[]; total: number; page?: number }>('/tickets?' + params.toString());
+        const params = new URLSearchParams({
+            scope: 'tickets_by_supervisor',
+            page: String(page.value),
+            per_page: String(pageSize.value),
+        });
+        const res = await api<{ tickets: Ticket[]; total: number; page?: number }>(
+            '/tickets?' + params.toString(),
+        );
         tickets.value = res.tickets ?? [];
         total.value = res.total ?? 0;
     } catch (e) {
@@ -48,22 +54,53 @@ const load = async (): Promise<void> => {
     }
 };
 
-const onPageChange = (p: number): void => { page.value = p; void load(); };
-const onPageSizeChange = (size: number): void => { pageSize.value = size; page.value = 1; void load(); };
+const onPageChange = (p: number): void => {
+    page.value = p;
+    void load();
+};
+const onPageSizeChange = (size: number): void => {
+    pageSize.value = size;
+    page.value = 1;
+    void load();
+};
 
 onMounted(load);
 </script>
 
 <template>
     <div class="space-y-4">
-        <PageHeader title="Tickets by supervisor" description="Closed self-assigned tickets created by your supervisor." />
+        <PageHeader
+            title="Tickets by supervisor"
+            description="Closed self-assigned tickets created by your supervisor."
+        />
         <p v-if="error" class="text-sm text-destructive">{{ error }}</p>
         <Card>
             <CardHeader><CardTitle>Tickets</CardTitle></CardHeader>
             <CardContent>
-                <DataTable table-id="tickets-by-supervisor" :columns="columns" :rows="tickets as unknown as Record<string, unknown>[]" :loading="loading" empty-message="No tickets." pagination="server" :page-size="pageSize" :total="total" :page="page" @page-change="onPageChange" @page-size-change="onPageSizeChange" @row-click="(row) => router.push(`/tickets/${(row as unknown as Ticket).id}`)">
-                    <template #cell-category_name="{ row }"><span class="text-sm">{{ (row as unknown as Ticket).category_name ?? '—' }}</span></template>
-                    <template #cell-resolved_date="{ value }"><span class="text-sm text-muted-foreground">{{ formatDate(value as number) }}</span></template>
+                <DataTable
+                    table-id="tickets-by-supervisor"
+                    :columns="columns"
+                    :rows="tickets as unknown as Record<string, unknown>[]"
+                    :loading="loading"
+                    empty-message="No tickets."
+                    pagination="server"
+                    :page-size="pageSize"
+                    :total="total"
+                    :page="page"
+                    @page-change="onPageChange"
+                    @page-size-change="onPageSizeChange"
+                    @row-click="(row) => router.push(`/tickets/${(row as unknown as Ticket).id}`)"
+                >
+                    <template #cell-category_name="{ row }"
+                        ><span class="text-sm">{{
+                            (row as unknown as Ticket).category_name ?? '—'
+                        }}</span></template
+                    >
+                    <template #cell-resolved_date="{ value }"
+                        ><span class="text-sm text-muted-foreground">{{
+                            formatDate(value as number)
+                        }}</span></template
+                    >
                 </DataTable>
             </CardContent>
         </Card>

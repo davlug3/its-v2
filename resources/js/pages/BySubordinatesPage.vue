@@ -110,7 +110,11 @@ const clearSelection = (): void => {
 
 const approveOne = async (id: number): Promise<void> => {
     try {
-        await api(`/tickets/${id}/approve`, { method: 'POST', body: JSON.stringify({}) }, newIdempotencyKey());
+        await api(
+            `/tickets/${id}/approve`,
+            { method: 'POST', body: JSON.stringify({}) },
+            newIdempotencyKey(),
+        );
         await load();
     } catch (e) {
         error.value = (e as { message?: string }).message ?? 'Failed.';
@@ -219,7 +223,10 @@ onMounted(load);
 
 <template>
     <div class="space-y-4">
-        <PageHeader title="Tickets by subordinates" description="Review and approve subordinate tickets." />
+        <PageHeader
+            title="Tickets by subordinates"
+            description="Review and approve subordinate tickets."
+        />
 
         <Card>
             <CardHeader>
@@ -227,11 +234,29 @@ onMounted(load);
             </CardHeader>
             <CardContent class="flex flex-wrap items-end gap-4">
                 <label class="flex items-center gap-2 text-sm">
-                    <input type="checkbox" v-model="indirect" @change="() => { page = 1; void load(); }" />
+                    <input
+                        type="checkbox"
+                        v-model="indirect"
+                        @change="
+                            () => {
+                                page = 1;
+                                void load();
+                            }
+                        "
+                    />
                     Include indirect subordinates
                 </label>
                 <label class="flex items-center gap-2 text-sm">
-                    <input type="checkbox" v-model="hideOld" @change="() => { page = 1; void load(); }" />
+                    <input
+                        type="checkbox"
+                        v-model="hideOld"
+                        @change="
+                            () => {
+                                page = 1;
+                                void load();
+                            }
+                        "
+                    />
                     Hide old tickets
                 </label>
                 <span class="text-sm text-muted-foreground">{{ total }} pending</span>
@@ -245,7 +270,11 @@ onMounted(load);
                     <div class="flex flex-wrap gap-2">
                         <Button size="sm" variant="outline" @click="selectAll">Check all</Button>
                         <Button size="sm" variant="outline" @click="clearSelection">Clear</Button>
-                        <Button size="sm" :disabled="selectedCount === 0" @click="requestBatchApprove">
+                        <Button
+                            size="sm"
+                            :disabled="selectedCount === 0"
+                            @click="requestBatchApprove"
+                        >
                             Approve selected ({{ selectedCount }})
                         </Button>
                         <Button
@@ -289,18 +318,32 @@ onMounted(load);
                         <span class="font-mono text-sm">{{ value }}</span>
                     </template>
                     <template #cell-subject="{ row }">
-                        <span class="hover:underline">{{ (row as unknown as Ticket).subject }}</span>
+                        <span class="hover:underline">{{
+                            (row as unknown as Ticket).subject
+                        }}</span>
                     </template>
                     <template #cell-created_uid="{ row }">
-                        <span class="text-sm">{{ (row as unknown as Ticket).created_name ?? ((row as unknown as Ticket).created_uid ? 'Deleted user' : '—') }}</span>
+                        <span class="text-sm">{{
+                            (row as unknown as Ticket).created_name ??
+                            ((row as unknown as Ticket).created_uid ? 'Deleted user' : '—')
+                        }}</span>
                     </template>
                     <template #cell-created_date="{ value }">
-                        <span class="text-sm text-muted-foreground">{{ formatDate(value as number) }}</span>
+                        <span class="text-sm text-muted-foreground">{{
+                            formatDate(value as number)
+                        }}</span>
                     </template>
                     <template #cell-actions="{ row }">
                         <div class="flex flex-wrap gap-1" @click.stop>
-                            <Button size="sm" @click="approveOne((row as unknown as Ticket).id)">Approve</Button>
-                            <Button size="sm" variant="outline" @click="openDisapprove((row as unknown as Ticket).id)">Disapprove</Button>
+                            <Button size="sm" @click="approveOne((row as unknown as Ticket).id)"
+                                >Approve</Button
+                            >
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                @click="openDisapprove((row as unknown as Ticket).id)"
+                                >Disapprove</Button
+                            >
                             <Button
                                 v-if="(row as unknown as Ticket).approved_by_supervisor === 1"
                                 size="sm"

@@ -30,7 +30,8 @@ const columns = [
     { key: 'created_date', label: 'Created', sortable: true, width: 140, resizable: true },
 ];
 
-const stateLabel = (id: number): string => (id === 1 ? 'Open' : id === 2 ? 'Closed' : `State ${id}`);
+const stateLabel = (id: number): string =>
+    id === 1 ? 'Open' : id === 2 ? 'Closed' : `State ${id}`;
 
 const formatDate = (ts: number): string => (ts ? new Date(ts * 1000).toLocaleDateString() : '—');
 
@@ -77,10 +78,14 @@ onMounted(load);
                     @row-click="(row) => router.push(`/tickets/${row.id}`)"
                 >
                     <template #cell-state_id="{ value }">
-                        <Badge :variant="value === 2 ? 'secondary' : 'outline'">{{ stateLabel(value as number) }}</Badge>
+                        <Badge :variant="value === 2 ? 'secondary' : 'outline'">{{
+                            stateLabel(value as number)
+                        }}</Badge>
                     </template>
                     <template #cell-created_date="{ value }">
-                        <span class="text-sm text-muted-foreground">{{ formatDate(value as number) }}</span>
+                        <span class="text-sm text-muted-foreground">{{
+                            formatDate(value as number)
+                        }}</span>
                     </template>
                 </DataTable>
                 <p v-if="!loading && total > 0" class="mt-3 text-xs text-muted-foreground">
