@@ -237,8 +237,8 @@ class TicketController extends Controller
             return response()->json(['message' => 'Ticket not found.'], 404);
         }
 
-        // Only helpdesk (ACL >= 2) who is also the creator may edit.
-        if ($this->aclOf($request) < 2 || $ticket->created_uid !== (int) $user->id) {
+        // Only helpdesk (ACL >= 2) may edit ticket fields.
+        if ($this->aclOf($request) < 2) {
             return response()->json(['message' => 'You do not have permission to edit this ticket.'], 403);
         }
 
