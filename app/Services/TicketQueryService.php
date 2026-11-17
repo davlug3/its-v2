@@ -111,16 +111,28 @@ class TicketQueryService
             $searchMode = true;
         }
 
-        $subject = trim((string) ($filters['subject'] ?? $filters['search'] ?? ''));
-        if ($subject !== '' && strcasecmp($subject, 'null') !== 0) {
-            $query->where('subject', 'like', '%'.$subject.'%');
+        // Unified search: 'q' searches across subject, issue, and (post-enrichment)
+        // names, locations, categories. When 'q' is set it takes precedence over
+        // the individual subject/issue filters.
+        $q = trim((string) ($filters['q'] ?? ''));
+        if ($q !== '' && strcasecmp($q, 'null') !== 0) {
+            $query->where(function ($sub) use ($q): void {
+                $sub->where('subject', 'like', '%'.$q.'%')
+                    ->orWhere('issue', 'like', '%'.$q.'%');
+            });
             $searchMode = true;
-        }
+        } else {
+            $subject = trim((string) ($filters['subject'] ?? $filters['search'] ?? ''));
+            if ($subject !== '' && strcasecmp($subject, 'null') !== 0) {
+                $query->where('subject', 'like', '%'.$subject.'%');
+                $searchMode = true;
+            }
 
-        $issue = trim((string) ($filters['issue'] ?? ''));
-        if ($issue !== '' && strcasecmp($issue, 'null') !== 0) {
-            $query->where('issue', 'like', '%'.$issue.'%');
-            $searchMode = true;
+            $issue = trim((string) ($filters['issue'] ?? ''));
+            if ($issue !== '' && strcasecmp($issue, 'null') !== 0) {
+                $query->where('issue', 'like', '%'.$issue.'%');
+                $searchMode = true;
+            }
         }
 
         if ($isSet($filters, 'eu_uid') || $isSet($filters, 'resolved_uid')) {
@@ -154,8 +166,28 @@ class TicketQueryService
             ->take($perPage)
             ->get();
 
+        $enriched = $this->resolver->enrichTickets($tickets->toArray());
+
+        // Post-enrichment filter for unified search across resolved fields.
+        if ($q !== '' && strcasecmp($q, 'null') !== 0) {
+            $qLower = mb_strtolower($q);
+            $enriched = array_values(array_filter($enriched, function (array $t) use ($qLower): bool {
+                foreach (['subject', 'issue', 'created_name', 'eu_name', 'assigned_name', 'location_name', 'category_name', 'resolved_name'] as $field) {
+                    $val = $t[$field] ?? '';
+                    if (is_string($val) && str_contains(mb_strtolower($val), $qLower)) {
+                        return true;
+                    }
+                }
+                if (isset($t['id']) && str_contains((string) $t['id'], $q)) {
+                    return true;
+                }
+                return false;
+            }));
+            $total = count($enriched);
+        }
+
         return [
-            'tickets' => $this->resolver->enrichTickets($tickets->toArray()),
+            'tickets' => $enriched,
             'total' => $total,
             'page' => $page,
             'per_page' => $perPage,

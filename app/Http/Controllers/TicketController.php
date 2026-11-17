@@ -138,6 +138,7 @@ class TicketController extends Controller
                 'eu_uid' => $request->query('eu_uid'),
                 'location_id' => $request->query('location_id'),
                 'resolved_uid' => $request->query('resolved_uid', $request->query('closed_by')),
+                'q' => $request->query('q'),
             ];
 
             $result = $this->queries->listAll(

@@ -6,11 +6,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import SearchableSelect from '@/components/common/SearchableSelect.vue';
 import type { SelectOption } from '@/components/common/SearchableSelect.vue';
 import DataTable from '@/components/common/DataTable.vue';
 import PageHeader from '@/components/common/PageHeader.vue';
+import TicketListFilters from '@/components/common/TicketListFilters.vue';
 import { api } from '@/services/api';
 
 interface Ticket {
@@ -42,7 +42,6 @@ const lastPage = ref(1);
 const pageSize = ref(20);
 const loading = shallowRef(true);
 const error = shallowRef<string | null>(null);
-const showFilters = shallowRef(true);
 const showMoreColumns = shallowRef(false);
 
 const ticketId = shallowRef('');
@@ -140,6 +139,8 @@ const setParam = (params: URLSearchParams, key: string, value: string | number |
     params.set(key, String(value));
 };
 
+const searchQuery = shallowRef('');
+
 const load = async (): Promise<void> => {
     loading.value = true;
     error.value = null;
@@ -149,6 +150,7 @@ const load = async (): Promise<void> => {
             page: String(page.value),
             per_page: String(pageSize.value),
         });
+        if (searchQuery.value.trim()) params.set('q', searchQuery.value.trim());
         setParam(params, 'ticket_id', ticketId.value.trim());
         setParam(params, 'subject', subject.value.trim());
         setParam(params, 'issue', issue.value.trim());
@@ -178,12 +180,14 @@ const load = async (): Promise<void> => {
     }
 };
 
-const apply = async (): Promise<void> => {
+const onSearch = (query: string): void => {
+    searchQuery.value = query;
     page.value = 1;
-    await load();
+    void load();
 };
 
-const reset = async (): Promise<void> => {
+const onReset = (): void => {
+    searchQuery.value = '';
     ticketId.value = '';
     euUid.value = '';
     locationId.value = '';
@@ -194,8 +198,10 @@ const reset = async (): Promise<void> => {
     stateFilter.value = '';
     assignedFilter.value = '';
     page.value = 1;
-    await load();
+    void load();
 };
+
+
 
 const printResults = (): void => {
     window.print();
@@ -245,29 +251,18 @@ onMounted(() => {
         </PageHeader>
 
         <Card>
-            <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle>Filters</CardTitle>
-                <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    @click="showFilters = !showFilters"
+            <CardContent class="pt-6">
+                <TicketListFilters
+                    search-placeholder="Search tickets…"
+                    @search="onSearch"
+                    @reset="onReset"
                 >
-                    {{ showFilters ? 'Hide' : 'Show' }}
-                </Button>
-            </CardHeader>
-            <CardContent v-if="showFilters">
-                <form class="space-y-4" @submit.prevent="apply">
-                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                        <div class="space-y-2">
-                            <Label for="ticket_id">Ticket ID</Label>
-                            <Input id="ticket_id" v-model="ticketId" placeholder="ID" />
+                    <template #advanced>
+                        <div class="space-y-1">
+                            <Label>Ticket ID</Label>
+                            <Input v-model="ticketId" placeholder="ID" />
                         </div>
-                        <div class="space-y-2">
-                            <Label for="subject">Subject</Label>
-                            <Input id="subject" v-model="subject" placeholder="Subject contains…" />
-                        </div>
-                        <div class="space-y-2">
+                        <div class="space-y-1">
                             <Label>State</Label>
                             <SearchableSelect
                                 v-model="stateFilter"
@@ -275,7 +270,7 @@ onMounted(() => {
                                 placeholder="All"
                             />
                         </div>
-                        <div class="space-y-2">
+                        <div class="space-y-1">
                             <Label>Assigned to</Label>
                             <SearchableSelect
                                 v-model="assignedFilter"
@@ -284,10 +279,7 @@ onMounted(() => {
                                 placeholder="All"
                             />
                         </div>
-                    </div>
-
-                    <div v-if="showMoreColumns || showFilters" class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                        <div class="space-y-2">
+                        <div class="space-y-1">
                             <Label>End User</Label>
                             <SearchableSelect
                                 v-model="euUid"
@@ -296,7 +288,7 @@ onMounted(() => {
                                 placeholder="All"
                             />
                         </div>
-                        <div class="space-y-2">
+                        <div class="space-y-1">
                             <Label>Location</Label>
                             <SearchableSelect
                                 v-model="locationId"
@@ -305,7 +297,7 @@ onMounted(() => {
                                 placeholder="All locations"
                             />
                         </div>
-                        <div class="space-y-2">
+                        <div class="space-y-1">
                             <Label>Category</Label>
                             <SearchableSelect
                                 v-model="categoryId"
@@ -313,11 +305,7 @@ onMounted(() => {
                                 placeholder="All categories"
                             />
                         </div>
-                        <div class="space-y-2">
-                            <Label for="issue">Issue</Label>
-                            <Input id="issue" v-model="issue" placeholder="Issue contains…" />
-                        </div>
-                        <div class="space-y-2">
+                        <div class="space-y-1">
                             <Label>Closed By</Label>
                             <SearchableSelect
                                 v-model="closedBy"
@@ -326,23 +314,12 @@ onMounted(() => {
                                 placeholder="All"
                             />
                         </div>
-                    </div>
-
-                    <div class="flex items-center gap-2">
-                        <Button type="submit" class="min-h-[44px]">Search</Button>
-                        <Button type="button" variant="outline" class="min-h-[44px]" @click="reset">
-                            Reset
-                        </Button>
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            @click="showMoreColumns = !showMoreColumns"
-                        >
-                            {{ showMoreColumns ? 'Fewer columns' : 'More columns' }}
-                        </Button>
-                    </div>
-                </form>
+                        <div class="space-y-1">
+                            <Label>Issue</Label>
+                            <Input v-model="issue" placeholder="Issue contains…" />
+                        </div>
+                    </template>
+                </TicketListFilters>
             </CardContent>
         </Card>
 
