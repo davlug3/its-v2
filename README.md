@@ -193,6 +193,13 @@ The scaffold is complete. Steps:
 The application is at `http://localhost:8080`.
 Port 8000 is used by another local project and must not be used.
 
+Attachment uploads are capped by PHP's `upload_max_filesize` (default 2 MB).
+The application validates up to 25 MB but cannot exceed what PHP allows; files
+larger than the PHP limit are rejected with a clear error. To allow uploads up
+to 25 MB, raise `upload_max_filesize` and `post_max_size` in the PHP ini used
+by your server (for example `/etc/php/8.5/cli/php.ini` for `php artisan serve`,
+or the FPM pool ini for nginx/Apache), then restart the server.
+
 Checks:
 
 - `php artisan test`

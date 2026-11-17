@@ -584,8 +584,45 @@ class TicketController extends Controller
             return response()->json(['message' => 'Forbidden.'], 403);
         }
 
+        // Surface a clear message when PHP rejected the upload before Laravel saw it
+        // (e.g. file larger than upload_max_filesize).
+        $uploadError = (int) ($_FILES['file']['error'] ?? UPLOAD_ERR_OK);
+        if ($uploadError !== UPLOAD_ERR_OK) {
+            $messages = [
+                UPLOAD_ERR_INI_SIZE => 'File exceeds the server upload limit (upload_max_filesize).',
+                UPLOAD_ERR_FORM_SIZE => 'File exceeds the form upload limit.',
+                UPLOAD_ERR_PARTIAL => 'File was only partially uploaded.',
+                UPLOAD_ERR_NO_FILE => 'No file was uploaded.',
+                UPLOAD_ERR_NO_TMP_DIR => 'Server temporary folder is missing.',
+                UPLOAD_ERR_CANT_WRITE => 'Failed to write file to disk.',
+                UPLOAD_ERR_EXTENSION => 'A PHP extension stopped the upload.',
+            ];
+
+            return response()->json([
+                'message' => $messages[$uploadError] ?? 'The file failed to upload.',
+                'errors' => ['file' => [$messages[$uploadError] ?? 'The file failed to upload.']],
+            ], 422);
+        }
+
+        // Cap the allowed size at the smaller of the intended 25 MB and PHP's
+        // actual upload_max_filesize, so validation never promises more than
+        // the runtime can deliver.
+        $maxKb = 25600;
+        $ini = (string) ini_get('upload_max_filesize');
+        if (preg_match('/^(\d+)([KMG]?)$/i', trim($ini), $m)) {
+            $val = (int) $m[1];
+            $unit = strtoupper($m[2]);
+            $bytes = match ($unit) {
+                'G' => $val * 1024 * 1024 * 1024,
+                'M' => $val * 1024 * 1024,
+                'K' => $val * 1024,
+                default => $val,
+            };
+            $maxKb = min($maxKb, (int) floor($bytes / 1024));
+        }
+
         $validated = $request->validate([
-            'file' => ['required', 'file', 'max:25600', 'mimes:pdf,jpg,jpeg,png,gif,doc,docx,xls,xlsx,txt,zip'],
+            'file' => ['required', 'file', 'max:'.$maxKb, 'mimes:pdf,jpg,jpeg,png,gif,doc,docx,xls,xlsx,txt,zip'],
         ]);
 
         $file = $validated['file'];
