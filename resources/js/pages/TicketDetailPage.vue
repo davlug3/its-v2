@@ -254,7 +254,9 @@ const onFileChange = async (event: Event): Promise<void> => {
         await loadLogs();
         if (fileInput.value) fileInput.value.value = '';
     } catch (e) {
-        uploadError.value = (e as { message?: string }).message ?? 'Upload failed.';
+        const err = e as { message?: string; errors?: Record<string, string[]> };
+        uploadError.value =
+            err.errors?.file?.[0] ?? err.message ?? 'Upload failed.';
     } finally {
         uploading.value = false;
     }
@@ -491,6 +493,10 @@ onMounted(() => {
                         </Button>
                         <span v-if="uploading" class="text-sm text-muted-foreground">Uploading…</span>
                     </div>
+                    <p class="text-xs text-muted-foreground">
+                        PDF, images, Office, text, or zip. Max size depends on server
+                        (default 2 MB).
+                    </p>
                     <ul v-if="attachments.length" class="space-y-2">
                         <li
                             v-for="a in attachments"
