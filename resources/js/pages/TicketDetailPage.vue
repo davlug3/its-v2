@@ -422,78 +422,75 @@ onMounted(() => {
                         </div>
                     </div>
 
-                    <div class="space-y-0.5 rounded-md border border-border bg-paper/50 p-1">
-                        <div class="flex items-center gap-2 rounded px-2 py-1.5 transition-colors hover:bg-haze/50">
+                    <div class="space-y-0 rounded-md border border-border bg-paper/50 p-0.5">
+                        <div class="flex items-center gap-2 rounded px-2 py-1 transition-colors hover:bg-haze/50">
                             <MapPin class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                            <span class="flex-1 text-sm text-muted-foreground">Department</span>
+                            <span class="w-24 text-sm text-muted-foreground">Department</span>
                             <span class="text-sm font-medium text-foreground">
                                 {{ ticket.location_name ?? (ticket.location_id ? 'Unknown department' : '—') }}
                             </span>
                         </div>
-                        <div class="flex items-center gap-2 rounded px-2 py-1.5 transition-colors hover:bg-haze/50">
+                        <div class="flex items-center gap-2 rounded px-2 py-1 transition-colors hover:bg-haze/50">
                             <MapPin class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                            <span class="flex-1 text-sm text-muted-foreground">Place</span>
+                            <span class="w-24 text-sm text-muted-foreground">Place</span>
                             <span class="text-sm font-medium text-foreground">{{ ticket.place || '—' }}</span>
                         </div>
-                        <div class="flex items-center gap-2 rounded px-2 py-1.5 transition-colors hover:bg-haze/50">
+                        <div class="flex items-center gap-2 rounded px-2 py-1 transition-colors hover:bg-haze/50">
                             <Phone class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                            <span class="flex-1 text-sm text-muted-foreground">Contact</span>
+                            <span class="w-24 text-sm text-muted-foreground">Contact</span>
                             <span class="text-sm font-medium text-foreground">{{ ticket.contact || '—' }}</span>
                         </div>
-                        <div class="flex items-center gap-2 rounded px-2 py-1.5 transition-colors hover:bg-haze/50">
+                        <div class="flex items-center gap-2 rounded px-2 py-1 transition-colors hover:bg-haze/50">
                             <User class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                            <span class="flex-1 text-sm text-muted-foreground">Created by</span>
+                            <span class="w-24 text-sm text-muted-foreground">Created by</span>
                             <span class="text-sm font-medium text-foreground">
                                 {{ ticket.created_name ?? (ticket.created_uid ? 'Deleted user' : '—') }}
                             </span>
                         </div>
-                        <div class="flex items-center gap-2 rounded px-2 py-1.5 transition-colors hover:bg-haze/50">
+                        <div class="flex items-center gap-2 rounded px-2 py-1 transition-colors hover:bg-haze/50">
                             <Users class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                            <span class="flex-1 text-sm text-muted-foreground">Assigned to</span>
+                            <span class="w-24 text-sm text-muted-foreground">Assigned to</span>
                             <span class="text-sm font-medium text-foreground">
                                 {{ ticket.assigned_name ?? (ticket.assigned_uid ? 'Deleted user' : 'Unassigned') }}
                             </span>
                         </div>
                         <div
                             v-if="ticket.eu_uid && ticket.eu_uid !== ticket.created_uid"
-                            class="flex items-center gap-2 rounded px-2 py-1.5 transition-colors hover:bg-haze/50"
+                            class="flex items-center gap-2 rounded px-2 py-1 transition-colors hover:bg-haze/50"
                         >
                             <User class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                            <span class="flex-1 text-sm text-muted-foreground">End user</span>
+                            <span class="w-24 text-sm text-muted-foreground">End user</span>
                             <span class="text-sm font-medium text-foreground">{{ ticket.eu_name ?? 'Deleted user' }}</span>
                         </div>
                         <div
                             v-if="ticket.resolved_uid"
-                            class="flex items-center gap-2 rounded px-2 py-1.5 transition-colors hover:bg-haze/50"
+                            class="flex items-center gap-2 rounded px-2 py-1 transition-colors hover:bg-haze/50"
                         >
                             <UserCheck class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                            <span class="flex-1 text-sm text-muted-foreground">Resolved by</span>
+                            <span class="w-24 text-sm text-muted-foreground">Resolved by</span>
                             <span class="text-sm font-medium text-foreground">{{ ticket.resolved_name ?? 'Deleted user' }}</span>
                         </div>
                     </div>
 
 
-                    <div v-if="canAssignDetails" class="space-y-2 border-t border-border pt-2">
-                        <h3 class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                            Assign details
-                        </h3>
+                    <div v-if="canAssignDetails" class="space-y-1 border-t border-border pt-2">
                         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                            <div class="space-y-1">
-                                <Label>Category</Label>
+                            <div class="space-y-0">
+                                <Label class="text-xs">Category</Label>
                                 <SearchableSelect
                                     v-model="categoryId"
                                     :options="categoryOptions"
                                     placeholder="Select category"
                                 />
                             </div>
-                            <div class="space-y-1">
-                                <Label for="units">Units</Label>
-                                <Input id="units" v-model.number="unitsCount" type="number" min="0" />
+                            <div class="space-y-0">
+                                <Label for="units" class="text-xs">Units</Label>
+                                <Input id="units" v-model.number="unitsCount" type="number" min="0" class="h-8" />
                             </div>
                         </div>
                         <div v-if="canAssign" class="flex items-end gap-2">
-                            <div class="space-y-1">
-                                <Label for="assign-uid">Assign to</Label>
+                            <div class="space-y-0 flex-1">
+                                <Label for="assign-uid" class="text-xs">Assign to</Label>
                                 <SearchableSelect
                                     id="assign-uid"
                                     v-model="assignUid"
@@ -502,13 +499,13 @@ onMounted(() => {
                                     :placeholder="ticket.assigned_name ?? 'Select assignee'"
                                 />
                             </div>
-                            <Button :disabled="assigning" @click="doAssign">
+                            <Button size="sm" :disabled="assigning" @click="doAssign">
                                 {{ assigning ? 'Assigning…' : 'Assign' }}
                             </Button>
                         </div>
                         <p v-if="assignError" class="text-sm text-destructive">{{ assignError }}</p>
                         <div class="flex gap-2">
-                            <Button :disabled="saving" @click="save">
+                            <Button size="sm" :disabled="saving" @click="save">
                                 {{ saving ? 'Saving…' : 'Save details' }}
                             </Button>
                         </div>
