@@ -3,8 +3,15 @@
 use Illuminate\Support\Facades\Route;
 
 /*
- * The Vue SPA owns every non-API path.
+ * Retired legacy ?p= adapter (DECISIONS.md U9): any request carrying the
+ * ?p= query parameter receives a 404. All navigation uses Vue Router.
  */
-Route::get('/{any?}', fn () => view('app'))
+Route::get('/{any?}', function ($any = null) {
+    if (request()->has('p')) {
+        abort(404);
+    }
+
+    return view('app');
+})
     ->where('any', '^(?!api(?:/|$)).*$')
     ->name('spa');

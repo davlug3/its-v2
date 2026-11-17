@@ -22,7 +22,7 @@ The new system must:
 - Keep every legacy row readable with its original meaning.
 - Keep every role, screen, action, and message the same, except the documented repairs.
 - Fix the listed security and data-integrity defects.
-- Keep the legacy `?p=` URLs and `#ticket=` deep links working.
+- Keep the `#ticket=` deep links working. `?p=` is retired (U9); all navigation uses Vue Router.
 - Run without PHP 5-era code, jQuery, Kendo UI, or MyISAM.
 
 Source system: `X:\its` (legacy PHP), production host `192.163.10.131`, database `its`.
@@ -302,13 +302,13 @@ Exit check: AT-01 to AT-06 pass against a staging copy.
 
 ### Phase 4 — Module registry and routing
 
-- [ ] Seed `mods` from the live 69-row export. Keep every row.
-- [ ] Treat `parent = ''` and `parent = 'none'` as top-level.
-- [ ] Map each `mods.path` to a target controller or a "not migrated" page.
-- [ ] Cache the registry. Invalidate when `mods` changes.
-- [ ] Build a `?p=<name>` compatibility adapter.
-- [ ] Path allowlist: reject traversal and unregistered files (D65).
-- [ ] Direct legacy file paths return 404 or route through middleware.
+- [x] ~~Seed `mods` from the live 69-row export. Keep every row.~~ Retired (U9). `mods` table stays as historical data; no routing through it.
+- [x] ~~Build a `?p=<name>` compatibility adapter.~~ Retired (U9). All navigation uses Vue Router. `?p=` requests return 404.
+- [x] ~~Path allowlist: reject traversal and unregistered files (D65).~~ Retired (U9).
+- [x] ~~Direct legacy file paths return 404 or route through middleware.~~ Retired (U9).
+- [ ] CSRF on every state-changing request, including login and logout (D09).
+- [ ] Security headers: CSP, nosniff, Referrer-Policy, frame denial, HSTS in production.
+- [ ] Input validation with typed schemas. No `extract()`.
 - [~] Central authorization middleware: module ACL and object scope (D10, D11). Applied to admin/reports routes and key ticket paths; route-security tests added. Full audit still needed.
 - [ ] CSRF on every state-changing request, including login and logout (D09).
 - [~] Retired-team pages: SPA route `/tickets/assigned-to-group` shows a clear retired message; remaining legacy group/team admin pages still need retirement handling if exposed.
@@ -316,7 +316,7 @@ Exit check: AT-01 to AT-06 pass against a staging copy.
 - [ ] Security headers: CSP, nosniff, Referrer-Policy, frame denial, HSTS in production.
 - [ ] Input validation with typed schemas. No `extract()`.
 
-Exit check: every `?p=` alias resolves. Unknown module gives 404. No path traversal.
+Exit check: Vue Router routes resolve. Legacy `?p=` returns 404. No path traversal.
 
 ---
 
@@ -522,7 +522,7 @@ Exit check: AT-48 passes.
 - [ ] CI: lint, `vue-tsc` type check, static analysis, tests, `composer audit`, `npm audit`, migration dry run.
 - [ ] Update `README.md` with setup and roles.
 - [ ] Write the data dictionary.
-- [ ] Write the route map (`?p=` → target route).
+- [x] ~~Write the route map (`?p=` → target route).~~ Retired (U9). Vue Router is the only routing mechanism.
 - [ ] Write the deviation log.
 - [ ] Write the operations runbook.
 - [ ] Write user quick guides.

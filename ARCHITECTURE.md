@@ -871,18 +871,21 @@ The following modules return a "This feature is retired" page:
 The `groups` table, its rows, the `user_profile.group_id` column, and the affected `mods` rows all stay.
 No `mods` row is deleted.
 
-### 19.6 Module registry
+### 19.6 Module registry (retired)
 
-- The live `mods` table has 69 rows. All 69 are kept.
+The `?p=` compatibility router is retired (DECISIONS.md U9). All navigation uses
+Vue Router. The `mods` table and its 69 rows remain as historical data (additive-only
+rule), but nothing routes through them. Any external caller of `?p=...` receives a 404.
+
+- The live `mods` table has 69 rows. All 69 are kept (historical data).
 - `parent = ''` and `parent = 'none'` both mean top-level.
-- The registry is cached and invalidated when `mods` changes.
-- Every legacy path maps to a controller route or a "not migrated" page.
+- No caching or path mapping is needed; the registry is no longer consulted.
 
 ### 19.7 Module-specific deviations
 
 | Module | Deviation | Reason |
 |---|---|---|
-| `change_password` | Alias redirects to `?p=user_options` | The row is mis-registered. `DECISIONS.md` C7. |
+| `change_password` | Alias redirects to `/user-options` | The row is mis-registered. `DECISIONS.md` C7. `?p=` is retired (U9). |
 | `assigned_to_group` | Retired page | Teams retired. `DECISIONS.md` T1. |
 | Dashboard group card | Removed, no replacement | Teams retired. `DECISIONS.md` T1. |
 | User add/edit | No group field. Insert writes `group_id = 1`. | Teams retired. `DECISIONS.md` T2. |

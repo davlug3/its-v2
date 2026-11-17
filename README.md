@@ -106,8 +106,9 @@ These rules are not optional.
    `groups` has 59 rows. Keep all 59.
    `users` has 4,709 rows. Keep all. The new app adds `user_profile` but does not touch `users`.
 
-3. **Keep the legacy `?p=` URLs and `#ticket=` deep links working.**
-   The `mods` table drives a compatibility router.
+3. **Keep the `#ticket=` deep links working.**
+   The `?p=` compatibility router is retired (DECISIONS.md U9). All navigation uses
+   Vue Router. The `mods` table stays as historical data (additive-only rule).
 
 4. **Keep the legacy log strings.**
    `tickets_log` messages are part of the audit record.
