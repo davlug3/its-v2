@@ -42,8 +42,6 @@ return [
 
     'debug' => (bool) env('APP_DEBUG', false),
 
-    'vite_port' => (int) env('VITE_PORT', 5173),
-
     /*
     |--------------------------------------------------------------------------
     | Application URL
