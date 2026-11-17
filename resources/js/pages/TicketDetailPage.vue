@@ -96,9 +96,34 @@ const closing = shallowRef(false);
 
 const subject = shallowRef('');
 const issue = shallowRef('');
+const categoryId = shallowRef<number | null>(null);
+const locationId = shallowRef<number | null>(null);
+const place = shallowRef('');
+const contact = shallowRef('');
+const unitsCount = shallowRef(0);
 const assignUid = shallowRef(0);
 const assigning = shallowRef(false);
 const assignError = shallowRef<string | null>(null);
+
+const categories = shallowRef<Array<{ id: number; category: string }>>([]);
+
+const categoryOptions = computed(() =>
+    categories.value.map((c) => ({ value: c.id, label: c.category })),
+);
+
+const fetchCategories = async (): Promise<void> => {
+    try {
+        categories.value = await api<Array<{ id: number; category: string }>>('/categories');
+    } catch {
+        categories.value = [];
+    }
+};
+
+const fetchLocations = async (q: string): Promise<SelectOption[]> => {
+    const params = new URLSearchParams({ q, limit: '30' });
+    const res = await api<Array<{ id: number; label: string }>>(`/locations/options?${params.toString()}`);
+    return (res ?? []).map((l) => ({ value: l.id, label: l.label }));
+};
 
 const logs = shallowRef<TicketLog[]>([]);
 const commentText = shallowRef('');
@@ -146,6 +171,11 @@ const load = async (): Promise<void> => {
         ticket.value = await api<Ticket>(`/tickets/${id}`);
         subject.value = ticket.value.subject;
         issue.value = ticket.value.issue;
+        categoryId.value = ticket.value.category_id;
+        locationId.value = ticket.value.location_id;
+        place.value = ticket.value.place;
+        contact.value = ticket.value.contact;
+        unitsCount.value = ticket.value.units_count;
         assignUid.value = ticket.value.assigned_uid;
         await loadLogs();
         await loadAttachments();
@@ -162,6 +192,11 @@ const save = async (): Promise<void> => {
     const input: TicketEditInput = {
         subject: subject.value,
         issue: issue.value,
+        category_id: categoryId.value ?? 1,
+        location_id: locationId.value ?? 0,
+        place: place.value,
+        contact: contact.value,
+        units_count: unitsCount.value,
     };
     try {
         await ticketEditSchema.validate(input, { abortEarly: false });
@@ -176,7 +211,15 @@ const save = async (): Promise<void> => {
             `/tickets/${id}`,
             {
                 method: 'PUT',
-                body: JSON.stringify({ subject: input.subject.trim(), issue: input.issue.trim() }),
+                body: JSON.stringify({
+                    subject: input.subject.trim(),
+                    issue: input.issue.trim(),
+                    category_id: input.category_id,
+                    location_id: input.location_id,
+                    place: input.place.trim(),
+                    contact: input.contact.trim(),
+                    units_count: input.units_count,
+                }),
             },
             newIdempotencyKey(),
         );
@@ -324,6 +367,7 @@ const submitComment = async (): Promise<void> => {
 const formatLogDate = (ts: number): string => (ts ? new Date(ts * 1000).toLocaleString() : '—');
 
 onMounted(() => {
+    void fetchCategories();
     void load();
 });
 </script>
@@ -369,6 +413,39 @@ onMounted(() => {
                         <div class="space-y-2">
                             <Label for="issue">Issue</Label>
                             <Textarea id="issue" v-model="issue" rows="6" />
+                        </div>
+                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            <div class="space-y-2">
+                                <Label>Category</Label>
+                                <SearchableSelect
+                                    v-model="categoryId"
+                                    :options="categoryOptions"
+                                    placeholder="Select category"
+                                />
+                            </div>
+                            <div class="space-y-2">
+                                <Label>Location</Label>
+                                <SearchableSelect
+                                    v-model="locationId"
+                                    :options="[{ value: locationId ?? 0, label: ticket?.location_name ?? 'Current' }]"
+                                    :fetch-options="fetchLocations"
+                                    placeholder="Select location"
+                                />
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            <div class="space-y-2">
+                                <Label for="place">Place</Label>
+                                <Input id="place" v-model="place" />
+                            </div>
+                            <div class="space-y-2">
+                                <Label for="contact">Contact</Label>
+                                <Input id="contact" v-model="contact" />
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <Label for="units">Units</Label>
+                            <Input id="units" v-model.number="unitsCount" type="number" min="0" />
                         </div>
                         <div class="flex gap-2">
                             <Button :disabled="saving" @click="save">
