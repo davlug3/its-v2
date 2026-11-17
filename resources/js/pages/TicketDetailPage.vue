@@ -429,12 +429,6 @@ onMounted(() => {
                             </h3>
                             <div class="space-y-0">
                                 <div class="flex items-center justify-between rounded-md px-2 py-1.5 transition-colors hover:bg-haze/50">
-                                    <span class="text-sm text-muted-foreground">Category</span>
-                                    <span class="text-sm font-medium text-foreground">
-                                        {{ ticket.category_name ?? (ticket.category_id ? 'Unknown category' : '—') }}
-                                    </span>
-                                </div>
-                                <div class="flex items-center justify-between rounded-md px-2 py-1.5 transition-colors hover:bg-haze/50">
                                     <span class="text-sm text-muted-foreground">Location</span>
                                     <span class="text-sm font-medium text-foreground">
                                         {{ ticket.location_name ?? (ticket.location_id ? 'Unknown location' : '—') }}
@@ -447,10 +441,6 @@ onMounted(() => {
                                 <div class="flex items-center justify-between rounded-md px-2 py-1.5 transition-colors hover:bg-haze/50">
                                     <span class="text-sm text-muted-foreground">Contact</span>
                                     <span class="text-sm font-medium text-foreground">{{ ticket.contact || '—' }}</span>
-                                </div>
-                                <div class="flex items-center justify-between rounded-md px-2 py-1.5 transition-colors hover:bg-haze/50">
-                                    <span class="text-sm text-muted-foreground">Units</span>
-                                    <span class="text-sm font-medium text-foreground">{{ ticket.units_count }}</span>
                                 </div>
                             </div>
                         </div>
