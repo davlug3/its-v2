@@ -415,6 +415,25 @@ onMounted(() => {
                             <Label for="issue">Issue</Label>
                             <Textarea id="issue" v-model="issue" rows="6" />
                         </div>
+                        <div class="flex gap-2">
+                            <Button :disabled="saving" @click="save">
+                                {{ saving ? 'Saving…' : 'Save' }}
+                            </Button>
+                            <Button variant="outline" @click="editing = false">Cancel</Button>
+                        </div>
+                    </div>
+                    <div v-else class="space-y-3">
+                        <div class="prose prose-sm max-w-none text-sm" v-html="safeIssue"></div>
+                        <div class="flex gap-2">
+                            <Button v-if="canEdit" variant="outline" @click="editing = true"
+                                >Edit subject & issue</Button
+                            >
+                        </div>
+                    </div>
+
+                    <!-- Category, location, place, contact, units — always editable by helpdesk -->
+                    <div v-if="canEdit" class="space-y-3 border-t border-border pt-3">
+                        <h3 class="text-sm font-medium text-foreground">Assign details</h3>
                         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                             <div class="space-y-2">
                                 <Label>Category</Label>
@@ -450,17 +469,8 @@ onMounted(() => {
                         </div>
                         <div class="flex gap-2">
                             <Button :disabled="saving" @click="save">
-                                {{ saving ? 'Saving…' : 'Save' }}
+                                {{ saving ? 'Saving…' : 'Save details' }}
                             </Button>
-                            <Button variant="outline" @click="editing = false">Cancel</Button>
-                        </div>
-                    </div>
-                    <div v-else class="space-y-3">
-                        <div class="prose prose-sm max-w-none text-sm" v-html="safeIssue"></div>
-                        <div class="flex gap-2">
-                            <Button v-if="canEdit" variant="outline" @click="editing = true"
-                                >Edit</Button
-                            >
                         </div>
                     </div>
 
