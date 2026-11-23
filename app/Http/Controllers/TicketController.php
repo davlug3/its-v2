@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Attachement;
+use App\Models\Attachment;
 use App\Models\Ticket;
 use App\Models\TicketLog;
 use App\Models\UserProfile;
@@ -513,7 +513,7 @@ class TicketController extends Controller
             ? $this->supervisors->allSubordinates($userId)
             : $direct;
 
-        $hideCutoff = $this->cutoff('approval.hide_old_cutoff', 1784692800);
+        $hideCutoff = (int) config('approvals.hide_old_cutoff', 1784692800);
 
         $page = max(1, (int) $request->query('page', 1));
         $perPage = min(100, max(1, (int) $request->query('per_page', 40)));
@@ -540,27 +540,11 @@ class TicketController extends Controller
         }
 
         $direct = $this->supervisors->directSubordinates($userId);
-        $badgeCutoff = $this->cutoff('approval.badge_cutoff', 1784553600);
+        $badgeCutoff = (int) config('approvals.badge_cutoff', 1784553600);
 
         $count = $this->queries->pendingReviewCount($direct, $badgeCutoff);
 
         return response()->json(['count' => $count]);
-    }
-
-    private function cutoff(string $name, int $default): int
-    {
-        $row = DB::connection('mysql')
-            ->table('application_settings')
-            ->where('name', $name)
-            ->first();
-
-        if ($row === null) {
-            return $default;
-        }
-
-        $value = (int) $row->setting;
-
-        return $value > 0 ? $value : $default;
     }
 
     public function attachments(Request $request, int $id): JsonResponse
@@ -574,7 +558,7 @@ class TicketController extends Controller
             return response()->json(['message' => 'Forbidden.'], 403);
         }
 
-        $items = Attachement::where('ticket_id', $id)->orderBy('created_at')->get();
+        $items = Attachment::where('ticket_id', $id)->orderBy('created_at')->get();
 
         return response()->json($items);
     }
@@ -650,7 +634,7 @@ class TicketController extends Controller
         $storedName = (string) Str::uuid().'.'.$file->getClientOriginalExtension();
         $path = $file->storeAs($directory, $storedName, 'local');
 
-        $attachment = new Attachement;
+        $attachment = new Attachment;
         $attachment->file_name_org = $file->getClientOriginalName();
         $attachment->file_name = 0;
         $attachment->ticket_id = $id;
@@ -687,7 +671,7 @@ class TicketController extends Controller
             return response()->json(['message' => 'Forbidden.'], 403);
         }
 
-        $attachment = Attachement::where('id', $attachmentId)->where('ticket_id', $id)->first();
+        $attachment = Attachment::where('id', $attachmentId)->where('ticket_id', $id)->first();
 
         if ($attachment === null) {
             return response()->json(['message' => 'Attachment not found.'], 404);
@@ -713,7 +697,7 @@ class TicketController extends Controller
             return response()->json(['message' => 'Forbidden.'], 403);
         }
 
-        $attachment = Attachement::where('id', $attachmentId)->where('ticket_id', $id)->first();
+        $attachment = Attachment::where('id', $attachmentId)->where('ticket_id', $id)->first();
 
         if ($attachment === null) {
             return response()->json(['message' => 'Attachment not found.'], 404);

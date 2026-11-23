@@ -17,13 +17,16 @@ use Illuminate\Support\Carbon;
  * @property int $uploaded_by
  * @property Carbon|null $created_at
  */
-class Attachement extends Model
+class Attachment extends Model
 {
+    /**
+     * The legacy table name is intentionally misspelled ("attachements").
+     */
     protected $table = 'attachements';
 
     protected $primaryKey = 'id';
 
     public $timestamps = false;
 
-    protected $guarded = [];
+    protected $guarded = ['*'];
 }

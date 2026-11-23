@@ -58,6 +58,7 @@ const toggleAdvanced = (): void => {
                     v-model="searchQuery"
                     type="search"
                     :placeholder="searchPlaceholder"
+                    aria-label="Search tickets"
                     class="pl-9"
                     @keyup.enter="doSearch"
                 />

@@ -215,7 +215,9 @@ const displayedRows = computed(() => {
     return sortedRows.value;
 });
 
-const currentPage = computed(() => (props.page !== undefined ? props.page : 1));
+const internalPage = shallowRef(1);
+
+const currentPage = computed(() => (props.page !== undefined ? props.page : internalPage.value));
 
 const totalPages = computed(() =>
     props.pagination === 'server'
@@ -231,9 +233,17 @@ const goPage = (p: number): void => {
     const next = Math.min(Math.max(1, p), totalPages.value);
     if (props.page !== undefined) {
         emit('update:page', next);
+    } else {
+        internalPage.value = next;
     }
     emit('page-change', next);
 };
+
+watch(totalPages, (tp) => {
+    if (props.page === undefined && internalPage.value > tp) {
+        internalPage.value = tp;
+    }
+});
 
 watch(() => props.tableId, loadWidths);
 </script>
@@ -285,8 +295,11 @@ watch(() => props.tableId, loadWidths);
                         <TableRow
                             v-for="(row, idx) in displayedRows"
                             :key="(row.id as string | number | undefined) ?? idx"
-                            class="cursor-pointer hover:bg-haze/50"
+                            class="cursor-pointer hover:bg-haze/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-cobalt-core"
+                            tabindex="0"
                             @click="emit('row-click', row)"
+                            @keydown.enter.prevent="emit('row-click', row)"
+                            @keydown.space.prevent="emit('row-click', row)"
                         >
                             <TableCell
                                 v-for="col in columns"

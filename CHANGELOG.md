@@ -39,6 +39,21 @@ Versions start at `0.1.0` when the scaffold is ready.
 
 ### Fixed
 
+- **Client-side pagination and table accessibility (2026-11-23).**
+  - `DataTable.vue` now keeps an internal page for `pagination="client"`; previously
+    `currentPage` was always `1`, so Next/Prev did nothing on Monitoring, Admin
+    Categories, and Admin Permissions.
+  - Table rows are keyboard-accessible (`tabindex="0"`, Enter/Space activate the
+    row, visible focus ring).
+  - Search input in `TicketListFilters.vue` has an explicit `aria-label`.
+  - Approval cutoffs moved from the legacy `application_settings` table to
+    `config/approvals.php` (env-overridable); removed the now-unused
+    `ApplicationSetting` model.
+  - Renamed `Attachement` model to `Attachment` (legacy table name
+    `attachements` kept).
+  - `Ticket` and `Attachment` models now guard all mass assignment (`$guarded` =
+    `['*']`); code assigns properties explicitly.
+
 - **Unified ticket search (2026-11-23).**
   - `TicketQueryService::applySearch()` now resolves the search term to user,
     department, and category IDs and filters in SQL, so search covers the whole
