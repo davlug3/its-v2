@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, shallowRef } from 'vue';
+import { shallowRef } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { Button } from '@/components/ui/button';
@@ -10,52 +10,23 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { api } from '@/services/api';
 import { ticketCreateSchema, type TicketCreateInput } from '@/schemas/ticketCreate';
-import SearchableSelect from '@/components/common/SearchableSelect.vue';
-
-interface Category {
-    id: number;
-    category: string;
-}
 
 const router = useRouter();
 const subject = shallowRef('');
 const issue = shallowRef('');
-const categoryId = shallowRef<number | null>(null);
 const place = shallowRef('');
 const contact = shallowRef('');
-const unitsCount = shallowRef(1);
 const submitting = shallowRef(false);
 const error = shallowRef<string | null>(null);
 const idempotencyKey = shallowRef<string | null>(null);
-
-const categories = ref<Category[]>([]);
-
-const categoryOptions = computed(() =>
-    categories.value.map((c) => ({ value: c.id, label: c.category })),
-);
-
-const loadCategories = async (): Promise<void> => {
-    try {
-        categories.value = await api<Category[]>('/categories');
-        if (categoryId.value === null && categories.value.length > 0) {
-            categoryId.value = categories.value[0].id;
-        }
-    } catch {
-        categories.value = [];
-    }
-};
-
-onMounted(loadCategories);
 
 const submit = async (): Promise<void> => {
     error.value = null;
     const input: TicketCreateInput = {
         subject: subject.value,
         issue: issue.value,
-        category_id: categoryId.value ?? 1,
         place: place.value,
         contact: contact.value,
-        units_count: unitsCount.value,
     };
     try {
         await ticketCreateSchema.validate(input, { abortEarly: false });
@@ -76,10 +47,8 @@ const submit = async (): Promise<void> => {
                 body: JSON.stringify({
                     subject: input.subject.trim(),
                     issue: input.issue.trim(),
-                    category_id: input.category_id,
                     place: input.place.trim(),
                     contact: input.contact.trim(),
-                    units_count: input.units_count,
                 }),
             },
             idempotencyKey.value,
@@ -114,25 +83,12 @@ const submit = async (): Promise<void> => {
                     </div>
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div class="space-y-2">
-                            <Label for="category">Category</Label>
-                            <SearchableSelect
-                                id="category"
-                                v-model="categoryId"
-                                :options="categoryOptions"
-                                placeholder="Select category"
-                            />
-                        </div>
-                        <div class="space-y-2">
                             <Label for="place">Place</Label>
                             <Input id="place" v-model="place" />
                         </div>
                         <div class="space-y-2">
                             <Label for="contact">Contact</Label>
                             <Input id="contact" v-model="contact" />
-                        </div>
-                        <div class="space-y-2">
-                            <Label for="units">Units</Label>
-                            <Input id="units" v-model.number="unitsCount" type="number" min="0" />
                         </div>
                     </div>
 

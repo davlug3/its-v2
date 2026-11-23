@@ -39,6 +39,10 @@ Versions start at `0.1.0` when the scaffold is ready.
 
 ### Fixed
 
+- **Removed Category and Units from the New Ticket form (2026-11-23).**
+  - `/tickets/new` now only asks for Subject, Issue, Place, and Contact.
+    Category defaults to 1 and units to 1 server-side.
+
 - **Logout redirects to login (2026-11-23).**
   - The user menu now calls `auth.logout()` and then `router.push('/login')`.
     Previously logout cleared the token but left the user on the current page.
