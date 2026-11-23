@@ -39,6 +39,11 @@ Versions start at `0.1.0` when the scaffold is ready.
 
 ### Fixed
 
+- **SearchableSelect keeps the selected label (2026-11-23).**
+  - After picking an async option (assignee, user filter), the input now shows
+    the selected label instead of clearing. Root cause: `selectedLabel` only
+    searched `props.options`, which for assignees is just "Unassigned".
+
 - **Vite watcher ignore list expanded (2026-11-23).**
   - Ignore `storage`, `.git`, `.agents`, `.claude`, `public/build`, `docs`, and
     `*.log` to avoid `ENOSPC: System limit for number of file watchers reached`.

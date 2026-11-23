@@ -30,6 +30,7 @@ const query = shallowRef('');
 const debouncedQuery = shallowRef('');
 const loading = shallowRef(false);
 const asyncOptions = ref<SelectOption[] | null>(null);
+const selectedOption = shallowRef<SelectOption | null>(null);
 
 let timer: ReturnType<typeof setTimeout> | null = null;
 
@@ -66,6 +67,9 @@ const filtered = computed(() => {
 });
 
 const selectedLabel = computed(() => {
+    if (selectedOption.value !== null && selectedOption.value.value === model.value) {
+        return selectedOption.value.label;
+    }
     const found = baseOptions.value.find((o) => o.value === model.value);
     return found ? found.label : '';
 });
@@ -116,6 +120,7 @@ onUnmounted(() => {
 
 const select = (opt: SelectOption): void => {
     model.value = opt.value;
+    selectedOption.value = opt;
     query.value = '';
     debouncedQuery.value = '';
     asyncOptions.value = null;
@@ -124,6 +129,7 @@ const select = (opt: SelectOption): void => {
 
 const clear = (): void => {
     model.value = null;
+    selectedOption.value = null;
     query.value = '';
 };
 
