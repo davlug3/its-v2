@@ -30,9 +30,15 @@ class TicketMutationService
     {
         $subject = trim((string) ($data['subject'] ?? ''));
         $issue = trim((string) ($data['issue'] ?? ''));
+        $place = trim((string) ($data['place'] ?? ''));
+        $contact = trim((string) ($data['contact'] ?? ''));
 
         if ($subject === '' || $issue === '') {
             return ['ok' => false, 'ticket_id' => null, 'message' => 'Subject and issue are required.'];
+        }
+
+        if ($place === '' || $contact === '') {
+            return ['ok' => false, 'ticket_id' => null, 'message' => 'Place and contact are required.'];
         }
 
         if (mb_strlen($subject) > 255) {
@@ -57,7 +63,7 @@ class TicketMutationService
 
         $now = time();
 
-        $ticket = DB::transaction(function () use ($subject, $issue, $categoryId, $locationId, $unitsCount, $actorId, $isStaff, $now, $data) {
+        $ticket = DB::transaction(function () use ($subject, $issue, $place, $contact, $categoryId, $locationId, $unitsCount, $actorId, $isStaff, $now) {
             $ticket = new Ticket;
             $ticket->subject = $subject;
             $ticket->issue = $issue;
@@ -67,8 +73,8 @@ class TicketMutationService
             $ticket->created_time = $now;
             $ticket->category_id = $categoryId;
             $ticket->location_id = $locationId;
-            $ticket->place = (string) ($data['place'] ?? '');
-            $ticket->contact = (string) ($data['contact'] ?? '');
+            $ticket->place = $place;
+            $ticket->contact = $contact;
             $ticket->assigned_gid = 0;
             $ticket->assigned_uid = 0;
             $ticket->state_id = 1;
