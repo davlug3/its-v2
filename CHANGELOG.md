@@ -39,6 +39,10 @@ Versions start at `0.1.0` when the scaffold is ready.
 
 ### Fixed
 
+- **Logout redirects to login (2026-11-23).**
+  - The user menu now calls `auth.logout()` and then `router.push('/login')`.
+    Previously logout cleared the token but left the user on the current page.
+
 - **SearchableSelect keeps the selected label (2026-11-23).**
   - After picking an async option (assignee, user filter), the input now shows
     the selected label instead of clearing. Root cause: `selectedLabel` only

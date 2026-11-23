@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, shallowRef } from 'vue';
-import { RouterLink, RouterView, useRoute } from 'vue-router';
+import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router';
 
 import { Bell, ChevronDown, Menu } from '@lucide/vue';
 
@@ -29,6 +29,7 @@ interface Notification {
 
 const auth = useAuthStore();
 const route = useRoute();
+const router = useRouter();
 
 const acl = computed(() => auth.user?.acl ?? 1);
 
@@ -92,6 +93,11 @@ const markAllRead = async (): Promise<void> => {
     } catch {
         // ignore
     }
+};
+
+const onLogout = (): void => {
+    auth.logout();
+    void router.push('/login');
 };
 
 const pageTitle = computed(() => {
@@ -283,7 +289,7 @@ onUnmounted(() => {
                                 <RouterLink to="/about" class="w-full">About</RouterLink>
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem @click="auth.logout()">Log out</DropdownMenuItem>
+                            <DropdownMenuItem @click="onLogout">Log out</DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
