@@ -32,7 +32,17 @@ export default defineConfig({
             host: 'localhost',
         },
         watch: {
-            ignored: ['**/storage/framework/views/**', '**/vendor/**', '**/node_modules/**'],
+            ignored: [
+                '**/storage/**',
+                '**/vendor/**',
+                '**/node_modules/**',
+                '**/.git/**',
+                '**/.agents/**',
+                '**/.claude/**',
+                '**/public/build/**',
+                '**/docs/**',
+                '**/*.log',
+            ],
         },
     },
 });

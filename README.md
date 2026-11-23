@@ -186,8 +186,8 @@ The scaffold is complete. Steps:
    to your authorized credentials.
 3. `php artisan key:generate`
 4. `php artisan jwt:secret`
-5. `npm install`
-6. `npm run build`
+5. `pnpm install`
+6. `pnpm build`
 7. `docker compose up -d app nginx`
 
 The application is at `http://localhost:8080`.
@@ -200,13 +200,20 @@ to 25 MB, raise `upload_max_filesize` and `post_max_size` in the PHP ini used
 by your server (for example `/etc/php/8.5/cli/php.ini` for `php artisan serve`,
 or the FPM pool ini for nginx/Apache), then restart the server.
 
+On Linux, if `pnpm dev` reports `ENOSPC: System limit for number of file
+watchers reached`, raise the inotify watch limit:
+
+```
+sudo sysctl -w fs.inotify.max_user_watches=524288
+```
+
 Checks:
 
 - `php artisan test`
-- `npm run typecheck`
-- `npm run build`
-- `npm run lint`
-- `npm run format:check`
+- `pnpm typecheck`
+- `pnpm build`
+- `pnpm lint`
+- `pnpm format:check`
 - `./vendor/bin/pint --test`
 - `./vendor/bin/phpstan analyse --memory-limit=512M`
 

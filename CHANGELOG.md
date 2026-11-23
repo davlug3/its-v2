@@ -39,6 +39,11 @@ Versions start at `0.1.0` when the scaffold is ready.
 
 ### Fixed
 
+- **Vite watcher ignore list expanded (2026-11-23).**
+  - Ignore `storage`, `.git`, `.agents`, `.claude`, `public/build`, `docs`, and
+    `*.log` to avoid `ENOSPC: System limit for number of file watchers reached`.
+  - README documents raising `fs.inotify.max_user_watches` and uses `pnpm`.
+
 - **Removed unreachable EndUserTicketsPage (2026-11-23).**
   - Deleted `resources/js/pages/EndUserTicketsPage.vue` and its
     `/tickets/end-user` route. It duplicated My Tickets and was not linked in
