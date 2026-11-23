@@ -47,6 +47,7 @@ Related files:
 | P1 | Dual-run password strategy | Pending cutover approval |
 | Q1 | Open questions | Open |
 | TL1 | Canonical ticket lifecycle and reopening | Approved |
+| R1 | Rich text editor for the ticket issue | Approved |
 
 ---
 
@@ -725,6 +726,7 @@ These items need a decision from Dave. They do not block Phase 1.
 | 2026-11-04 | Initial record. Added A1–A5, C1, C2, C6, C7, D27, D53, D74, T1, T2, P1, Q1. |
 | 2026-11-04 | Added U1 (shadcn-vue), U2 (TypeScript 5.9.3), U3 (Vue Router 5), U4 (vee-validate), U5 (Yup), U6 (port 8080). |
 | 2026-11-04 | Revised C6. Identity, location, and state now come from `jblmrhpayroll`. Added C8: retire `its.users` and `its.locations`, add `user_profile`. |
+| 2026-11-23 | Added R1: Tiptap rich text editor for the ticket issue plus Symfony html-sanitizer allowlist. |
 
 ## U8 — Retire forced password change (fpc)
 
@@ -825,3 +827,25 @@ behaviour; all 11 existing tests still pass.
 **Reason.** These rules were confirmed by the product owner during the ticket lifecycle review on 2026-11-10.
 
 **Effect.** Update `PROMPT.md`, implement `TICKET_LIFECYCLE.md`, and add AT-55 onward in `PLAN.md`.
+
+---
+
+## R1 — Rich text editor for the ticket issue
+
+**Decision.** Use **Tiptap `3.35.0`** (`@tiptap/vue-3`, `@tiptap/core`, `@tiptap/pm`, `@tiptap/starter-kit`, `@tiptap/extension-image`) for the New Ticket issue field.
+
+Add **Symfony `html-sanitizer` `8.1.11`** (`symfony/html-sanitizer`) on the backend for server-side HTML sanitization via a strict allowlist.
+
+**Reason.** The user asked for formatted ticket issue text. The ticket detail page already renders the issue through `DOMPurify` and `v-html`, so the editor emits HTML and the existing display path is reused. The backend must sanitize before storing because client-side rendering is not a security control.
+
+**Allowed elements.** `p`, `br`, `strong`, `em`, `u`, `s`, `blockquote`, `code`, `pre`, `h1`–`h3`, `ul`, `ol`, `li`, `a` (href/title, allow-listed schemes, forced `rel="noopener noreferrer"`), `img` (src, media schemes).
+
+All other elements are dropped, including their children.
+
+**Effect.**
+
+- `resources/js/components/common/RichTextEditor.vue` is a headless Tiptap editor with a toolbar (bold, italic, underline, strike, heading 1–3, bullet list, ordered list, quote, image, undo, redo).
+- The New Ticket form sends the issue as HTML and requires Subject, Issue, Place, and Contact.
+- `TicketMutationService` sanitizes on create and edit, rejects empty rich text, derives `preview` from plain text, and caps plain text at 4000 characters.
+
+**Known limitation.** Ticket list search uses `LIKE` on the stored HTML, so searching for text inside markup may match tags.

@@ -11,7 +11,26 @@ Versions start at `0.1.0` when the scaffold is ready.
 
 ### Added
 
-- **Architecture evaluation and cleanup (2026-11-10).**
+- **Rich text editor for the ticket issue (2026-11-23).**
+  - Installed **Tiptap `3.35.0`** (`@tiptap/vue-3`, `@tiptap/core`, `@tiptap/pm`,
+    `@tiptap/starter-kit`, `@tiptap/extension-image`).
+  - Added `resources/js/components/common/RichTextEditor.vue`: headless Tiptap editor
+    with a toolbar (bold, italic, underline, strike, heading 1–3, bullet list, ordered
+    list, quote, image, undo, redo).
+  - `/tickets/new` Issue is now the rich text editor. Subject, Issue, Place, and
+    Contact are required. Category defaults to 1 and units to 1 server-side.
+
+### Security
+
+- **Server-side HTML sanitization for the ticket issue (2026-11-23).**
+  - Added `App\Support\RichText` on `symfony/html-sanitizer` `8.1.11` with a strict
+    allowlist (p, br, strong, em, u, s, blockquote, code, pre, h1–h3, ul, ol, li, a, img).
+  - `TicketMutationService::create` and `edit` sanitize before storing, reject empty
+    rich text, and build `preview` from plain text. Plain text is capped at 4000 chars.
+
+### Fixed
+
+- **Ticket creation requires Place and Contact server-side (2026-11-23).**
   - Split the 1,369-line `TicketService` God object into two focused services:
     - `TicketQueryService` (658 lines) — read-side: listing, aggregation, log retrieval.
     - `TicketMutationService` (739 lines) — write-side: create, edit, assign, comment,

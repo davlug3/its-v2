@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PageHeader from '@/components/common/PageHeader.vue';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import RichTextEditor from '@/components/common/RichTextEditor.vue';
 import { api } from '@/services/api';
 import { ticketCreateSchema, type TicketCreateInput } from '@/schemas/ticketCreate';
 
@@ -79,7 +79,7 @@ const submit = async (): Promise<void> => {
                     </div>
                     <div class="space-y-2">
                         <Label for="issue">Issue</Label>
-                        <Textarea id="issue" v-model="issue" rows="12" />
+                        <RichTextEditor id="issue" v-model="issue" aria-label="Issue description" />
                     </div>
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div class="space-y-2">

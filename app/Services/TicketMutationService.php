@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Category;
 use App\Models\Ticket;
 use App\Models\TicketLog;
+use App\Support\RichText;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -18,6 +19,7 @@ class TicketMutationService
 {
     public function __construct(
         private NotificationService $notifications,
+        private RichText $richText,
     ) {}
 
     /**
@@ -33,7 +35,10 @@ class TicketMutationService
         $place = trim((string) ($data['place'] ?? ''));
         $contact = trim((string) ($data['contact'] ?? ''));
 
-        if ($subject === '' || $issue === '') {
+        $issue = $this->richText->sanitize($issue);
+        $plainIssue = $this->richText->plainText($issue);
+
+        if ($subject === '' || $plainIssue === '') {
             return ['ok' => false, 'ticket_id' => null, 'message' => 'Subject and issue are required.'];
         }
 
@@ -45,8 +50,9 @@ class TicketMutationService
             $subject = mb_substr($subject, 0, 255);
         }
 
-        if (mb_strlen($issue) > 4000) {
-            $issue = mb_substr($issue, 0, 4000);
+        if (mb_strlen($plainIssue) > 4000) {
+            $plainIssue = mb_substr($plainIssue, 0, 4000);
+            $issue = '<p>'.e($plainIssue).'</p>';
         }
 
         $categoryId = (int) ($data['category_id'] ?? 1);
@@ -63,11 +69,11 @@ class TicketMutationService
 
         $now = time();
 
-        $ticket = DB::transaction(function () use ($subject, $issue, $place, $contact, $categoryId, $locationId, $unitsCount, $actorId, $isStaff, $now) {
+        $ticket = DB::transaction(function () use ($subject, $issue, $plainIssue, $place, $contact, $categoryId, $locationId, $unitsCount, $actorId, $isStaff, $now) {
             $ticket = new Ticket;
             $ticket->subject = $subject;
             $ticket->issue = $issue;
-            $ticket->preview = mb_substr($issue, 0, 200);
+            $ticket->preview = mb_substr($plainIssue, 0, 200);
             $ticket->created_uid = $actorId;
             $ticket->created_date = $now;
             $ticket->created_time = $now;
@@ -125,8 +131,10 @@ class TicketMutationService
 
         $subject = isset($data['subject']) ? trim((string) $data['subject']) : $ticket->subject;
         $issue = isset($data['issue']) ? trim((string) $data['issue']) : $ticket->issue;
+        $issue = $this->richText->sanitize($issue);
+        $plainIssue = $this->richText->plainText($issue);
 
-        if ($subject === '' || $issue === '') {
+        if ($subject === '' || $plainIssue === '') {
             return ['ok' => false, 'message' => 'Subject and issue are required.'];
         }
 
@@ -134,8 +142,9 @@ class TicketMutationService
             $subject = mb_substr($subject, 0, 255);
         }
 
-        if (mb_strlen($issue) > 4000) {
-            $issue = mb_substr($issue, 0, 4000);
+        if (mb_strlen($plainIssue) > 4000) {
+            $plainIssue = mb_substr($plainIssue, 0, 4000);
+            $issue = '<p>'.e($plainIssue).'</p>';
         }
 
         if (isset($data['category_id']) && ! Category::query()->whereKey((int) $data['category_id'])->exists()) {
@@ -149,7 +158,7 @@ class TicketMutationService
         $changed = [];
         $now = time();
 
-        DB::transaction(function () use ($ticket, $subject, $issue, $data, $actorId, $now, &$changed) {
+        DB::transaction(function () use ($ticket, $subject, $issue, $data, $actorId, $now, &$changed, $plainIssue) {
             if ($ticket->subject !== $subject) {
                 $changed[] = 'subject';
                 $ticket->subject = $subject;
@@ -158,7 +167,7 @@ class TicketMutationService
             if ($ticket->issue !== $issue) {
                 $changed[] = 'issue';
                 $ticket->issue = $issue;
-                $ticket->preview = mb_substr($issue, 0, 200);
+                $ticket->preview = mb_substr($plainIssue, 0, 200);
             }
 
             if (isset($data['category_id']) && (int) $data['category_id'] !== (int) $ticket->category_id) {
