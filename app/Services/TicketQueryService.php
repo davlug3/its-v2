@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Ticket;
 use App\Models\TicketLog;
+use App\Support\Like;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
@@ -40,8 +41,8 @@ class TicketQueryService
         $categoryIds = $this->resolver->categoryIdsMatching($search);
 
         $query->where(function (Builder $sub) use ($search, $userIds, $locationIds, $categoryIds): void {
-            $sub->where('subject', 'like', '%'.$search.'%')
-                ->orWhere('issue', 'like', '%'.$search.'%');
+            $sub->where('subject', 'like', Like::contains($search))
+                ->orWhere('issue', 'like', Like::contains($search));
 
             if (ctype_digit($search)) {
                 $sub->orWhere('id', (int) $search);
@@ -171,12 +172,12 @@ class TicketQueryService
         } else {
             $subject = trim((string) ($filters['subject'] ?? $filters['search'] ?? ''));
             if ($subject !== '' && strcasecmp($subject, 'null') !== 0) {
-                $query->where('subject', 'like', '%'.$subject.'%');
+                $query->where('subject', 'like', Like::contains($subject));
             }
 
             $issue = trim((string) ($filters['issue'] ?? ''));
             if ($issue !== '' && strcasecmp($issue, 'null') !== 0) {
-                $query->where('issue', 'like', '%'.$issue.'%');
+                $query->where('issue', 'like', Like::contains($issue));
             }
         }
 

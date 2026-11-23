@@ -10,6 +10,7 @@ use App\Services\ReferenceResolver;
 use App\Services\SupervisorService;
 use App\Services\TicketMutationService;
 use App\Services\TicketQueryService;
+use App\Support\Like;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -279,7 +280,16 @@ class TicketController extends Controller
 
         $canClose = $this->aclOf($request) >= 2;
 
-        $result = $this->mutations->close($id, (int) $user->id, $canClose);
+        $validated = $request->validate([
+            'resolution' => ['nullable', 'string', 'max:4000'],
+        ]);
+
+        $result = $this->mutations->close(
+            $id,
+            (int) $user->id,
+            $canClose,
+            isset($validated['resolution']) ? trim($validated['resolution']) : null,
+        );
 
         if (! $result['ok']) {
             return response()->json(['message' => $result['message']], 422);
@@ -747,7 +757,7 @@ class TicketController extends Controller
             ->select(['id', 'department']);
 
         if ($q !== '') {
-            $query->where('department', 'like', '%'.$q.'%');
+            $query->where('department', 'like', Like::contains($q));
         }
 
         $rows = $query->orderBy('department')->limit($limit)->get();
@@ -766,7 +776,7 @@ class TicketController extends Controller
 
         $tickets = Ticket::query()
             ->where('state_id', 1)
-            ->whereNotIn('category_id', [23, 24])
+            ->whereNotIn('category_id', config('monitoring.excluded_category_ids', []))
             ->orderByDesc('created_date')
             ->limit(200)
             ->get();

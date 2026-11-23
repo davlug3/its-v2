@@ -722,7 +722,7 @@ class TicketMutationService
      *
      * @return array{ok: bool, message: string}
      */
-    public function close(int $ticketId, int $actorId, bool $canClose): array
+    public function close(int $ticketId, int $actorId, bool $canClose, ?string $resolution = null): array
     {
         $ticket = Ticket::find($ticketId);
 
@@ -739,13 +739,17 @@ class TicketMutationService
             return ['ok' => true, 'message' => 'Ticket already closed.'];
         }
 
+        $resolution = $resolution !== null && trim($resolution) !== '' ? trim($resolution) : null;
         $now = time();
 
-        DB::transaction(function () use ($ticket, $actorId, $now) {
+        DB::transaction(function () use ($ticket, $actorId, $resolution, $now) {
             $ticket->state_id = 2;
             $ticket->resolved_uid = $actorId;
             $ticket->resolved_date = $now;
             $ticket->resolved_time = $now;
+            if ($resolution !== null) {
+                $ticket->resolution = $resolution;
+            }
             $ticket->updated_at = now();
             $ticket->save();
 

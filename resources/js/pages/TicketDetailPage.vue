@@ -9,6 +9,14 @@ import { MapPin, Phone, User, UserCheck, Users } from '@lucide/vue';
 import { Button } from '@/components/ui/button';
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import PageHeader from '@/components/common/PageHeader.vue';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -89,6 +97,8 @@ const loading = shallowRef(true);
 const error = shallowRef<string | null>(null);
 const saving = shallowRef(false);
 const closing = shallowRef(false);
+const closeOpen = shallowRef(false);
+const closeResolution = shallowRef('');
 
 const categoryId = shallowRef<number | null>(null);
 const unitsCount = shallowRef(1);
@@ -207,7 +217,20 @@ const close = async (): Promise<void> => {
     closing.value = true;
     error.value = null;
     try {
-        await api(`/tickets/${id}/close`, { method: 'POST' }, newIdempotencyKey());
+        await api(
+            `/tickets/${id}/close`,
+            {
+                method: 'POST',
+                body: JSON.stringify(
+                    closeResolution.value.trim() !== ''
+                        ? { resolution: closeResolution.value.trim() }
+                        : {},
+                ),
+            },
+            newIdempotencyKey(),
+        );
+        closeOpen.value = false;
+        closeResolution.value = '';
         await load();
     } catch (e) {
         error.value = (e as { message?: string }).message ?? 'Failed to close.';
@@ -352,7 +375,7 @@ onMounted(() => {
                 <Button
                     v-if="ticket && ticket.state_id === 1 && canClose"
                     :disabled="closing"
-                    @click="close"
+                    @click="closeOpen = true"
                 >
                     {{ closing ? 'Closing…' : 'Close ticket' }}
                 </Button>
@@ -579,5 +602,26 @@ onMounted(() => {
             @confirm="confirmDeleteAttachment"
             @cancel="deleteAttachmentOpen = false"
         />
+
+        <Dialog v-model:open="closeOpen">
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Close ticket</DialogTitle>
+                    <DialogDescription>
+                        Optionally add a resolution note for the ticket history.
+                    </DialogDescription>
+                </DialogHeader>
+                <div class="space-y-2">
+                    <Label for="resolution">Resolution (optional)</Label>
+                    <Textarea id="resolution" v-model="closeResolution" rows="3" />
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" @click="closeOpen = false">Cancel</Button>
+                    <Button :disabled="closing" @click="close">
+                        {{ closing ? 'Closing…' : 'Close ticket' }}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     </div>
 </template>

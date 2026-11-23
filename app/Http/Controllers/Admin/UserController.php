@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\AdminAudit;
 use App\Models\UserProfile;
+use App\Support\Like;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -29,10 +30,10 @@ class UserController extends Controller
 
         if ($search !== '') {
             $query->where(function ($q) use ($search): void {
-                $q->where('u.username', 'like', '%'.$search.'%')
-                    ->orWhere('p.name', 'like', '%'.$search.'%')
-                    ->orWhere('p.mname', 'like', '%'.$search.'%')
-                    ->orWhere('p.lname', 'like', '%'.$search.'%');
+                $q->where('u.username', 'like', Like::contains($search))
+                    ->orWhere('p.name', 'like', Like::contains($search))
+                    ->orWhere('p.mname', 'like', Like::contains($search))
+                    ->orWhere('p.lname', 'like', Like::contains($search));
             });
         }
 
@@ -92,9 +93,9 @@ class UserController extends Controller
 
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
-                $q->where('u.username', 'like', '%'.$search.'%')
-                    ->orWhere('p.name', 'like', '%'.$search.'%')
-                    ->orWhere('p.lname', 'like', '%'.$search.'%');
+                $q->where('u.username', 'like', Like::contains($search))
+                    ->orWhere('p.name', 'like', Like::contains($search))
+                    ->orWhere('p.lname', 'like', Like::contains($search));
             });
         }
 

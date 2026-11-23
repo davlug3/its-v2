@@ -39,6 +39,17 @@ Versions start at `0.1.0` when the scaffold is ready.
 
 ### Fixed
 
+- **Second hardening pass (2026-11-23).**
+  - Theme is applied on startup (`useThemeStore().init()` in `app.ts`); dark
+    mode now survives reloads.
+  - Removed unused `useSortable` composable.
+  - Added `App\Support\Like` and escaped `%`, `_`, and `\` in every `LIKE`
+    search so wildcards are matched literally.
+  - Moved the monitoring category exclusions from hardcoded `[23, 24]` to
+    `config/monitoring.php`.
+  - `close()` now accepts an optional resolution; the ticket detail close
+    dialog sends it, and it appears in the report.
+
 - **Security and robustness hardening (2026-11-23).**
   - `AboutController` only returns `app_env`, `app_debug`, `php_version`,
     `laravel_version`, and DB URLs to ACL 9; other users get blanks.

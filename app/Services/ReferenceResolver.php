@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Category;
+use App\Support\Like;
 use Illuminate\Support\Facades\DB;
 
 class ReferenceResolver
@@ -165,9 +166,9 @@ class ReferenceResolver
 
         return DB::connection('payroll')
             ->table('payroll')
-            ->where('name', 'like', '%'.$term.'%')
-            ->orWhere('mname', 'like', '%'.$term.'%')
-            ->orWhere('lname', 'like', '%'.$term.'%')
+            ->where('name', 'like', Like::contains($term))
+            ->orWhere('mname', 'like', Like::contains($term))
+            ->orWhere('lname', 'like', Like::contains($term))
             ->limit(500)
             ->pluck('id')
             ->map(fn ($id): int => (int) $id)
@@ -188,7 +189,7 @@ class ReferenceResolver
 
         return DB::connection('payroll')
             ->table('department')
-            ->where('department', 'like', '%'.$term.'%')
+            ->where('department', 'like', Like::contains($term))
             ->limit(500)
             ->pluck('id')
             ->map(fn ($id): int => (int) $id)
@@ -208,7 +209,7 @@ class ReferenceResolver
         }
 
         return Category::query()
-            ->where('category', 'like', '%'.$term.'%')
+            ->where('category', 'like', Like::contains($term))
             ->limit(500)
             ->pluck('id')
             ->map(fn ($id): int => (int) $id)
