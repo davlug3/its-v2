@@ -39,6 +39,14 @@ Versions start at `0.1.0` when the scaffold is ready.
 
 ### Fixed
 
+- **Server-side validation for ticket mutations (2026-11-23).**
+  - `create()` and `edit()` now reject non-existent categories and negative
+    `units_count`.
+  - `assign()` now rejects an `assigned_uid` that does not exist or is inactive
+    in the payroll table.
+  - Previously only the frontend validated; direct API calls could persist bad
+    data.
+
 - **CSV formula injection in ticket report (2026-11-23).**
   - Added `App\Support\CsvSafe::cell()` and applied it to every exported cell.
   - Values starting with `=`, `+`, `-`, `@`, tab, or CR are prefixed with a

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Category;
 use App\Models\Ticket;
 use App\Models\TicketLog;
 use Illuminate\Support\Facades\DB;
@@ -44,10 +45,19 @@ class TicketMutationService
 
         $categoryId = (int) ($data['category_id'] ?? 1);
         $locationId = (int) ($data['location_id'] ?? 0);
+        $unitsCount = (int) ($data['units_count'] ?? 1);
+
+        if (! Category::query()->whereKey($categoryId)->exists()) {
+            return ['ok' => false, 'ticket_id' => null, 'message' => 'Category not found.'];
+        }
+
+        if ($unitsCount < 0) {
+            return ['ok' => false, 'ticket_id' => null, 'message' => 'Units count cannot be negative.'];
+        }
 
         $now = time();
 
-        $ticket = DB::transaction(function () use ($subject, $issue, $categoryId, $locationId, $actorId, $isStaff, $now, $data) {
+        $ticket = DB::transaction(function () use ($subject, $issue, $categoryId, $locationId, $unitsCount, $actorId, $isStaff, $now, $data) {
             $ticket = new Ticket;
             $ticket->subject = $subject;
             $ticket->issue = $issue;
@@ -65,7 +75,7 @@ class TicketMutationService
             $ticket->eu_uid = $actorId;
             $ticket->approved_by_supervisor = 0;
             $ticket->source = $isStaff ? 'staff' : 'enduser';
-            $ticket->units_count = (int) ($data['units_count'] ?? 1);
+            $ticket->units_count = $unitsCount;
             $ticket->save();
 
             $log = new TicketLog;
@@ -120,6 +130,14 @@ class TicketMutationService
 
         if (mb_strlen($issue) > 4000) {
             $issue = mb_substr($issue, 0, 4000);
+        }
+
+        if (isset($data['category_id']) && ! Category::query()->whereKey((int) $data['category_id'])->exists()) {
+            return ['ok' => false, 'message' => 'Category not found.'];
+        }
+
+        if (isset($data['units_count']) && (int) $data['units_count'] < 0) {
+            return ['ok' => false, 'message' => 'Units count cannot be negative.'];
         }
 
         $changed = [];
@@ -210,6 +228,22 @@ class TicketMutationService
 
         if (! $canAssign) {
             return ['ok' => false, 'message' => 'You do not have permission to assign this ticket.'];
+        }
+
+        if (array_key_exists('assigned_uid', $data)) {
+            $assignedUid = (int) $data['assigned_uid'];
+
+            if ($assignedUid > 0) {
+                $active = DB::connection('payroll')
+                    ->table('payroll')
+                    ->where('id', $assignedUid)
+                    ->where('status', 'A')
+                    ->exists();
+
+                if (! $active) {
+                    return ['ok' => false, 'message' => 'Assigned user not found or inactive.'];
+                }
+            }
         }
 
         $now = time();
