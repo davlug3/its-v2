@@ -39,6 +39,12 @@ Versions start at `0.1.0` when the scaffold is ready.
 
 ### Fixed
 
+- **CSV formula injection in ticket report (2026-11-23).**
+  - Added `App\Support\CsvSafe::cell()` and applied it to every exported cell.
+  - Values starting with `=`, `+`, `-`, `@`, tab, or CR are prefixed with a
+    single quote so Excel/Sheets treat them as text.
+  - Added `tests/Unit/CsvSafeTest.php`.
+
 - **Attachment table rename (2026-11-23).**
   - Renamed the misspelled `attachements` table to `attachments` via migration
     `2026_11_23_000000_rename_attachements_to_attachments.php` (reversible).

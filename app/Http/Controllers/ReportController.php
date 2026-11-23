@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Ticket;
+use App\Support\CsvSafe;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -86,7 +87,7 @@ class ReportController extends Controller
             ]);
 
             foreach ($tickets as $ticket) {
-                fputcsv($handle, [
+                $row = [
                     $ticket->id,
                     $ticket->subject,
                     $ticket->state_id === 1 ? 'Open' : ($ticket->state_id === 2 ? 'Closed' : 'State '.$ticket->state_id),
@@ -104,7 +105,9 @@ class ReportController extends Controller
                     Carbon::createFromTimestamp((int) $ticket->created_date, self::TZ)->toDateTimeString(),
                     $ticket->resolved_date ? Carbon::createFromTimestamp((int) $ticket->resolved_date, self::TZ)->toDateTimeString() : '',
                     $ticket->resolution,
-                ]);
+                ];
+
+                fputcsv($handle, array_map(fn ($value): string => CsvSafe::cell($value), $row));
             }
 
             fclose($handle);
