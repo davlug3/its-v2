@@ -75,11 +75,6 @@ const router = createRouter({
                     meta: { acl: 3 },
                 },
                 {
-                    path: 'tickets/end-user',
-                    name: 'end-user-tickets',
-                    component: () => import('@/pages/EndUserTicketsPage.vue'),
-                },
-                {
                     path: 'tickets/new',
                     name: 'new-ticket',
                     component: () => import('@/pages/NewTicketPage.vue'),

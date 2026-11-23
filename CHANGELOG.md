@@ -39,6 +39,11 @@ Versions start at `0.1.0` when the scaffold is ready.
 
 ### Fixed
 
+- **Removed unreachable EndUserTicketsPage (2026-11-23).**
+  - Deleted `resources/js/pages/EndUserTicketsPage.vue` and its
+    `/tickets/end-user` route. It duplicated My Tickets and was not linked in
+    the navigation.
+
 - **Second hardening pass (2026-11-23).**
   - Theme is applied on startup (`useThemeStore().init()` in `app.ts`); dark
     mode now survives reloads.
