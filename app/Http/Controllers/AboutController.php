@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\UserProfile;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -17,19 +18,25 @@ class AboutController extends Controller
             $version = (string) config('about.app_version');
         }
 
+        $profile = UserProfile::where('user_id', $request->user()->id)->first();
+        $acl = $profile !== null ? (int) $profile->acl_id : 1;
+        $isAdmin = $acl >= 9;
+
         $data = [
             'app_name' => config('app.name'),
             'app_description' => config('app.description'),
-            'app_env' => config('app.env'),
             'app_url' => config('app.url'),
             'app_timezone' => config('app.timezone'),
-            'app_debug' => (bool) config('app.debug'),
             'app_version' => $version,
-            'php_version' => PHP_VERSION,
-            'laravel_version' => app()->version(),
+            'app_env' => $isAdmin ? config('app.env') : '',
+            'app_debug' => $isAdmin && (bool) config('app.debug'),
+            'php_version' => $isAdmin ? PHP_VERSION : '',
+            'laravel_version' => $isAdmin ? app()->version() : '',
+            'database_url' => null,
+            'payroll_database' => null,
         ];
 
-        $showDbUrl = (bool) config('about.show_database_url', false);
+        $showDbUrl = $isAdmin && (bool) config('about.show_database_url', false);
 
         if ($showDbUrl) {
             $data['database_url'] = sprintf(
@@ -48,9 +55,6 @@ class AboutController extends Controller
                 config('database.connections.payroll.port'),
                 config('database.connections.payroll.database'),
             );
-        } else {
-            $data['database_url'] = null;
-            $data['payroll_database'] = null;
         }
 
         return response()->json($data);

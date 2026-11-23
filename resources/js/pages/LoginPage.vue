@@ -24,7 +24,9 @@ const [password, passwordAttrs] = defineField('password');
 const onSubmit = handleSubmit(async (values) => {
     const ok = await auth.login(values);
     if (ok) {
-        const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/';
+        const raw = typeof route.query.redirect === 'string' ? route.query.redirect : '/';
+        // Only allow same-origin paths; reject protocol-relative and absolute URLs.
+        const redirect = raw.startsWith('/') && !raw.startsWith('//') ? raw : '/';
         await router.push(redirect);
     }
 });

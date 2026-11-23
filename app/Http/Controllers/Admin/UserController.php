@@ -239,8 +239,19 @@ class UserController extends Controller
         }
 
         $profile = UserProfile::firstOrNew(['user_id' => $id]);
+        $beforeSupervisor = $profile->exists ? $profile->supervisor_id : null;
         $profile->supervisor_id = $supervisorId;
         $profile->save();
+
+        AdminAudit::create([
+            'actor_user_id' => $request->user()->id,
+            'action' => 'update_supervisor',
+            'entity' => 'user',
+            'entity_id' => $id,
+            'before' => json_encode(['supervisor_id' => $beforeSupervisor]),
+            'after' => json_encode(['supervisor_id' => $supervisorId]),
+            'ip' => $request->ip(),
+        ]);
 
         return response()->json(['message' => 'Supervisor updated.']);
     }

@@ -39,6 +39,17 @@ Versions start at `0.1.0` when the scaffold is ready.
 
 ### Fixed
 
+- **Security and robustness hardening (2026-11-23).**
+  - `AboutController` only returns `app_env`, `app_debug`, `php_version`,
+    `laravel_version`, and DB URLs to ACL 9; other users get blanks.
+  - `UserController::updateSupervisor()` now writes an `admin_audit` entry.
+  - `SupervisorService::allSubordinates()` loads `user_profile` once and walks
+    the tree in memory (was one query per node).
+  - `LoginPage` only honors same-origin `redirect` values (rejects `//` and
+    absolute URLs).
+  - `ReportController::tickets()` validates `from`/`to` as `YYYY-MM-DD` and
+    returns 422 instead of a 500.
+
 - **Server-side validation for ticket mutations (2026-11-23).**
   - `create()` and `edit()` now reject non-existent categories and negative
     `units_count`.

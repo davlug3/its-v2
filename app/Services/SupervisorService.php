@@ -26,25 +26,28 @@ class SupervisorService
      */
     public function allSubordinates(int $userId): array
     {
+        $children = [];
+        foreach (
+            UserProfile::query()
+                ->where('supervisor_id', '>', 0)
+                ->get(['user_id', 'supervisor_id']) as $row
+        ) {
+            $children[(int) $row->supervisor_id][] = (int) $row->user_id;
+        }
+
         $result = [];
-        $visited = [];
+        $visited = [$userId => true];
         $stack = [$userId];
 
         while ($stack !== []) {
             $current = array_pop($stack);
 
-            if (isset($visited[$current])) {
-                continue;
-            }
-            $visited[$current] = true;
-
-            foreach ($this->directSubordinates($current) as $sub) {
-                if ($sub === $userId) {
+            foreach ($children[$current] ?? [] as $sub) {
+                if (isset($visited[$sub])) {
                     continue;
                 }
-                if (! in_array($sub, $result, true)) {
-                    $result[] = $sub;
-                }
+                $visited[$sub] = true;
+                $result[] = $sub;
                 $stack[] = $sub;
             }
         }

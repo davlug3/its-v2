@@ -16,6 +16,11 @@ class ReportController extends Controller
 
     public function tickets(Request $request): StreamedResponse
     {
+        $request->validate([
+            'from' => ['nullable', 'date_format:Y-m-d'],
+            'to' => ['nullable', 'date_format:Y-m-d'],
+        ]);
+
         [$from, $to] = $this->dateRange($request);
 
         $employeeIds = $request->query('employees', []);
