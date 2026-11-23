@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Ticket;
 use App\Models\TicketLog;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -19,11 +20,56 @@ class TicketQueryService
     ) {}
 
     /**
+     * Apply the unified search term to a query.
+     *
+     * Searches subject, issue, ticket ID, and resolved names (users,
+     * departments, categories) by resolving the term to IDs first so the
+     * filter runs in SQL and covers the entire table.
+     *
+     * @param  Builder<Ticket>  $query
+     */
+    private function applySearch(Builder $query, string $search): void
+    {
+        $search = trim($search);
+        if ($search === '' || strcasecmp($search, 'null') === 0) {
+            return;
+        }
+
+        $userIds = $this->resolver->userIdsMatching($search);
+        $locationIds = $this->resolver->locationIdsMatching($search);
+        $categoryIds = $this->resolver->categoryIdsMatching($search);
+
+        $query->where(function (Builder $sub) use ($search, $userIds, $locationIds, $categoryIds): void {
+            $sub->where('subject', 'like', '%'.$search.'%')
+                ->orWhere('issue', 'like', '%'.$search.'%');
+
+            if (ctype_digit($search)) {
+                $sub->orWhere('id', (int) $search);
+            }
+
+            if ($userIds !== []) {
+                $sub->orWhereIn('created_uid', $userIds)
+                    ->orWhereIn('assigned_uid', $userIds)
+                    ->orWhereIn('eu_uid', $userIds)
+                    ->orWhereIn('resolved_uid', $userIds);
+            }
+
+            if ($locationIds !== []) {
+                $sub->orWhereIn('location_id', $locationIds);
+            }
+
+            if ($categoryIds !== []) {
+                $sub->orWhereIn('category_id', $categoryIds);
+            }
+        });
+    }
+
+    /**
      * List tickets involving the given user.
      *
      * @return array{tickets: array<int, array<string, mixed>>, total: int, page: int, per_page: int}
      */
-    public function listForUser(int $userId, int $page = 1, int $perPage = 20, ?int $stateId = null, ?string $sort = null, string $dir = 'desc'): array
+    public function listForUser(int $userId, int $page = 1, int $perPage = 20, ?int $stateId = null, ?string $sort = null, string $dir = 'desc', ?string $search = null): array
     {
         $query = Ticket::query()->where(function ($q) use ($userId): void {
             $q->where('created_uid', $userId)
@@ -34,8 +80,6 @@ class TicketQueryService
         if ($stateId !== null) {
             $query->where('state_id', $stateId);
         }
-
-        $total = (int) $query->count();
 
         $sortMap = [
             'id' => 'id',
@@ -49,6 +93,10 @@ class TicketQueryService
 
         $sortColumn = $sortMap[$sort ?? ''] ?? 'created_date';
         $direction = $dir === 'asc' ? 'asc' : 'desc';
+
+        $this->applySearch($query, (string) $search);
+
+        $total = (int) $query->count();
 
         $tickets = $query
             ->orderBy($sortColumn, $direction)
@@ -104,43 +152,6 @@ class TicketQueryService
             $query->where('location_id', (int) $filters['location_id']);
         }
 
-        $searchMode = false;
-
-        if (isset($filters['ticket_id']) && $filters['ticket_id'] !== '' && strcasecmp((string) $filters['ticket_id'], 'null') !== 0) {
-            $query->where('id', (int) $filters['ticket_id']);
-            $searchMode = true;
-        }
-
-        // Unified search: 'q' searches across subject, issue, and (post-enrichment)
-        // names, locations, categories. When 'q' is set it takes precedence over
-        // the individual subject/issue filters.
-        $q = trim((string) ($filters['q'] ?? ''));
-        if ($q !== '' && strcasecmp($q, 'null') !== 0) {
-            $query->where(function ($sub) use ($q): void {
-                $sub->where('subject', 'like', '%'.$q.'%')
-                    ->orWhere('issue', 'like', '%'.$q.'%');
-            });
-            $searchMode = true;
-        } else {
-            $subject = trim((string) ($filters['subject'] ?? $filters['search'] ?? ''));
-            if ($subject !== '' && strcasecmp($subject, 'null') !== 0) {
-                $query->where('subject', 'like', '%'.$subject.'%');
-                $searchMode = true;
-            }
-
-            $issue = trim((string) ($filters['issue'] ?? ''));
-            if ($issue !== '' && strcasecmp($issue, 'null') !== 0) {
-                $query->where('issue', 'like', '%'.$issue.'%');
-                $searchMode = true;
-            }
-        }
-
-        if ($isSet($filters, 'eu_uid') || $isSet($filters, 'resolved_uid')) {
-            $searchMode = true;
-        }
-
-        $total = (int) $query->count();
-
         $sortMap = [
             'id' => 'id',
             'subject' => 'subject',
@@ -154,11 +165,26 @@ class TicketQueryService
         $sortColumn = $sortMap[$sort ?? ''] ?? 'created_date';
         $direction = $dir === 'asc' ? 'asc' : 'desc';
 
-        if ($searchMode) {
-            $perPage = min($perPage, 500);
-            $page = 1;
-            $total = min($total, 500);
+        $search = trim((string) ($filters['q'] ?? ''));
+        if ($search !== '' && strcasecmp($search, 'null') !== 0) {
+            $this->applySearch($query, $search);
+        } else {
+            $subject = trim((string) ($filters['subject'] ?? $filters['search'] ?? ''));
+            if ($subject !== '' && strcasecmp($subject, 'null') !== 0) {
+                $query->where('subject', 'like', '%'.$subject.'%');
+            }
+
+            $issue = trim((string) ($filters['issue'] ?? ''));
+            if ($issue !== '' && strcasecmp($issue, 'null') !== 0) {
+                $query->where('issue', 'like', '%'.$issue.'%');
+            }
         }
+
+        if (isset($filters['ticket_id']) && $filters['ticket_id'] !== '' && strcasecmp((string) $filters['ticket_id'], 'null') !== 0) {
+            $query->where('id', (int) $filters['ticket_id']);
+        }
+
+        $total = (int) $query->count();
 
         $tickets = $query
             ->orderBy($sortColumn, $direction)
@@ -166,29 +192,8 @@ class TicketQueryService
             ->take($perPage)
             ->get();
 
-        $enriched = $this->resolver->enrichTickets($tickets->toArray());
-
-        // Post-enrichment filter for unified search across resolved fields.
-        if ($q !== '' && strcasecmp($q, 'null') !== 0) {
-            $qLower = mb_strtolower($q);
-            $enriched = array_values(array_filter($enriched, function (array $t) use ($q, $qLower): bool {
-                foreach (['subject', 'issue', 'created_name', 'eu_name', 'assigned_name', 'location_name', 'category_name', 'resolved_name'] as $field) {
-                    $val = $t[$field] ?? '';
-                    if (is_string($val) && str_contains(mb_strtolower($val), $qLower)) {
-                        return true;
-                    }
-                }
-                if (isset($t['id']) && str_contains((string) $t['id'], $q)) {
-                    return true;
-                }
-
-                return false;
-            }));
-            $total = count($enriched);
-        }
-
         return [
-            'tickets' => $enriched,
+            'tickets' => $this->resolver->enrichTickets($tickets->toArray()),
             'total' => $total,
             'page' => $page,
             'per_page' => $perPage,
@@ -210,13 +215,11 @@ class TicketQueryService
      *
      * @return array{tickets: array<int, array<string, mixed>>, total: int, page: int, per_page: int}
      */
-    public function listClosedByUser(int $userId, int $page = 1, int $perPage = 20, ?string $sort = null, string $dir = 'desc'): array
+    public function listClosedByUser(int $userId, int $page = 1, int $perPage = 20, ?string $sort = null, string $dir = 'desc', ?string $search = null): array
     {
         $query = Ticket::query()
             ->where('state_id', 2)
             ->where('resolved_uid', $userId);
-
-        $total = (int) $query->count();
 
         $sortMap = [
             'id' => 'id',
@@ -226,6 +229,10 @@ class TicketQueryService
         ];
         $sortColumn = $sortMap[$sort ?? ''] ?? 'resolved_date';
         $direction = $dir === 'asc' ? 'asc' : 'desc';
+
+        $this->applySearch($query, (string) $search);
+
+        $total = (int) $query->count();
 
         $tickets = $query
             ->orderBy($sortColumn, $direction)
@@ -246,13 +253,11 @@ class TicketQueryService
      *
      * @return array{tickets: array<int, array<string, mixed>>, total: int, page: int, per_page: int}
      */
-    public function listAssignedToUser(int $userId, int $page = 1, int $perPage = 20, ?string $sort = null, string $dir = 'desc'): array
+    public function listAssignedToUser(int $userId, int $page = 1, int $perPage = 20, ?string $sort = null, string $dir = 'desc', ?string $search = null): array
     {
         $query = Ticket::query()
             ->where('state_id', 1)
             ->where('assigned_uid', $userId);
-
-        $total = (int) $query->count();
 
         $sortMap = [
             'id' => 'id',
@@ -265,6 +270,10 @@ class TicketQueryService
         if ($sort === null || $sort === '') {
             $direction = 'desc';
         }
+
+        $this->applySearch($query, (string) $search);
+
+        $total = (int) $query->count();
 
         $tickets = $query
             ->orderBy($sortColumn, $direction)
@@ -285,13 +294,11 @@ class TicketQueryService
      *
      * @return array{tickets: array<int, array<string, mixed>>, total: int, page: int, per_page: int}
      */
-    public function listUnassigned(int $page = 1, int $perPage = 20, ?string $sort = null, string $dir = 'desc'): array
+    public function listUnassigned(int $page = 1, int $perPage = 20, ?string $sort = null, string $dir = 'desc', ?string $search = null): array
     {
         $query = Ticket::query()
             ->where('state_id', 1)
             ->where('assigned_uid', 0);
-
-        $total = (int) $query->count();
 
         $sortMap = [
             'id' => 'id',
@@ -304,6 +311,10 @@ class TicketQueryService
         if ($sort === null || $sort === '') {
             $direction = 'desc';
         }
+
+        $this->applySearch($query, (string) $search);
+
+        $total = (int) $query->count();
 
         $tickets = $query
             ->orderBy($sortColumn, $direction)
@@ -325,7 +336,7 @@ class TicketQueryService
      *
      * @return array{tickets: array<int, array<string, mixed>>, total: int, page: int, per_page: int}
      */
-    public function listInvolvingUser(int $userId, int $page = 1, int $perPage = 20, ?string $sort = null, string $dir = 'desc'): array
+    public function listInvolvingUser(int $userId, int $page = 1, int $perPage = 20, ?string $sort = null, string $dir = 'desc', ?string $search = null): array
     {
         $query = Ticket::query()->where(function ($q) use ($userId): void {
             $q->where('created_uid', $userId)
@@ -333,13 +344,16 @@ class TicketQueryService
                 ->orWhere('assigned_uid', $userId);
         });
 
-        $total = (int) $query->count();
         $sortMap = ['id' => 'id', 'subject' => 'subject', 'created' => 'created_date', 'state' => 'state_id'];
         $sortColumn = $sortMap[$sort ?? ''] ?? 'id';
         $direction = $dir === 'asc' ? 'asc' : 'desc';
         if ($sort === null || $sort === '') {
             $direction = 'desc';
         }
+
+        $this->applySearch($query, (string) $search);
+
+        $total = (int) $query->count();
 
         $tickets = $query->orderBy($sortColumn, $direction)->skip(($page - 1) * $perPage)->take($perPage)->get();
 
@@ -356,7 +370,7 @@ class TicketQueryService
      *
      * @return array{tickets: array<int, array<string, mixed>>, total: int, page: int, per_page: int}
      */
-    public function listEndUserTickets(int $userId, ?int $stateId, int $page = 1, int $perPage = 20): array
+    public function listEndUserTickets(int $userId, ?int $stateId, int $page = 1, int $perPage = 20, ?string $search = null): array
     {
         $query = Ticket::query()->where(function ($q) use ($userId): void {
             $q->where('created_uid', $userId)->orWhere('resolved_uid', $userId);
@@ -364,6 +378,9 @@ class TicketQueryService
         if ($stateId !== null) {
             $query->where('state_id', $stateId);
         }
+
+        $this->applySearch($query, (string) $search);
+
         $total = (int) $query->count();
         $tickets = $query->orderByDesc('id')->skip(($page - 1) * $perPage)->take($perPage)->get();
 
@@ -380,7 +397,7 @@ class TicketQueryService
      *
      * @return array{tickets: array<int, array<string, mixed>>, total: int, page: int, per_page: int}
      */
-    public function listBySupervisor(int $supervisorId, int $page = 1, int $perPage = 20): array
+    public function listBySupervisor(int $supervisorId, int $page = 1, int $perPage = 20, ?string $search = null): array
     {
         if ($supervisorId <= 0) {
             return ['tickets' => [], 'total' => 0, 'page' => $page, 'per_page' => $perPage];
@@ -390,6 +407,8 @@ class TicketQueryService
             ->where('created_uid', $supervisorId)
             ->whereColumn('created_uid', 'assigned_uid')
             ->where('state_id', 2);
+
+        $this->applySearch($query, (string) $search);
 
         $total = (int) $query->count();
         $tickets = $query->orderByDesc('id')->skip(($page - 1) * $perPage)->take($perPage)->get();

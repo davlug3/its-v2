@@ -152,6 +152,70 @@ class ReferenceResolver
     }
 
     /**
+     * Find payroll user IDs whose name matches the term.
+     *
+     * @return array<int>
+     */
+    public function userIdsMatching(string $term): array
+    {
+        $term = trim($term);
+        if ($term === '') {
+            return [];
+        }
+
+        return DB::connection('payroll')
+            ->table('payroll')
+            ->where('name', 'like', '%'.$term.'%')
+            ->orWhere('mname', 'like', '%'.$term.'%')
+            ->orWhere('lname', 'like', '%'.$term.'%')
+            ->limit(500)
+            ->pluck('id')
+            ->map(fn ($id): int => (int) $id)
+            ->all();
+    }
+
+    /**
+     * Find department (location) IDs whose name matches the term.
+     *
+     * @return array<int>
+     */
+    public function locationIdsMatching(string $term): array
+    {
+        $term = trim($term);
+        if ($term === '') {
+            return [];
+        }
+
+        return DB::connection('payroll')
+            ->table('department')
+            ->where('department', 'like', '%'.$term.'%')
+            ->limit(500)
+            ->pluck('id')
+            ->map(fn ($id): int => (int) $id)
+            ->all();
+    }
+
+    /**
+     * Find category IDs whose name matches the term.
+     *
+     * @return array<int>
+     */
+    public function categoryIdsMatching(string $term): array
+    {
+        $term = trim($term);
+        if ($term === '') {
+            return [];
+        }
+
+        return Category::query()
+            ->where('category', 'like', '%'.$term.'%')
+            ->limit(500)
+            ->pluck('id')
+            ->map(fn ($id): int => (int) $id)
+            ->all();
+    }
+
+    /**
      * @param  array<int|string|null>  $ids
      * @return array<int>
      */

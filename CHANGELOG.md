@@ -39,6 +39,17 @@ Versions start at `0.1.0` when the scaffold is ready.
 
 ### Fixed
 
+- **Unified ticket search (2026-11-23).**
+  - `TicketQueryService::applySearch()` now resolves the search term to user,
+    department, and category IDs and filters in SQL, so search covers the whole
+    table (not just the current page or a recent candidate set).
+  - Search by subject, issue, ticket ID, requester/assignee name, department, and
+    category now works on **all** ticket list scopes (all, my, assigned, closed,
+    involving, unassigned, end-user, by-supervisor).
+  - Removed the broken post-enrichment page filter and the 500-row search cap.
+  - `MyTicketsPage` switched to server-side pagination (was client-side over 50
+    rows), so older tickets are reachable and search works.
+
 - **`NewTicketPage` unused import.** Removed the unused `newIdempotencyKey` import
   after the form switched to schema-based validation.
 

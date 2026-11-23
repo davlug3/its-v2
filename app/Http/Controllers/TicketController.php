@@ -64,6 +64,7 @@ class TicketController extends Controller
                 $perPage,
                 (string) $request->query('sort', ''),
                 (string) $request->query('dir', 'desc'),
+                $request->query('q'),
             );
 
             return response()->json($result);
@@ -76,6 +77,7 @@ class TicketController extends Controller
                 $perPage,
                 (string) $request->query('sort', ''),
                 (string) $request->query('dir', 'desc'),
+                $request->query('q'),
             );
 
             return response()->json($result);
@@ -87,6 +89,7 @@ class TicketController extends Controller
                 $perPage,
                 (string) $request->query('sort', ''),
                 (string) $request->query('dir', 'desc'),
+                $request->query('q'),
             );
 
             return response()->json($result);
@@ -99,6 +102,7 @@ class TicketController extends Controller
                 $perPage,
                 (string) $request->query('sort', ''),
                 (string) $request->query('dir', 'desc'),
+                $request->query('q'),
             );
 
             return response()->json($result);
@@ -112,6 +116,7 @@ class TicketController extends Controller
                 $stateId,
                 $page,
                 $perPage,
+                $request->query('q'),
             );
 
             return response()->json($result);
@@ -120,7 +125,7 @@ class TicketController extends Controller
         if ($scope === 'tickets_by_supervisor' && $this->aclOf($request) >= 3) {
             $profile = UserProfile::where('user_id', $user->id)->first();
             $supervisorId = $profile !== null ? (int) ($profile->supervisor_id ?? 0) : 0;
-            $result = $this->queries->listBySupervisor($supervisorId, $page, $perPage);
+            $result = $this->queries->listBySupervisor($supervisorId, $page, $perPage, $request->query('q'));
 
             return response()->json($result);
         }
@@ -162,6 +167,7 @@ class TicketController extends Controller
             $stateId,
             (string) $request->query('sort', ''),
             (string) $request->query('dir', 'desc'),
+            $request->query('q'),
         );
 
         return response()->json($result);
