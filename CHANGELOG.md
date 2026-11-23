@@ -39,6 +39,12 @@ Versions start at `0.1.0` when the scaffold is ready.
 
 ### Fixed
 
+- **Attachment table rename (2026-11-23).**
+  - Renamed the misspelled `attachements` table to `attachments` via migration
+    `2026_11_23_000000_rename_attachements_to_attachments.php` (reversible).
+  - `Attachment` model no longer overrides `$table`; Laravel infers `attachments`.
+  - Updated `README.md`, `PLAN.md`, and the `PROMPT.md` schema rule to match.
+
 - **Client-side pagination and table accessibility (2026-11-23).**
   - `DataTable.vue` now keeps an internal page for `pagination="client"`; previously
     `currentPage` was always `1`, so Next/Prev did nothing on Monitoring, Admin

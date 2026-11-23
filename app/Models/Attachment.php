@@ -19,11 +19,6 @@ use Illuminate\Support\Carbon;
  */
 class Attachment extends Model
 {
-    /**
-     * The legacy table name is intentionally misspelled ("attachements").
-     */
-    protected $table = 'attachements';
-
     protected $primaryKey = 'id';
 
     public $timestamps = false;

@@ -129,7 +129,7 @@ These rules are not optional.
 |---|---|
 | `acls` | 4 |
 | `application_settings` | 2 |
-| `attachements` | 0 |
+| `attachments` | 0 |
 | `categories` | 31 |
 | `groups` | 59 |
 | `locations` | 100 |

@@ -503,7 +503,7 @@ Exit check: notification appears, can be read, and the count updates.
 
 ### Phase 12 — Attachments
 
-- [ ] Keep table name `attachements` and legacy columns.
+- [x] Table renamed from `attachements` to `attachments` (2026-11-23); legacy columns kept.
 - [ ] Authorized download controller with ticket visibility checks.
 - [ ] `Content-Disposition: attachment`, `nosniff`.
 - [ ] Allowlist types. Size cap 25 MB. Magic-byte check.

@@ -39,7 +39,7 @@ Rebuild the application so that, on cut-over day:
 
 ### 2.1 Schema rules
 
-- **MUST keep every existing table name**, including the misspelled **`attachements`**. Do not rename it to `attachments`.
+- **MUST keep every existing table name**, including the misspelled **`attachements`**. Do not rename it to `attachments`. *(Superseded 2026-11-23: the director approved renaming `attachements` to `attachments`; see `CHANGELOG.md`.)*
 - **MUST keep every existing column name, type, nullability, default, character set, collation, and meaning.** This includes intentionally awkward choices such as `tickets.created_date` and `tickets.created_time` both being `int(11)`, and `attachements.file_name` being `int(11)`.
 - **MAY add** new tables, new nullable/defaulted columns, and new indexes.
 - **MUST NOT delete** an existing table or column.
